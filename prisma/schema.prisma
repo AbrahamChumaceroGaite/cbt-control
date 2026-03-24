@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  name        String   // "S2A"
+  level       String   // "Secondary 1" | "Secondary 2"
+  parallel    String   // "A" | "B" | "C"
+  plant       String   @default("")
+  classPoints Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  students    Student[]
+  pointLogs   PointLog[]
+  redemptions Redemption[]
+  groups      Group[]
+}
+
+model Student {
+  id        String   @id @default(cuid())
+  courseId  String
+  code      String   @default("")
+  name      String
+  email     String?  // NEW
+  points    Int      @default(0)
+  createdAt DateTime @default(now())
+
+  course               Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  pointLogs            PointLog[]
+  tramos               StudentTramo[]
+  individualRedemptions StudentRedemption[]
+  groupMemberships     GroupMember[]
+}
+
+model StudentTramo {
+  id        String   @id @default(cuid())
+  studentId String
+  tramo     String   // "T1" | "T2" | ... | "T7"
+  awardedAt DateTime @default(now())
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, tramo])
+}
+
+model Reward {
+  id             String   @id @default(cuid())
+  name           String
+  description    String   @default("")
+  icon           String   @default("★")
+  pointsRequired Int
+  type           String   @default("class") // "class" | "individual"
+  isGlobal       Boolean  @default(true)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  redemptions           Redemption[]
+  individualRedemptions StudentRedemption[]
+}
+
+model Redemption {
+  id         String   @id @default(cuid())
+  courseId   String
+  rewardId   String
+  notes      String   @default("")
+  redeemedAt DateTime @default(now())
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  reward Reward @relation(fields: [rewardId], references: [id])
+}
+
+model StudentRedemption {
+  id         String   @id @default(cuid())
+  studentId  String
+  rewardId   String
+  redeemedAt DateTime @default(now())
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  reward  Reward  @relation(fields: [rewardId], references: [id])
+}
+
+model Action {
+  id             String  @id @default(cuid())
+  name           String
+  points         Int
+  category       String  @default("blue") // "green"|"blue"|"red"|"amber"|"purple"|"mag"
+  affectsClass   Boolean @default(true)
+  affectsStudent Boolean @default(true)
+  isActive       Boolean @default(true)
+
+  pointLogs PointLog[]
+}
+
+model PointLog {
+  id        String   @id @default(cuid())
+  courseId  String
+  studentId String?
+  actionId  String?
+  points    Int
+  reason    String
+  createdAt DateTime @default(now())
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student Student? @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  action  Action?  @relation(fields: [actionId], references: [id], onDelete: SetNull)
+}
+
+model Group {
+  id       String @id @default(cuid())
+  name     String
+  courseId  String
+
+  course   Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  members  GroupMember[]
+}
+
+model GroupMember {
+  id        String @id @default(cuid())
+  groupId   String
+  studentId String
+
+  group   Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, studentId])
+}

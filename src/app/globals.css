@@ -1,0 +1,127 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply font-sans antialiased overflow-x-hidden;
+  background-color: #09090b; /* zinc-950 */
+  color: #fafafa;
+}
+
+@layer components {
+  /* Base ShadCN-like Card Style */
+  .card-base {
+    @apply border rounded-xl overflow-hidden shadow-sm;
+    background-color: #0c0c0e;
+    border-color: #27272a; /* zinc-800 */
+  }
+
+  .panel-title {
+    @apply text-lg font-bold tracking-tight mb-1;
+    color: #fff;
+  }
+
+  .panel-subtitle {
+    @apply text-sm mb-6;
+    color: #a1a1aa; /* zinc-400 */
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary { background-color: #fafafa; color: #18181b; }
+  .btn-primary:hover { background-color: #e4e4e7; }
+  
+  .btn-secondary { background-color: #27272a; color: #fafafa; }
+  .btn-secondary:hover { background-color: #3f3f46; }
+  
+  .btn-ghost { color: #a1a1aa; background-color: transparent; }
+  .btn-ghost:hover { background-color: #27272a; color: #fafafa; }
+  
+  .btn-danger { background-color: #7f1d1d; color: #fecaca; }
+  .btn-danger:hover { background-color: #991b1b; }
+  
+  .btn-action-primary { background-color: #2563eb; color: white; }
+  .btn-action-primary:hover { background-color: #1d4ed8; }
+
+  .btn-sm { @apply h-9 px-3; }
+  .btn-md { @apply h-10 px-4 py-2; }
+  .btn-lg { @apply h-11 rounded-md px-8; }
+
+  /* Dashboard Grids */
+  .dashboard-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4;
+  }
+
+  /* Modals */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 flex items-center justify-center p-4;
+    background-color: rgba(0,0,0,0.8);
+  }
+  .modal-content {
+    @apply border shadow-xl sm:rounded-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh];
+    background-color: #09090b;
+    border-color: #27272a;
+    animation: modal-enter 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes modal-enter {
+    0% { opacity: 0; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  .modal-header { @apply px-6 py-4 border-b; border-color: #27272a; }
+  .modal-title { @apply text-lg font-semibold leading-none tracking-tight flex justify-between items-center; color: #fff; }
+  .modal-body { @apply p-6 overflow-y-auto flex-1; }
+  .modal-footer { @apply px-6 py-4 border-t flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2; border-color: #27272a; }
+
+  /* Forms */
+  .label { @apply text-sm font-medium leading-none pb-2 block; color: #d4d4d8; }
+  .input { 
+    @apply flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 transition duration-200; 
+    background-color: #09090b;
+    border-color: #27272a;
+  }
+  .input:hover { background-color: #18181b; }
+  .select { @apply input appearance-none; }
+
+  /* Floating Bottom Nav */
+  .floating-nav {
+    @apply fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 p-2 rounded-2xl backdrop-blur-xl border shadow-2xl;
+    background-color: rgba(24, 24, 27, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  .nav-item {
+    @apply flex flex-col items-center justify-center w-16 h-14 rounded-xl transition-all duration-200;
+    color: #a1a1aa;
+  }
+  .nav-item:hover { background-color: rgba(255,255,255,0.05); }
+  .nav-item.active {
+    color: #fff;
+    background-color: rgba(255,255,255,0.1);
+  }
+  .nav-icon { @apply w-5 h-5 mb-1; }
+  .nav-label { @apply text-[10px] font-medium tracking-wide; }
+
+  /* Tramos Progress Bar */
+  .progress-rail { @apply h-2 w-full rounded-full overflow-hidden; background-color: #27272a; }
+  .progress-fill { @apply h-full transition-all duration-500 ease-in-out; background-color: #3b82f6; }
+
+  /* Pills */
+  .pill { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2; }
+
+  /* Main content wrapper padding to account for floating nav */
+  .page-wrapper {
+    @apply pb-32;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { border-radius: 9999px; background-color: #27272a; }
+::-webkit-scrollbar-thumb:hover { background-color: #3f3f46; }
