@@ -21,6 +21,7 @@ type StudentData = {
   coinLogs: CoinLogEntry[]
   groupMemberships: GroupEntry[]
   redemptionRequests: RedemptionReq[]
+  individualRedemptions: { rewardId: string }[]
 }
 
 type Tab = 'perfil' | 'recompensas' | 'solicitudes'
@@ -118,7 +119,13 @@ export default function PortalPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 pb-28">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 pb-28 relative overflow-x-hidden">
+      {/* ── Animated blobs ── */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden z-0">
+        <div className="blob blob-1" />
+        <div className="blob blob-2" />
+        <div className="blob blob-3" />
+      </div>
 
       {/* ── Header ── */}
       <header className="sticky top-0 z-30 px-5 pt-5 pb-3">
@@ -233,9 +240,11 @@ export default function PortalPage() {
             ) : (
               rewards.map(r => {
                 const canAfford = student.coins >= r.coinsRequired
+                const alreadyRedeemed = student.individualRedemptions.some(ir => ir.rewardId === r.id)
                 const alreadyPending = student.redemptionRequests.some(
                   req => req.reward.name === r.name && req.status === 'pending'
                 )
+                if (alreadyRedeemed) return null
                 return (
                   <div key={r.id} className={`flex items-center gap-4 bg-zinc-900 border rounded-2xl p-4 transition-all ${canAfford ? 'border-zinc-700/60' : 'border-zinc-800/40 opacity-60'}`}>
                     <div className="text-3xl shrink-0">{r.icon}</div>

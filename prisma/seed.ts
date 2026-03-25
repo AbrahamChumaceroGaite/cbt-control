@@ -32,12 +32,13 @@ async function seedStudents(courseId: string): Promise<{ id: string; code: strin
   for (let i = 0; i < students.length; i++) {
     const s = students[i]
     const id = `${prefix}-${s.name.replace(/\s/g, '-').toLowerCase()}`
-    const code = `${prefix}${String(i + 1).padStart(2, '0')}` // e.g. "s1a01"
+    // Use school code if provided, else generate sequential code (e.g. "s2a01")
+    const code = s.code ?? `${prefix}${String(i + 1).padStart(2, '0')}`
 
     await prisma.student.upsert({
       where: { id },
-      update: {},  // never overwrite existing coins from app activity
-      create: { id, courseId, name: s.name, coins: s.coins, code },
+      update: { code, email: s.email ?? null },  // update code/email but not coins (preserves game progress)
+      create: { id, courseId, name: s.name, coins: s.coins, code, email: s.email ?? null },
     })
 
     result.push({ id, code })
@@ -77,27 +78,36 @@ async function seedUsers(allStudents: { id: string; code: string }[]) {
   })
   console.log('  Admin user: code=admin, password=admin123')
 
-  // One User per student — password defaults to their code (e.g. "s1a01")
+  // One User per student — login code = school code, password defaults to code
+  let created = 0, updated = 0
   for (const { id, code } of allStudents) {
     const existing = await prisma.user.findFirst({ where: { studentId: id } })
-    if (existing) continue  // don't overwrite custom passwords
 
-    // Check if code is already taken (edge case: re-seeding with different student mapping)
-    const codeExists = await prisma.user.findUnique({ where: { code } })
-    if (codeExists) continue
+    if (existing) {
+      // Always sync the login code to the current school code; preserve password
+      if (existing.code !== code) {
+        // If the new code is taken by another user, skip to avoid conflict
+        const conflict = await prisma.user.findUnique({ where: { code } })
+        if (!conflict) {
+          await prisma.user.update({ where: { id: existing.id }, data: { code } })
+          updated++
+        }
+      }
+      continue
+    }
+
+    // New student — create user; password = school code
+    const conflict = await prisma.user.findUnique({ where: { code } })
+    if (conflict) continue  // code already taken (shouldn't happen with real school codes)
 
     const hash = await bcrypt.hash(code, 12)
     await prisma.user.create({
-      data: {
-        code,
-        passwordHash: hash,
-        role: 'student',
-        studentId: id,
-      },
+      data: { code, passwordHash: hash, role: 'student', studentId: id },
     })
+    created++
   }
 
-  console.log(`  Created user accounts for ${allStudents.length} students`)
+  console.log(`  Users: ${created} created, ${updated} codes updated`)
 }
 
 async function main() {

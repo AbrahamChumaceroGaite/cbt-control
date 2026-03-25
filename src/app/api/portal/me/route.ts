@@ -24,6 +24,7 @@ export async function GET() {
         include: { reward: { select: { name: true, icon: true, coinsRequired: true } } },
         orderBy: { createdAt: 'desc' },
       },
+      individualRedemptions: { select: { rewardId: true } },
     },
   })
 

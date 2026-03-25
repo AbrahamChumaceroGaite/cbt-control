@@ -195,3 +195,44 @@
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { border-radius: 9999px; background-color: #27272a; }
 ::-webkit-scrollbar-thumb:hover { background-color: #3f3f46; }
+
+/* ── Animated background blobs ── */
+@keyframes blob1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(40px, -30px) scale(1.08); }
+  66%       { transform: translate(-25px, 20px) scale(0.94); }
+}
+@keyframes blob2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(-35px, 25px) scale(1.06); }
+  66%       { transform: translate(30px, -20px) scale(1.1); }
+}
+@keyframes blob3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%       { transform: translate(20px, 30px) scale(0.92); }
+}
+.blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.12;
+}
+.blob-1 {
+  width: 500px; height: 500px;
+  top: -10%; left: -5%;
+  background: radial-gradient(circle, #fbbf24, transparent 70%);
+  animation: blob1 18s ease-in-out infinite;
+}
+.blob-2 {
+  width: 400px; height: 400px;
+  top: 40%; right: -8%;
+  background: radial-gradient(circle, #3b82f6, transparent 70%);
+  animation: blob2 22s ease-in-out infinite;
+}
+.blob-3 {
+  width: 350px; height: 350px;
+  bottom: 10%; left: 30%;
+  background: radial-gradient(circle, #ef4444, transparent 70%);
+  animation: blob3 26s ease-in-out infinite;
+  opacity: 0.07;
+}

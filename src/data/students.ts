@@ -1,156 +1,165 @@
 /**
- * Nóminas por course id, ordenadas por N° del CSV.
- * Para agregar coins iniciales (ej. MathCoins migrados), editar el campo `coins` de cada alumno.
- * S2 arranca en 0 coins. S1 también por ahora — completar con MathCoins cuando estén disponibles.
+ * Nóminas por course id — datos reales de los CSV de cada paralelo.
+ * Código = código escolar numérico (ej. "178") → usado como login en el sistema.
+ * Coins S1 = MathCoins TRIM 1. Coins S2 = 0 (sin historial aún).
  */
-export type StudentSeed = { name: string; coins: number }
+export type StudentSeed = {
+  name: string
+  coins: number
+  code: string
+  email?: string
+}
 
 export const STUDENTS_BY_COURSE: Record<string, StudentSeed[]> = {
 
-  // ── Secondary 1 ────────────────────────────────────────────────────
+  // ── Secondary 1 A — Leeds ────────────────────────────────────────
   'course-s1a': [
-    { name: 'Orihuela Camilo',                    coins: 0 },  // N°1
-    { name: 'Bled Rivero Julieta',                coins: 0 },  // N°2
-    { name: 'Casso Arce Mikaela Belen',           coins: 0 },  // N°3
-    { name: 'Cespedes Gonzales Andre',            coins: 0 },  // N°4
-    { name: 'Cortez Velasco Camila Victoria',     coins: 0 },  // N°5
-    { name: 'Hurtado Aracena Carlos Augusto',     coins: 0 },  // N°6
-    { name: 'Jaramillo Sardina Romelia de los Angeles', coins: 0 }, // N°7
-    { name: 'Leyton Cornejo Adriana Natalia',     coins: 0 },  // N°8
-    { name: 'Medina Albino Mario Daniel',         coins: 0 },  // N°9
-    { name: 'Navarro Canedo André',               coins: 0 },  // N°10
-    { name: 'Ramirez Pradel Hadasa',              coins: 0 },  // N°11
-    { name: 'Rios Zambrana Eric Rodolfo',         coins: 0 },  // N°12
-    { name: 'Rivera Ocampo Isabella',             coins: 0 },  // N°13
-    { name: 'Ruiz Castillo Elisa',                coins: 0 },  // N°14
-    { name: 'Sanjines Trigo Ignacio',             coins: 0 },  // N°15
-    { name: 'Tarraga Flores Leandro Matias',      coins: 0 },  // N°16
-    { name: 'Vaca Garcia Victoria Elisa',         coins: 0 },  // N°17
-    { name: 'Vallejo Exeni Pablo Alejandro',      coins: 0 },  // N°18
-    { name: 'Velasquez Lopez Hugo Fernando',      coins: 0 },  // N°19
+    { name: 'Orihuela Camilo',                          code: '178',  email: 'tj.camilo..o@cbds.net.bo',            coins: 13 },
+    { name: 'Bled Rivero Julieta',                      code: '374',  email: 'tj.julieta.bled.r@cbds.net.bo',       coins: 0  },
+    { name: 'Casso Arce Mikaela Belen',                 code: '732',  email: 'tj.mikaela.casso.a@cbds.net.bo',      coins: 15 },
+    { name: 'Cespedes Gonzales Andre',                  code: '587',  email: 'tj.andre.cespedes.g@cbds.net.bo',     coins: 13 },
+    { name: 'Cortez Velasco Camila Victoria',           code: '191',  email: 'tj.camila.cortez.v@cbds.net.bo',      coins: 14 },
+    { name: 'Hurtado Aracena Carlos Augusto',           code: '747',  email: 'tj.carlos.hurtado.a@cbds.net.bo',     coins: 17 },
+    { name: 'Jaramillo Sardina Romelia de los Angeles', code: '1017', email: 'tj.romelia.jaramillo.s@cbds.net.bo',  coins: 12 },
+    { name: 'Leyton Cornejo Adriana Natalia',           code: '1058', email: 'tj.adriana.leyton.c@cbds.net.bo',     coins: 9  },
+    { name: 'Medina Albino Mario Daniel',               code: '200',  email: 'tj.mario.medina.a@cbds.net.bo',       coins: 15 },
+    { name: 'Navarro Canedo André',                     code: '177',  email: 'tj.andre.navarro.c@cbds.net.bo',      coins: 6  },
+    { name: 'Ramirez Pradel Hadasa',                    code: '578',  email: 'tj.hadasa.ramirez.p@cbds.net.bo',     coins: 13 },
+    { name: 'Rios Zambrana Eric Rodolfo',               code: '216',  email: 'tj.eric.rios.z@cbds.net.bo',          coins: 8  },
+    { name: 'Rivera Ocampo Isabella',                   code: '269',  email: 'tj.isabella.rivera.o@cbds.net.bo',    coins: 7  },
+    { name: 'Ruiz Castillo Elisa',                      code: '866',  email: 'tj.elisa.ruiz.c@cbds.net.bo',         coins: 14 },
+    { name: 'Sanjines Trigo Ignacio',                   code: '738',  email: 'tj.ignacio.sanjines.t@cbds.net.bo',   coins: 9  },
+    { name: 'Tarraga Flores Leandro Matias',            code: '715',  email: 'tj.leandro.tarraga.f@cbds.net.bo',    coins: 26 },
+    { name: 'Vaca Garcia Victoria Elisa',               code: '523',  email: 'tj.victoria.vaca.g@cbds.net.bo',      coins: 21 },
+    { name: 'Vallejo Exeni Pablo Alejandro',            code: '183',  email: 'tj.pablo.vallejo.e@cbds.net.bo',      coins: 17 },
+    { name: 'Velasquez Lopez Hugo Fernando',            code: '205',  email: 'tj.hugo.velasquez.l@cbds.net.bo',     coins: 13 },
   ],
 
+  // ── Secondary 1 B — Manchester ──────────────────────────────────
   'course-s1b': [
-    { name: 'Polo Cesar Dionicio',                coins: 0 },  // N°1
-    { name: 'Angulo Mendoza Sofia Paola',         coins: 0 },  // N°2
-    { name: 'Baldivieso Da Silva Maria Agustina', coins: 0 },  // N°3
-    { name: 'Cossio Velasquez Bruno Josue',       coins: 0 },  // N°4
-    { name: 'Ferrufino Soto Santino Johan',       coins: 0 },  // N°5
-    { name: 'Flores Fernandez Thiago Matias',     coins: 0 },  // N°6
-    { name: 'Flores Pavez Emilia Zoe',            coins: 0 },  // N°7
-    { name: 'Francisco Aramayo Carmen Constanza', coins: 0 },  // N°8
-    { name: 'Galarza Vaca Muriel',                coins: 0 },  // N°9
-    { name: 'Guerra Chavez Liam Gabriel',         coins: 0 },  // N°10
-    { name: 'Gutierrez Castañon Leonardo Shiomar',coins: 0 },  // N°11
-    { name: 'Martínez Colquechambi Violeta',      coins: 0 },  // N°12
-    { name: 'Miranda Jijena Matias Hector',       coins: 0 },  // N°13
-    { name: 'Mogro Siles Juan Manuel',            coins: 0 },  // N°14
-    { name: 'Ortiz Peffaure Catalina',            coins: 0 },  // N°15
-    { name: 'Pecile Soruco Maria',                coins: 0 },  // N°16
-    { name: 'Pizarro Morales Luis Augusto',       coins: 0 },  // N°17
-    { name: 'Ramirez Sola Evangelina Claudia',    coins: 0 },  // N°18
-    { name: 'Valdez Tolaba José Fernando',        coins: 0 },  // N°19
+    { name: 'Polo Cesar Dionicio',                      code: '202',  email: 'tj.cesar..p@cbds.net.bo',             coins: 20 },
+    { name: 'Angulo Mendoza Sofia Paola',               code: '931',  email: 'tj.sofia.angulo.m@cbds.net.bo',       coins: 14 },
+    { name: 'Baldivieso Da Silva Maria Agustina',       code: '207',  email: 'tj.maria.baldivieso.d@cbds.net.bo',   coins: 5  },
+    { name: 'Cossio Velasquez Bruno Josue',             code: '401',  email: 'tj.bruno.cossio.v@cbds.net.bo',       coins: 15 },
+    { name: 'Ferrufino Soto Santino Johan',             code: '830',  email: 'tj.santino.ferrufino.s@cbds.net.bo',  coins: 7  },
+    { name: 'Flores Fernandez Thiago Matias',           code: '173',  email: 'tj.thiago.flores.f@cbds.net.bo',      coins: 28 },
+    { name: 'Flores Pavez Emilia Zoe',                  code: '698',  email: 'tj.emilia.flores.p@cbds.net.bo',      coins: 10 },
+    { name: 'Francisco Aramayo Carmen Constanza',       code: '837',  email: 'tj.carmen.francisco.a@cbds.net.bo',   coins: 12 },
+    { name: 'Galarza Vaca Muriel',                      code: '219',  email: 'tj.muriel.galarza.v@cbds.net.bo',     coins: 12 },
+    { name: 'Guerra Chavez Liam Gabriel',               code: '376',  email: 'tj.liam.guerra.c@cbds.net.bo',        coins: 22 },
+    { name: 'Gutierrez Castañon Leonardo Shiomar',      code: '695',  email: 'tj.leonardo.gutierrez.c@cbds.net.bo', coins: 7  },
+    { name: 'Martínez Colquechambi Violeta',            code: '689',  email: 'tj.violeta.martinez.c@cbds.net.bo',   coins: 3  },
+    { name: 'Miranda Jijena Matias Hector',             code: '212',  email: 'tj.matias.miranda.j@cbds.net.bo',     coins: 5  },
+    { name: 'Mogro Siles Juan Manuel',                  code: '187',  email: 'tj.juan.mogro.s@cbds.net.bo',         coins: 4  },
+    { name: 'Ortiz Peffaure Catalina',                  code: '1041', email: 'tj.catalina.ortiz.p@cbds.net.bo',     coins: 0  },
+    { name: 'Pecile Soruco Maria',                      code: '180',  email: 'tj.maria.pecile.s@cbds.net.bo',       coins: 8  },
+    { name: 'Pizarro Morales Luis Augusto',             code: '201',  email: 'tj.luis.pizarro.m@cbds.net.bo',       coins: 9  },
+    { name: 'Ramirez Sola Evangelina Claudia',          code: '1016', email: 'tj.evangelina.ramirez.s@cbds.net.bo', coins: 15 },
+    { name: 'Valdez Tolaba José Fernando',              code: '204',  email: 'tj.jose.valdez.t@cbds.net.bo',        coins: 10 },
   ],
 
+  // ── Secondary 1 C — Oxford ───────────────────────────────────────
   'course-s1c': [
-    { name: 'Beccar Julio Ana Teresa',            coins: 0 },  // N°1
-    { name: 'Copa Zuruguay Mariana',              coins: 0 },  // N°2
-    { name: 'Cuellar Tejerina Sergio Emiliano',   coins: 0 },  // N°3
-    { name: 'Escalante Romero Santiago Nicolas',  coins: 0 },  // N°4
-    { name: 'Fernandez Miranda Victoria Elizabeth', coins: 0 }, // N°5
-    { name: 'Figueroa Rengel Alicia',             coins: 0 },  // N°6
-    { name: 'Flores Aparicio Abisai Daniela',     coins: 0 },  // N°7
-    { name: 'Ibañez Montellano Facundo',          coins: 0 },  // N°8
-    { name: 'Irahola Santos Dannye Mathias',      coins: 0 },  // N°9
-    { name: 'Iturri Cortez Josefina',             coins: 0 },  // N°10
-    { name: 'Leyton Aramayo Agustin Hector',      coins: 0 },  // N°11
-    { name: 'Luna Orozco Vedia Diego Octavio',    coins: 0 },  // N°12
-    { name: 'Ordoñez Arce Selva Patricia',        coins: 0 },  // N°13
-    { name: 'Padilla Ordoñez Carlos Adrian',      coins: 0 },  // N°14
-    { name: 'Pereira Kohlberg Melissa',           coins: 0 },  // N°15
-    { name: 'Sanchez Soliz Victor Santiago',      coins: 0 },  // N°16
-    { name: 'Santos Torrez Luna Celeste',         coins: 0 },  // N°17
-    { name: 'Sotillo Serrano Valentina Ariana',   coins: 0 },  // N°18
-    { name: 'Zilveti Coca Martha Elena',          coins: 0 },  // N°19
+    { name: 'Beccar Julio Ana Teresa',                  code: '748',  email: 'tj.ana.beccar.j@cbds.net.bo',         coins: 0  },
+    { name: 'Copa Zuruguay Mariana',                    code: '171',  email: 'tj.mariana.copa.z@cbds.net.bo',       coins: 5  },
+    { name: 'Cuellar Tejerina Sergio Emiliano',         code: '526',  email: 'tj.sergio.cuellar.t@cbds.net.bo',     coins: 2  },
+    { name: 'Escalante Romero Santiago Nicolas',        code: '193',  email: 'tj.santiago.escalante.r@cbds.net.bo', coins: 11 },
+    { name: 'Fernandez Miranda Victoria Elizabeth',     code: '172',  email: 'tj.victoria.fernandez.m@cbds.net.bo', coins: 15 },
+    { name: 'Figueroa Rengel Alicia',                   code: '856',  email: 'tj.alicia.figueroa.r@cbds.net.bo',    coins: 10 },
+    { name: 'Flores Aparicio Abisai Daniela',           code: '194',  email: 'tj.abisai.flores.a@cbds.net.bo',      coins: 5  },
+    { name: 'Ibañez Montellano Facundo',                code: '196',  email: 'tj.facundo.ibanez.m@cbds.net.bo',     coins: 14 },
+    { name: 'Irahola Santos Dannye Mathias',            code: '378',  email: 'tj.dannye.irahola.s@cbds.net.bo',     coins: 5  },
+    { name: 'Iturri Cortez Josefina',                   code: '406',  email: 'tj.josefina.iturri.c@cbds.net.bo',    coins: 9  },
+    { name: 'Leyton Aramayo Agustin Hector',            code: '175',  email: 'tj.agustin.leyton.a@cbds.net.bo',     coins: 5  },
+    { name: 'Lunaorozco Vedia Diego Octavio',           code: '199',  email: 'tj.diego.lunaorozco.v@cbds.net.bo',   coins: 4  },
+    { name: 'Ordoñez Arce Selva Patricia',              code: '862',  email: 'tj.selva.ordonez.a@cbds.net.bo',      coins: 5  },
+    { name: 'Padilla Ordoñez Carlos Adrian',            code: '414',  email: 'tj.carlos.padilla.o@cbds.net.bo',     coins: 5  },
+    { name: 'Pereira Kohlberg Melissa',                 code: '214',  email: 'tj.melissa.pereira.k@cbds.net.bo',    coins: 5  },
+    { name: 'Sanchez Soliz Victor Santiago',            code: '855',  email: 'tj.victor.sanchez.s@cbds.net.bo',     coins: 15 },
+    { name: 'Santos Torrez Luna Celeste',               code: '375',  email: 'tj.luna.santos.t@cbds.net.bo',        coins: 5  },
+    { name: 'Sotillo Serrano Valentina Ariana',         code: '302',  email: 'tj.valentina.sotillo.s@cbds.net.bo',  coins: 1  },
+    { name: 'Zilveti Coca Martha Elena',                code: '185',  email: 'tj.martha.zilveti.c@cbds.net.bo',     coins: 8  },
   ],
 
-  // ── Secondary 2 (0 coins iniciales) ───────────────────────────────
+  // ── Secondary 2 A — Leeds ────────────────────────────────────────
   'course-s2a': [
-    { name: 'Alarcon Molina Santiago Nicolas',    coins: 0 },  // N°1
-    { name: 'Alarcon Rojas Briana Fernanda',      coins: 0 },  // N°2
-    { name: 'Alcoreza Trigo Josefa Irene',        coins: 0 },  // N°3
-    { name: 'Antequera Collarani Santiago Nahuel',coins: 0 },  // N°4
-    { name: 'Antuña Videz Gemma Mariana',         coins: 0 },  // N°5
-    { name: 'Berciano Cuenca Mael Imanol',        coins: 0 },  // N°6
-    { name: 'Canedo Kohlberg Pablo Adriano',      coins: 0 },  // N°7
-    { name: 'Cari Villa Ariana Lujan',            coins: 0 },  // N°8
-    { name: 'Catari Velasquez Briana Aracely',    coins: 0 },  // N°9
-    { name: 'Conzelmann Montero Jose Gustavo',    coins: 0 },  // N°10
-    { name: 'Costas Villarroel Grace Isabel',     coins: 0 },  // N°11
-    { name: 'Eamara Figueroa Rosa Belen',         coins: 0 },  // N°12
-    { name: 'Escalante Castillo Percy',           coins: 0 },  // N°13
-    { name: 'Gareca Arroyo Seleste de los Angeles', coins: 0 }, // N°14
-    { name: 'Jimenez Polo Sol Luciana',           coins: 0 },  // N°15
-    { name: 'Kohlberg Arce Irene',                coins: 0 },  // N°16
-    { name: 'Murillo Mendez Maximiliano Andre',   coins: 0 },  // N°17
-    { name: 'Rios Zambrana Luz Maria',            coins: 0 },  // N°18
-    { name: 'Roda Lea Plaza Joaquin Alejandro',   coins: 0 },  // N°19
-    { name: 'Salazar Iriarte Sergio',             coins: 0 },  // N°20
-    { name: 'Thompson Navarro Zoe',               coins: 0 },  // N°21
-    { name: 'Villarpando Fuentes Leandro Ramiro', coins: 0 },  // N°22
-    { name: 'Villarroel Perez Facundo',           coins: 0 },  // N°23
+    { name: 'Alarcon Molina Santiago Nicolas',    code: '594',  email: 'tj.santiago.alarcon.m@cbds.net.bo',    coins: 0 },
+    { name: 'Alarcon Rojas Briana Fernanda',      code: '224',  email: 'tj.briana.alarcon.r@cbds.net.bo',      coins: 0 },
+    { name: 'Alcoreza Trigo Josefa Irene',        code: '710',  email: 'tj.josefa.alcoreza.t@cbds.net.bo',     coins: 0 },
+    { name: 'Antequera Collarani Santiago Nahuel',code: '226',  email: 'tj.santiago.antequera.c@cbds.net.bo',  coins: 0 },
+    { name: 'Antuña Videz Gemma Mariana',         code: '279',  email: 'tj.gemma.antuna.v@cbds.net.bo',        coins: 0 },
+    { name: 'Berciano Cuenca Mael Imanol',        code: '228',  email: 'tj.mael.berciano.c@cbds.net.bo',       coins: 0 },
+    { name: 'Canedo Kohlberg Pablo Adriano',      code: '413',  email: 'tj.pablo.canedo.k@cbds.net.bo',        coins: 0 },
+    { name: 'Cari Villa Ariana Lujan',            code: '231',  email: 'tj.ariana.cari.v@cbds.net.bo',         coins: 0 },
+    { name: 'Catari Velasquez Briana Aracely',    code: '283',  email: 'tj.rosa.eamara.f@cbds.net.bo',         coins: 0 },
+    { name: 'Conzelmann Montero Jose Gustavo',    code: '932',  email: 'tj.jose.conzelmann.m@cbds.net.bo',     coins: 0 },
+    { name: 'Costas Villarroel Grace Isabel',     code: '284',  email: 'tj.grace.costas.v@cbds.net.bo',        coins: 0 },
+    { name: 'Eamara Figueroa Rosa Belen',         code: '234',  email: 'tj.rosa.eamara.f@cbds.net.bo',         coins: 0 },
+    { name: 'Escalante Castillo Percy',           code: '287',  email: 'tj.percy.escalante.c@cbds.net.bo',     coins: 0 },
+    { name: 'Gareca Arroyo Seleste de los Angeles', code: '238', email: 'tj.seleste.gareca.a@cbds.net.bo',     coins: 0 },
+    { name: 'Jimenez Polo Sol Luciana',           code: '289',  email: 'tj.sol.jimenez.p@cbds.net.bo',         coins: 0 },
+    { name: 'Kohlberg Arce Irene',                code: '277',  email: 'tj.irene.kohlberg.a@cbds.net.bo',      coins: 0 },
+    { name: 'Murillo Mendez Maximiliano Andre',   code: '264',  email: 'tj.maximiliano.murillo.m@cbds.net.bo', coins: 0 },
+    { name: 'Rios Zambrana Luz Maria',            code: '297',  email: 'tj.luz.rios.z@cbds.net.bo',            coins: 0 },
+    { name: 'Roda Lea Plaza Joaquin Alejandro',   code: '300',  email: 'tj.joaquin.roda.l@cbds.net.bo',        coins: 0 },
+    { name: 'Salazar Iriarte Sergio',             code: '301',  email: 'tj.sergio.salazar.i@cbds.net.bo',      coins: 0 },
+    { name: 'Thompson Navarro Zoe',               code: '411',  email: 'tj.zoe.thompson.n@cbds.net.bo',        coins: 0 },
+    { name: 'Villarpando Fuentes Leandro Ramiro', code: '276',  email: 'tj.leandro.villarpando.f@cbds.net.bo', coins: 0 },
+    { name: 'Villarroel Perez Facundo',           code: '525',  email: 'tj.facundo.villarroel.p@cbds.net.bo',  coins: 0 },
   ],
 
+  // ── Secondary 2 B — Manchester ──────────────────────────────────
   'course-s2b': [
-    { name: 'Quintero Mendoza Sandra Rosalia',    coins: 0 },  // N°1
-    { name: 'Aleman Arzabe Mariano',              coins: 0 },  // N°2
-    { name: 'Antelo Luciana Cecil',               coins: 0 },  // N°3
-    { name: 'Armella Vacaflor Roberto',           coins: 0 },  // N°4
-    { name: 'Bernabe Escalante Antonella Ratziel',coins: 0 },  // N°5
-    { name: 'Crespo Jurado Sebastián Alexander',  coins: 0 },  // N°6
-    { name: 'Cruz Reyes Bon Giovanni Matheo',     coins: 0 },  // N°7
-    { name: 'Cuellar Gomez Martina',              coins: 0 },  // N°8
-    { name: 'Diaz Romay Aaron Gabriel',           coins: 0 },  // N°9
-    { name: 'Gamarra Gareca Victoria',            coins: 0 },  // N°10
-    { name: 'Guerrero Castro Lucas Uriel',        coins: 0 },  // N°11
-    { name: 'Krayasich Chavarria Santiago Adel',  coins: 0 },  // N°12
-    { name: 'Mendez Ruiz Luciana Claudia',        coins: 0 },  // N°13
-    { name: 'Montero Vargas Julieta Fernanda',    coins: 0 },  // N°14
-    { name: 'Paz Del Carpio Tamara',              coins: 0 },  // N°15
-    { name: 'Quispe Zenteno Dafne Luana',         coins: 0 },  // N°16
-    { name: 'Raya Melean Isabella Mariana',       coins: 0 },  // N°17
-    { name: 'Strothmann Velasquez Wendelin',      coins: 0 },  // N°18
-    { name: 'Teran Cardenas Paulina',             coins: 0 },  // N°19
-    { name: 'Torrez Hoyos Thiago Emmanuel',       coins: 0 },  // N°20
-    { name: 'Varca Villarrubia Thiago',           coins: 0 },  // N°21
-    { name: 'Vasquez Luna Pizarro Mariano',       coins: 0 },  // N°22
-    { name: 'Velasco Vega Victoria',              coins: 0 },  // N°23
+    { name: 'Quintero Mendoza Sandra Rosalia',    code: '267',  email: 'tj.sandra..q@cbds.net.bo',             coins: 0 },
+    { name: 'Aleman Arzabe Mariano',              code: '254',  email: 'tj.mariano.aleman.a@cbds.net.bo',      coins: 0 },
+    { name: 'Antelo Luciana Cecil',               code: '750',  email: 'tj.luciana.antelo.@cbds.net.bo',       coins: 0 },
+    { name: 'Armella Vacaflor Roberto',           code: '832',  email: 'tj.roberto.armella.v@cbds.net.bo',     coins: 0 },
+    { name: 'Bernabe Escalante Antonella Ratziel',code: '256',  email: 'tj.antonella.bernabe.e@cbds.net.bo',   coins: 0 },
+    { name: 'Crespo Jurado Sebastián Alexander',  code: '233',  email: 'tj.sebastian.crespo.j@cbds.net.bo',   coins: 0 },
+    { name: 'Cruz Reyes Bon Giovanni Matheo',     code: '383',  email: 'tj.bon.cruz.r@cbds.net.bo',            coins: 0 },
+    { name: 'Cuellar Gomez Martina',              code: '908',  email: 'tj.martina.cuellar.g@cbds.net.bo',     coins: 0 },
+    { name: 'Diaz Romay Aaron Gabriel',           code: '382',  email: 'tj.aaron.diaz.r@cbds.net.bo',          coins: 0 },
+    { name: 'Gamarra Gareca Victoria',            code: '260',  email: 'tj.victoria.gamarra.g@cbds.net.bo',    coins: 0 },
+    { name: 'Guerrero Castro Lucas Uriel',        code: '261',  email: 'tj.lucas.guerrero.c@cbds.net.bo',      coins: 0 },
+    { name: 'Krayasich Chavarria Santiago Adel',  code: '240',  email: 'tj.santiago.krayasich.c@cbds.net.bo',  coins: 0 },
+    { name: 'Mendez Ruiz Luciana Claudia',        code: '293',  email: 'tj.luciana.mendez.r@cbds.net.bo',      coins: 0 },
+    { name: 'Montero Vargas Julieta Fernanda',    code: '295',  email: 'tj.julieta.montero.v@cbds.net.bo',     coins: 0 },
+    { name: 'Paz Del Carpio Tamara',              code: '694',  email: 'tj.tamara.paz.d@cbds.net.bo',          coins: 0 },
+    { name: 'Quispe Zenteno Dafne Luana',         code: '244',  email: 'tj.dafne.quispe.z@cbds.net.bo',        coins: 0 },
+    { name: 'Raya Melean Isabella Mariana',       code: '245',  email: 'tj.isabella.raya.m@cbds.net.bo',       coins: 0 },
+    { name: 'Strothmann Velasquez Wendelin',      code: '596',  email: 'tj.wendelin.strothmann.@cbds.net.bo',  coins: 0 },
+    { name: 'Teran Cardenas Paulina',             code: '271',  email: 'tj.paulina.teran.c@cbds.net.bo',       coins: 0 },
+    { name: 'Torrez Hoyos Thiago Emmanuel',       code: '272',  email: 'tj.thiago.torrez.h@cbds.net.bo',       coins: 0 },
+    { name: 'Varca Villarrubia Thiago',           code: '274',  email: 'tj.thiago.varca.v@cbds.net.bo',        coins: 0 },
+    { name: 'Vasquez Luna Pizarro Mariano',       code: '303',  email: 'tj.mariano.vasquez.l@cbds.net.bo',     coins: 0 },
+    { name: 'Velasco Vega Victoria',              code: '304',  email: 'tj.victoria.velasco.v@cbds.net.bo',    coins: 0 },
   ],
 
+  // ── Secondary 2 C — Oxford ───────────────────────────────────────
   'course-s2c': [
-    { name: 'Molina Anahi Jasiel',                coins: 0 },  // N°1
-    { name: 'Alcoreza Romero Irina Sofia',        coins: 0 },  // N°2
-    { name: 'Barriga Trabuco Eduardo',            coins: 0 },  // N°3
-    { name: 'Bascon Sologuren Diego Alejandro',   coins: 0 },  // N°4
-    { name: 'Cardona Leigue Victoria',            coins: 0 },  // N°5
-    { name: 'Cortez Gallardo Alejandro Miguel',   coins: 0 },  // N°6
-    { name: 'Cuellar Gomez Micaela',              coins: 0 },  // N°7
-    { name: 'Echenique Gutierrez Jesus Alejandro',coins: 0 },  // N°8
-    { name: 'Escalier Bernal Camila Isabel',      coins: 0 },  // N°9
-    { name: 'Espinoza Franco Amaia Marilin',      coins: 0 },  // N°10
-    { name: 'Fernandez Julio Ariana',             coins: 0 },  // N°11
-    { name: 'Guardia Portillo Isabela',           coins: 0 },  // N°12
-    { name: 'Lacaze Garnica Mikael',              coins: 0 },  // N°13
-    { name: 'Lema Videz Lucio Leandro',           coins: 0 },  // N°14
-    { name: 'Marcos Zarate Milan',                coins: 0 },  // N°15
-    { name: 'Negron Peñaranda Isabella',          coins: 0 },  // N°16
-    { name: 'Olivera Bolivar Thiago Joaquín',     coins: 0 },  // N°17
-    { name: 'Osorio Rojas Carmen Yhuleni',        coins: 0 },  // N°18
-    { name: 'Rivera Soria Dayra Luz Skarlet',     coins: 0 },  // N°19
-    { name: 'Sanjines Trigo Ana Joaquina',        coins: 0 },  // N°20
-    { name: 'Surriable Rioja Agustina',           coins: 0 },  // N°21
-    { name: 'Trigo Baldiviezo Larissa Nicole',    coins: 0 },  // N°22
-    { name: 'Vaca Uzqueda Nicolas',               coins: 0 },  // N°23
-    { name: 'Velasquez Osorio Celeste Nathalia',  coins: 0 },  // N°24
+    { name: 'Molina Anahi Jasiel',                code: '263',  email: 'amolina@britanicotarija.edu.bo',        coins: 0 },
+    { name: 'Alcoreza Romero Irina Sofia',        code: '693',  email: 'ialcoreza@britanicotarija.edu.bo',      coins: 0 },
+    { name: 'Barriga Trabuco Eduardo',            code: '280',  email: 'ebarriga@britanicotarija.edu.bo',       coins: 0 },
+    { name: 'Bascon Sologuren Diego Alejandro',   code: '520',  email: 'dbascon@britanicotarija.edu.bo',        coins: 0 },
+    { name: 'Cardona Leigue Victoria',            code: '257',  email: 'vcardona@britanicotarija.edu.bo',       coins: 0 },
+    { name: 'Cortez Gallardo Alejandro Miguel',   code: '253',  email: 'acortez@britanicotarija.edu.bo',        coins: 0 },
+    { name: 'Cuellar Gomez Micaela',              code: '907',  email: 'micaela.cuellar@britanicotarija.edu.bo',coins: 0 },
+    { name: 'Echenique Gutierrez Jesus Alejandro',code: '235',  email: 'jechenique@britanicotarija.edu.bo',     coins: 0 },
+    { name: 'Escalier Bernal Camila Isabel',      code: '692',  email: 'cescalier@britanicotarija.edu.bo',      coins: 0 },
+    { name: 'Espinoza Franco Amaia Marilin',      code: '532',  email: 'aespinoza@britanicotarija.edu.bo',      coins: 0 },
+    { name: 'Fernandez Julio Ariana',             code: '259',  email: 'afernandez@britanicotarija.edu.bo',     coins: 0 },
+    { name: 'Guardia Portillo Isabela',           code: '1060',                                                  coins: 0 },
+    { name: 'Lacaze Garnica Mikael',              code: '385',  email: 'mlacaze@britanicotarija.edu.bo',        coins: 0 },
+    { name: 'Lema Videz Lucio Leandro',           code: '262',  email: 'lllema@britanicotarija.edu.bo',         coins: 0 },
+    { name: 'Marcos Zarate Milan',                code: '290',  email: 'mmarcos@britanicotarija.edu.bo',        coins: 0 },
+    { name: 'Negron Peñaranda Isabella',          code: '265',  email: 'inegron@britanicotarija.edu.bo',        coins: 0 },
+    { name: 'Olivera Bolivar Thiago Joaquín',     code: '399',  email: 'tolivera@britanicotarija.edu.bo',       coins: 0 },
+    { name: 'Osorio Rojas Carmen Yhuleni',        code: '243',  email: 'cosorio@britanicotarija.edu.bo',        coins: 0 },
+    { name: 'Rivera Soria Dayra Luz Skarlet',     code: '913',  email: 'dayra.rivera@britanicotarija.edu.bo',   coins: 0 },
+    { name: 'Sanjines Trigo Ana Joaquina',        code: '736',  email: 'asanjines@britanicotarija.edu.bo',      coins: 0 },
+    { name: 'Surriable Rioja Agustina',           code: '553',  email: 'asurriable@britanicotarija.edu.bo',     coins: 0 },
+    { name: 'Trigo Baldiviezo Larissa Nicole',    code: '273',  email: 'ltrigo@britanicotarija.edu.bo',         coins: 0 },
+    { name: 'Vaca Uzqueda Nicolas',               code: '380',  email: 'nvaca@britanicotarija.edu.bo',          coins: 0 },
+    { name: 'Velasquez Osorio Celeste Nathalia',  code: '275',  email: 'cvelasquez@britanicotarija.edu.bo',     coins: 0 },
   ],
 }

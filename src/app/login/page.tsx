@@ -43,16 +43,20 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-zinc-950 flex flex-col md:flex-row relative overflow-hidden">
+      {/* ── Animated blobs (full page) ── */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden z-0">
+        <div className="blob blob-1" />
+        <div className="blob blob-2" />
+        <div className="blob blob-3" />
+      </div>
+
       {/* ── Left panel (desktop only) ── */}
       <div className="hidden md:flex md:w-[45%] relative overflow-hidden flex-col justify-between p-12"
-        style={{ background: 'linear-gradient(135deg, #18181b 0%, #09090b 60%, #1c1917 100%)' }}>
+        style={{ background: 'linear-gradient(135deg, #18181b00 0%, #09090b80 60%, #1c191760 100%)' }}>
         {/* Decorative grid */}
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-        {/* Glow */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full opacity-20 blur-[80px]"
-          style={{ background: 'radial-gradient(circle, #fbbf24, transparent 70%)' }} />
 
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-zinc-700/50 bg-zinc-900/50 text-zinc-400 text-xs font-medium mb-10">
@@ -60,13 +64,13 @@ function LoginForm() {
             CBT · Sistema Activo
           </div>
           <h1 className="text-5xl font-black text-white leading-none tracking-tight mb-4">
-            Control<br />
+            CBT –<br />
             <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(135deg, #fbbf24, #f59e0b)' }}>
-              Aula
+              Home Coins
             </span>
           </h1>
           <p className="text-zinc-400 text-lg leading-relaxed">
-            Sistema de gamificación<br />para el aula inteligente.
+            Sistema de Desempeño<br />y Rewards para ti, estudiante promedio :D.
           </p>
         </div>
 
@@ -91,8 +95,8 @@ function LoginForm() {
       <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-12">
         {/* Mobile header */}
         <div className="md:hidden text-center mb-8">
-          <div className="text-3xl font-black text-white mb-1">Control<span className="text-amber-400">Aula</span></div>
-          <p className="text-zinc-500 text-sm">Sistema de gamificación</p>
+          <div className="text-3xl font-black text-white mb-1">CBT <span className="text-amber-400">COINS</span></div>
+          <p className="text-zinc-500 text-sm">Sistema de Desempeño y Rewards, para ti estudiante promedio :D</p>
         </div>
 
         <div className="w-full max-w-[380px]">
@@ -189,7 +193,7 @@ function LoginForm() {
           </form>
 
           <p className="text-center text-zinc-700 text-xs mt-8">
-            CBT Control Aula · Sistema privado
+            CBT - COINS · Sistema privado
           </p>
         </div>
       </div>

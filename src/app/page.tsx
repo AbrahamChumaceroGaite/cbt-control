@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { ACTION_COLORS } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import { Home, BookType, Users, Network, Zap, Gift, Plus, Upload, X, Check, Search, TrendingUp, Trophy, ArrowRightCircle, UserCog, Bell, LogOut } from 'lucide-react'
+import { Home, BookType, Users, Network, Zap, Gift, Plus, Upload, X, Check, Search, TrendingUp, Trophy, ArrowRightCircle, UserCog, Bell, LogOut, Pencil, Trash2 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
 /* ── Types ── */
@@ -36,6 +36,62 @@ const CATEGORIES = [
 ]
 
 const ICONS = ['★', '♪', '♫', '▶', '◉', '⇄', '◆', '+', '❄', '⚡', '♛', '⊕']
+
+const PAGE_SIZE = 10
+
+/* ── Reusable Pagination ── */
+function Pagination({ page, total, onChange }: { page: number; total: number; onChange: (p: number) => void }) {
+  if (total <= 1) return null
+  return (
+    <div className="flex items-center justify-between text-sm pt-1">
+      <span className="text-zinc-500 text-xs">{page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE)} de {total * PAGE_SIZE - (PAGE_SIZE - 1)} aprox.</span>
+      <div className="flex gap-1">
+        <button onClick={() => onChange(0)} disabled={page === 0} className="btn btn-secondary px-2 py-1 text-xs disabled:opacity-30">«</button>
+        <button onClick={() => onChange(page - 1)} disabled={page === 0} className="btn btn-secondary px-3 py-1 text-xs disabled:opacity-30">‹</button>
+        {Array.from({ length: total }, (_, i) => (
+          <button key={i} onClick={() => onChange(i)} className={cn('btn px-3 py-1 text-xs', i === page ? 'btn-primary' : 'btn-secondary')}>{i + 1}</button>
+        ))}
+        <button onClick={() => onChange(page + 1)} disabled={page >= total - 1} className="btn btn-secondary px-3 py-1 text-xs disabled:opacity-30">›</button>
+        <button onClick={() => onChange(total - 1)} disabled={page >= total - 1} className="btn btn-secondary px-2 py-1 text-xs disabled:opacity-30">»</button>
+      </div>
+    </div>
+  )
+}
+
+/* ── Reusable card hover overlay ── */
+function CardActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+  return (
+    <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center gap-3 backdrop-blur-sm bg-zinc-950/70">
+      <button className="btn btn-secondary px-4 gap-1.5" onClick={onEdit}><Pencil size={14}/>Editar</button>
+      <button className="btn btn-danger px-4 gap-1.5" onClick={onDelete}><Trash2 size={14}/>Eliminar</button>
+    </div>
+  )
+}
+
+/* ── Section header row (reused across all sections) ── */
+function SectionHeader({ title, subtitle, search, onSearch, actions }: {
+  title: string; subtitle?: string
+  search?: string; onSearch?: (v: string) => void
+  actions?: React.ReactNode
+}) {
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight text-white mb-1">{title}</h2>
+        {subtitle && <p className="text-zinc-400 text-sm">{subtitle}</p>}
+      </div>
+      <div className="flex items-center gap-2">
+        {onSearch !== undefined && (
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16}/>
+            <input className="input pl-9 w-[200px]" placeholder="Buscar..." value={search} onChange={e => onSearch(e.target.value)}/>
+          </div>
+        )}
+        {actions}
+      </div>
+    </div>
+  )
+}
 
 /* ── UI Components ── */
 function Modal({ open, onClose, title, lg, children }: { open: boolean; onClose: () => void; title: string; lg?: boolean; children: React.ReactNode }) {
@@ -79,6 +135,7 @@ export default function App() {
   const [logs, setLogs] = useState<Log[]>([])
   const [currentCourse, setCurrentCourse] = useState('')
   const [pendingSolicitudes, setPendingSolicitudes] = useState(0)
+  const [adminName, setAdminName] = useState('CBT')
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
 
   async function logout() {
@@ -86,11 +143,25 @@ export default function App() {
     window.location.href = '/login'
   }
 
+  // Fetch admin name once on mount
+  useEffect(() => {
+    fetch('/api/auth/me').then(r => r.json()).then(d => {
+      if (d?.fullName) setAdminName(d.fullName)
+      else if (d?.code) setAdminName(d.code)
+    }).catch(() => {})
+  }, [])
+
   useEffect(() => {
     fetch('/api/solicitudes').then(r => r.json()).then(data => {
       if (Array.isArray(data)) setPendingSolicitudes(data.filter((s: any) => s.status === 'pending').length)
     }).catch(() => {})
   }, [tab])
+
+  // Reload course data when switching back to aula tab (reflects approved redemptions etc.)
+  const switchTab = useCallback((t: Tab) => {
+    setTab(t)
+    if (t === 'aula' && currentCourse) loadCourse(currentCourse)
+  }, [currentCourse])
   
   const showToast = useCallback((msg: string, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast(null), 3000) }, [])
 
@@ -127,18 +198,28 @@ export default function App() {
   const course = courses.find(c => c.id === currentCourse)
 
   return (
-    <div className="min-h-screen bg-zinc-950 page-wrapper">
+    <div className="min-h-screen bg-zinc-950 page-wrapper relative overflow-x-hidden">
+      {/* ── Animated background blobs ── */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden z-0">
+        <div className="blob blob-1" />
+        <div className="blob blob-2" />
+        <div className="blob blob-3" />
+      </div>
+
       {toast && <Toast msg={toast.msg} ok={toast.ok} />}
 
       {/* ── Top Header ── */}
-      <header className="sticky top-0 z-30 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-900/50 px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-            Control Aula
-            <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 text-[10px] tracking-widest font-semibold uppercase relative top-[1px]">PRO</span>
-          </h1>
+      <header className="sticky top-0 z-30 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-900/50 px-6 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+            <span className="text-amber-400 text-xs font-black">{adminName.charAt(0).toUpperCase()}</span>
+          </div>
+          <div>
+            <div className="text-sm font-bold text-zinc-100 leading-none">{adminName}</div>
+            <div className="text-[10px] text-zinc-600 mt-0.5 font-medium uppercase tracking-wider">Administrador</div>
+          </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {courses.length > 0 && (
             <select
@@ -155,7 +236,7 @@ export default function App() {
       </header>
 
       {/* ── Main Content Area ── */}
-      <main className="p-6 mx-auto max-w-[1400px]">
+      <main className="relative z-10 p-6 mx-auto max-w-[1400px]">
         {tab === 'aula' && <AulaSection course={course} students={students} actions={actions} rewards={rewards} logs={logs} reload={() => loadCourse(currentCourse)} showToast={showToast} />}
         {tab === 'cursos' && <CursosSection courses={courses} reload={loadAll} showToast={showToast} />}
         {tab === 'estudiantes' && <EstudiantesSection students={students} currentCourse={currentCourse} reload={() => loadCourse(currentCourse)} reloadAll={loadAll} showToast={showToast} />}
@@ -166,16 +247,21 @@ export default function App() {
         {tab === 'usuarios' && <UsuariosSection courses={courses} showToast={showToast} />}
       </main>
 
+      {/* ── Footer watermark ── */}
+      <footer className="relative z-10 text-center py-6 text-zinc-700 text-xs">
+        Ing. Abraham CG &mdash; 2026 · All rights reserved
+      </footer>
+
       {/* ── Floating Bottom Navigation ── */}
       <nav className="floating-nav">
         {TABS.map(t => {
           const Icon = t.icon
           return (
-            <button key={t.id} onClick={() => setTab(t.id)} className={cn("nav-item", tab === t.id && "active")}>
+            <button key={t.id} onClick={() => switchTab(t.id)} className={cn("nav-item", tab === t.id && "active")}>
               <div className="relative inline-flex">
                 <Icon className="nav-icon" strokeWidth={tab === t.id ? 2.5 : 2} />
                 {t.id === 'solicitudes' && pendingSolicitudes > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-amber-500 text-black text-[9px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">
+                  <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-black text-[9px] font-black rounded-full min-w-[14px] h-3.5 px-0.5 flex items-center justify-center leading-none">
                     {pendingSolicitudes > 9 ? '9+' : pendingSolicitudes}
                   </span>
                 )}
@@ -503,17 +589,13 @@ function CursosSection({ courses, reload, showToast }: { courses: Course[]; relo
 
   return (
     <div className="animate-in fade-in duration-500">
-      <div className="flex justify-between items-end mb-6">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-white mb-1">Cursos</h2>
-          <p className="text-zinc-400 text-sm">Administra los cursos y niveles.</p>
-        </div>
-        <button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={16} className="mr-1"/> Nuevo Curso</button>
-      </div>
+      <SectionHeader title="Cursos" subtitle="Administra los cursos y niveles."
+        actions={<button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={16}/></button>}
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {courses.map(c => (
-          <div key={c.id} className="card-base p-5 flex flex-col justify-between hover:border-zinc-700 transition-colors">
+          <div key={c.id} className="group relative card-base p-5 flex flex-col justify-between hover:border-zinc-600 transition-all duration-200">
             <div>
               <div className="flex justify-between items-start mb-2">
                 <h3 className="text-xl font-bold text-white">{c.name}</h3>
@@ -522,10 +604,7 @@ function CursosSection({ courses, reload, showToast }: { courses: Course[]; relo
               <div className="text-xs text-zinc-500 font-medium mb-1 uppercase tracking-wider">{c.level} — Par. {c.parallel}</div>
               <div className="mt-4 text-sm text-zinc-400 flex items-center gap-1"><Users size={14}/> {c._count?.students ?? 0} estudiantes</div>
             </div>
-            <div className="flex items-center gap-2 mt-6 pt-4 border-t border-zinc-800/50">
-              <button className="btn btn-secondary flex-1" onClick={() => openEdit(c)}>Editar</button>
-              <button className="btn btn-danger" onClick={() => del(c.id)}><X size={16}/></button>
-            </div>
+            <CardActions onEdit={() => openEdit(c)} onDelete={() => del(c.id)} />
           </div>
         ))}
       </div>
@@ -553,6 +632,7 @@ function EstudiantesSection({ students, currentCourse, reload, reloadAll, showTo
   const [editing, setEditing] = useState<Student | null>(null)
   const [form, setForm] = useState({ name: '', code: '', email: '', coins: 0 })
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const openNew = () => { setForm({ name: '', code: '', email: '', coins: 0 }); setEditing(null); setModal(true) }
@@ -611,26 +691,25 @@ function EstudiantesSection({ students, currentCourse, reload, reloadAll, showTo
   }
 
   const filtered = (students || []).filter((s: Student) => !search || s.name.toLowerCase().includes(search.toLowerCase()))
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   return (
     <div className="animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-6">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-white mb-1">Directorio de Alumnos</h2>
-          <p className="text-zinc-400 text-sm">{students.length} estudiantes en el curso seleccionado.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
-            <input className="input pl-9 w-[200px]" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} />
-          </div>
-          <button className="btn btn-secondary btn-sm" onClick={() => fileInputRef.current?.click()} title="Importar Excel">
-            <Upload size={16} className="mr-2" /> Importar Excel
-          </button>
-          <input type="file" ref={fileInputRef} accept=".xlsx,.xls,.csv" className="hidden" onChange={handleExcelUpload} />
-          <button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={16} /> </button>
-        </div>
-      </div>
+      <SectionHeader
+        title="Directorio de Alumnos"
+        subtitle={`${students.length} estudiantes en el curso seleccionado.`}
+        search={search} onSearch={v => { setSearch(v); setPage(0) }}
+        actions={
+          <>
+            <button className="btn btn-secondary btn-sm" onClick={() => fileInputRef.current?.click()} title="Importar Excel">
+              <Upload size={16} className="mr-2" /> Importar Excel
+            </button>
+            <input type="file" ref={fileInputRef} accept=".xlsx,.xls,.csv" className="hidden" onChange={handleExcelUpload} />
+            <button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={16}/></button>
+          </>
+        }
+      />
 
       <div className="card-base border-t-0 rounded-none sm:rounded-xl sm:border-t">
         <div className="overflow-x-auto">
@@ -645,7 +724,7 @@ function EstudiantesSection({ students, currentCourse, reload, reloadAll, showTo
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800/50">
-              {filtered.map((s: Student) => (
+              {paginated.map((s: Student) => (
                 <tr key={s.id} className="hover:bg-zinc-900/30 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="font-semibold text-zinc-100">{s.name}</div>
@@ -655,18 +734,27 @@ function EstudiantesSection({ students, currentCourse, reload, reloadAll, showTo
                   <td className="px-6 py-4 text-right">
                      <span className="inline-flex items-center justify-center px-2 py-1 rounded bg-zinc-800 text-zinc-200 font-bold border border-zinc-700">{s.coins}</span>
                   </td>
-                  <td className="px-6 py-4 text-right opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="text-blue-400 hover:text-blue-300 font-medium text-xs mr-3" onClick={() => openEdit(s)}>Editar</button>
-                    <button className="text-red-400 hover:text-red-300 font-medium text-xs" onClick={() => del(s.id)}>Eliminar</button>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => openEdit(s)} className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-md transition-colors" title="Editar">
+                        <Pencil size={14} />
+                      </button>
+                      <button onClick={() => del(s.id)} className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-950/30 rounded-md transition-colors" title="Eliminar">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
+              {paginated.length === 0 && (
                 <tr><td colSpan={5} className="px-6 py-12 text-center text-zinc-500">No se encontraron estudiantes.</td></tr>
               )}
             </tbody>
           </table>
         </div>
+      </div>
+      <div className="mt-4">
+        <Pagination page={page} total={totalPages} onChange={setPage} />
       </div>
 
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? 'Editar alumno' : 'Nuevo alumno'}>
@@ -674,6 +762,7 @@ function EstudiantesSection({ students, currentCourse, reload, reloadAll, showTo
           <div><label className="label">Nombre completo</label><input className="input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></div>
           <div><label className="label">Código</label><input className="input" value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value }))} /></div>
           <div><label className="label">Correo</label><input className="input" type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} /></div>
+          {editing && <div><label className="label">Coins</label><input className="input" type="number" value={form.coins} onChange={e => setForm(p => ({ ...p, coins: parseInt(e.target.value) || 0 }))} /></div>}
         </div>
         <div className="modal-footer mt-6">
           <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
@@ -720,17 +809,12 @@ function GruposSection({ groups, students, currentCourse, reload, showToast }: a
 
   return (
     <div className="animate-in fade-in duration-500">
-      <div className="flex justify-between items-end mb-6">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-white mb-1">Grupos de Trabajo</h2>
-          <p className="text-zinc-400 text-sm">Gestiona los equipos en el curso seleccionado.</p>
-        </div>
-        <button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={16} className="mr-1"/> Nuevo Grupo</button>
-      </div>
+      <SectionHeader title="Grupos de Trabajo" subtitle="Gestiona los equipos en el curso seleccionado."
+        actions={<button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={16}/></button>} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
          {groups.map((g: Group) => (
-           <div key={g.id} className="card-base p-5 flex flex-col justify-between">
+           <div key={g.id} className="group relative card-base p-5 flex flex-col justify-between hover:border-zinc-600 transition-all duration-200">
              <div>
                <h3 className="text-lg font-bold text-white mb-3">{g.name}</h3>
                <div className="space-y-1 mt-2">
@@ -743,10 +827,7 @@ function GruposSection({ groups, students, currentCourse, reload, showToast }: a
                  {g.members.length === 0 && <div className="text-zinc-500 text-sm italic">Sin miembros</div>}
                </div>
              </div>
-             <div className="flex items-center gap-2 mt-6 pt-4 border-t border-zinc-800/50">
-                <button className="btn btn-secondary flex-1" onClick={() => openEdit(g)}>Editar</button>
-                <button className="btn btn-danger" onClick={() => del(g.id)}><X size={16}/></button>
-             </div>
+             <CardActions onEdit={() => openEdit(g)} onDelete={() => del(g.id)} />
            </div>
          ))}
          {groups.length === 0 && <div className="col-span-full text-center py-12 text-zinc-500">No hay grupos creados en este curso.</div>}
@@ -805,19 +886,14 @@ function AccionesSection({ actions, reload, showToast }: { actions: Action[]; re
 
   return (
     <div className="animate-in fade-in duration-500">
-      <div className="flex justify-between items-end mb-6">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-white mb-1">Catálogo de Acciones</h2>
-          <p className="text-zinc-400 text-sm">Configura los comportamientos y sus puntajes.</p>
-        </div>
-        <button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={16} className="mr-1"/> Nueva Acción</button>
-      </div>
+      <SectionHeader title="Catálogo de Acciones" subtitle="Configura los comportamientos y sus puntajes."
+        actions={<button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={16}/></button>} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {actions.map(a => {
           const col = ACTION_COLORS[a.category] || { bg: '#1e3a8a', text: '#bfdbfe' }
           return (
-            <div key={a.id} className={cn("card-base p-5 flex flex-col justify-between transition-opacity", !a.isActive && "opacity-60")}>
+            <div key={a.id} className={cn("group relative card-base p-5 flex flex-col justify-between transition-opacity hover:border-zinc-600", !a.isActive && "opacity-60")}>
               <div>
                 <div className="flex justify-between items-start mb-3">
                   <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-lg" style={{ background: `${col.bg}40`, color: col.text, border: `1px solid ${col.bg}` }}>
@@ -831,10 +907,7 @@ function AccionesSection({ actions, reload, showToast }: { actions: Action[]; re
                   {a.affectsStudent && <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">Estudiante</span>}
                 </div>
               </div>
-              <div className="flex items-center gap-2 mt-5 pt-4 border-t border-zinc-800/50">
-                <button className="btn btn-secondary flex-1" onClick={() => openEdit(a)}>Editar</button>
-                <button className="btn btn-danger" onClick={() => del(a.id)}><X size={16}/></button>
-              </div>
+              <CardActions onEdit={() => openEdit(a)} onDelete={() => del(a.id)} />
             </div>
           )
         })}
@@ -904,17 +977,12 @@ function RecompensasSection({ rewards, reload, showToast }: { rewards: Reward[];
 
   return (
     <div className="animate-in fade-in duration-500">
-      <div className="flex justify-between items-end mb-6">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-white mb-1">Tienda de Recompensas</h2>
-          <p className="text-zinc-400 text-sm">Gestiona los premios y privilegios canjeables.</p>
-        </div>
-        <button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={16} className="mr-1"/> Nueva Recompensa</button>
-      </div>
+      <SectionHeader title="Tienda de Recompensas" subtitle="Gestiona los premios y privilegios canjeables."
+        actions={<button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={16}/></button>} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {rewards.map(r => (
-          <div key={r.id} className={cn("card-base p-5 flex flex-col justify-between transition-opacity", !r.isActive && "opacity-60")}>
+          <div key={r.id} className={cn("group relative card-base p-5 flex flex-col justify-between transition-opacity hover:border-zinc-600", !r.isActive && "opacity-60")}>
             <div>
                <div className="flex justify-between items-start mb-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-amber-500/10 text-amber-500 border border-amber-500/20 text-xl">
@@ -924,16 +992,13 @@ function RecompensasSection({ rewards, reload, showToast }: { rewards: Reward[];
                </div>
                <h3 className="text-lg font-semibold text-white mb-1">{r.name}</h3>
                <p className="text-sm text-zinc-400 line-clamp-2">{r.description || 'Sin descripción'}</p>
-               
+
                <div className="flex gap-2 text-xs mt-4">
                   <span className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">{r.type === 'physical' ? 'Física' : r.type === 'digital' ? 'Digital' : 'Privilegio'}</span>
                   {r.isGlobal ? <span className="px-2 py-0.5 rounded bg-blue-900/30 text-blue-300">Global</span> : <span className="px-2 py-0.5 rounded bg-rose-900/30 text-rose-300">Personal</span>}
                </div>
             </div>
-            <div className="flex items-center gap-2 mt-5 pt-4 border-t border-zinc-800/50">
-              <button className="btn btn-secondary flex-1" onClick={() => openEdit(r)}>Editar</button>
-              <button className="btn btn-danger" onClick={() => del(r.id)}><X size={16}/></button>
-            </div>
+            <CardActions onEdit={() => openEdit(r)} onDelete={() => del(r.id)} />
           </div>
         ))}
       </div>
@@ -1111,6 +1176,7 @@ function UsuariosSection({ courses, showToast }: { courses: Course[]; showToast:
   const [editUser, setEditUser] = useState<UserFull | null>(null)
   const [form, setForm] = useState({ code: '', password: '', role: 'student', fullName: '', isActive: true })
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(0)
   const [processing, setProcessing] = useState<string | null>(null)
 
   const load = async () => {
@@ -1182,23 +1248,17 @@ function UsuariosSection({ courses, showToast }: { courses: Course[]; showToast:
   const filtered = users.filter(u =>
     !search || u.code.includes(search.toLowerCase()) || u.fullName.toLowerCase().includes(search.toLowerCase())
   )
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-white">Usuarios del Sistema</h2>
-        <button onClick={openCreate} className="btn btn-primary"><Plus size={16} className="mr-1.5" />Nuevo Usuario</button>
-      </div>
-
-      <div className="relative">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-        <input
-          className="input pl-9 w-full max-w-xs"
-          placeholder="Buscar por código o nombre..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
-      </div>
+      <SectionHeader
+        title="Usuarios del Sistema"
+        subtitle="Gestiona las cuentas de acceso al panel."
+        search={search} onSearch={v => { setSearch(v); setPage(0) }}
+        actions={<button onClick={openCreate} className="btn btn-primary btn-sm"><Plus size={16}/></button>}
+      />
 
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
         <table className="w-full text-sm">
@@ -1213,7 +1273,7 @@ function UsuariosSection({ courses, showToast }: { courses: Course[]; showToast:
             </tr>
           </thead>
           <tbody>
-            {filtered.map(u => (
+            {paginated.map(u => (
               <tr key={u.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
                 <td className="px-4 py-3 font-mono text-zinc-300">{u.code}</td>
                 <td className="px-4 py-3 text-zinc-200">{u.fullName || '—'}</td>
@@ -1254,12 +1314,14 @@ function UsuariosSection({ courses, showToast }: { courses: Course[]; showToast:
                 </td>
               </tr>
             ))}
-            {filtered.length === 0 && (
+            {paginated.length === 0 && (
               <tr><td colSpan={6} className="text-center py-8 text-zinc-600">Sin usuarios</td></tr>
             )}
           </tbody>
         </table>
       </div>
+
+      <Pagination page={page} total={totalPages} onChange={setPage} />
 
       <Modal open={modal} onClose={() => setModal(false)} title={editUser ? 'Editar Usuario' : 'Nuevo Usuario'}>
         <div className="space-y-4">
@@ -1276,7 +1338,10 @@ function UsuariosSection({ courses, showToast }: { courses: Course[]; showToast:
             </>
           )}
           <div><label className="label">Nombre Completo</label><input className="input" value={form.fullName} onChange={e => setForm(p => ({ ...p, fullName: e.target.value }))} placeholder="Nombre para mostrar" /></div>
-          <div><label className="label">{editUser ? 'Nueva Contraseña (dejar vacío para no cambiar)' : 'Contraseña'}</label><input className="input" type="password" value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} placeholder="••••••••" /></div>
+          {/* Password only for admin users or when creating */}
+          {(!editUser || form.role === 'admin') && (
+            <div><label className="label">{editUser ? 'Nueva Contraseña (vacío = sin cambio)' : 'Contraseña'}</label><input className="input" type="password" value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} placeholder="••••••••" /></div>
+          )}
           {editUser && (
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={form.isActive} onChange={e => setForm(p => ({ ...p, isActive: e.target.checked }))} className="w-4 h-4 rounded border-zinc-700 bg-zinc-900" />

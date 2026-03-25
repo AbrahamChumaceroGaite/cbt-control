@@ -5,9 +5,10 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "prisma generate && next build",
+    "postinstall": "prisma generate",
     "start": "next start -p 3001",
     "db:push": "npx prisma db push",
-    "db:seed": "npx ts-node prisma/seed.ts",
+    "db:seed": "npx tsx prisma/seed.ts",
     "db:studio": "npx prisma studio"
   },
   "dependencies": {

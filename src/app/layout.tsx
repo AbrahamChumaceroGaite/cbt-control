@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Control de Aula — TPdD',
-  description: 'Sistema de gestión de puntos para Cambridge GP Stage 8',
+  title: 'CBT Coins',
+  description: 'Sistema de Desempeño y Rewards — CBT COINS',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
