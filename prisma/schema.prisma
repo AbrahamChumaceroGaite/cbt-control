@@ -31,6 +31,7 @@ model Student {
   email     String?  // NEW
   points    Int      @default(0)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   course               Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
   pointLogs            PointLog[]
@@ -88,13 +89,15 @@ model StudentRedemption {
 }
 
 model Action {
-  id             String  @id @default(cuid())
+  id             String   @id @default(cuid())
   name           String
   points         Int
-  category       String  @default("blue") // "green"|"blue"|"red"|"amber"|"purple"|"mag"
-  affectsClass   Boolean @default(true)
-  affectsStudent Boolean @default(true)
-  isActive       Boolean @default(true)
+  category       String   @default("blue") // "green"|"blue"|"red"|"amber"|"purple"|"mag"
+  affectsClass   Boolean  @default(true)
+  affectsStudent Boolean  @default(true)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   pointLogs PointLog[]
 }
@@ -114,18 +117,21 @@ model PointLog {
 }
 
 model Group {
-  id       String @id @default(cuid())
-  name     String
+  id        String   @id @default(cuid())
+  name      String
   courseId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   course   Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
   members  GroupMember[]
 }
 
 model GroupMember {
-  id        String @id @default(cuid())
+  id        String   @id @default(cuid())
   groupId   String
   studentId String
+  joinedAt  DateTime @default(now())
 
   group   Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)

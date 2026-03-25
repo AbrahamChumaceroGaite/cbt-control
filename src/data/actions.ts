@@ -1,0 +1,15 @@
+export const ACTIONS = [
+  { id: 'act-participacion', name: 'Participación activa',                    points:  2, category: 'green',  affectsClass: true, affectsStudent: true  },
+  { id: 'act-equipo',        name: 'Trabajo en equipo',                       points:  3, category: 'blue',   affectsClass: true, affectsStudent: true  },
+  { id: 'act-silencio',      name: 'Silencio sostenido',                      points:  1, category: 'blue',   affectsClass: true, affectsStudent: false },
+  { id: 'act-planta',        name: 'Logro en planta',                         points:  4, category: 'green',  affectsClass: true, affectsStudent: true  },
+  { id: 'act-tarea',         name: 'Tarea entregada',                         points:  2, category: 'amber',  affectsClass: true, affectsStudent: true  },
+  { id: 'act-t1',            name: 'Tramo T1 — Atención demostrada',          points:  3, category: 'purple', affectsClass: true, affectsStudent: true  },
+  { id: 'act-t2',            name: 'Tramo T2 — Indagación demostrada',        points:  3, category: 'purple', affectsClass: true, affectsStudent: true  },
+  { id: 'act-t3',            name: 'Tramo T3 — Metacognición demostrada',     points:  3, category: 'purple', affectsClass: true, affectsStudent: true  },
+  { id: 'act-t4',            name: 'Tramo T4 — Pens. Analítico demostrado',   points:  4, category: 'purple', affectsClass: true, affectsStudent: true  },
+  { id: 'act-t5',            name: 'Tramo T5 — Apz. Autónomo demostrado',     points:  4, category: 'purple', affectsClass: true, affectsStudent: true  },
+  { id: 'act-t6',            name: 'Tramo T6 — Colaboración demostrada',      points:  4, category: 'purple', affectsClass: true, affectsStudent: true  },
+  { id: 'act-t7',            name: 'Tramo T7 — Innovación demostrada',        points:  5, category: 'purple', affectsClass: true, affectsStudent: true  },
+  { id: 'act-disruptivo',    name: 'Comportamiento disruptivo',               points: -3, category: 'red',    affectsClass: true, affectsStudent: true  },
+]

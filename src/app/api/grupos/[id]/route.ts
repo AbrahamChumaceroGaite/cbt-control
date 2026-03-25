@@ -1,36 +1,34 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { GroupService } from '@/server/services/GroupService'
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
-  const group = await prisma.group.findUnique({
-    where: { id: params.id },
-    include: { members: { include: { student: { select: { id: true, name: true, points: true } } } } },
-  })
-  if (!group) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
-  return NextResponse.json(group)
+  try {
+    const group = await GroupService.getGroupById(params.id)
+    if (!group) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
+    return NextResponse.json(group)
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 }
 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
-  const { name, studentIds } = await req.json()
-
-  if (studentIds && Array.isArray(studentIds)) {
-    await prisma.groupMember.deleteMany({ where: { groupId: params.id } })
-    if (studentIds.length > 0) {
-      await prisma.groupMember.createMany({
-        data: studentIds.map((sid: string) => ({ groupId: params.id, studentId: sid })),
-      })
-    }
+  try {
+    const data = await req.json()
+    const group = await GroupService.updateGroup(params.id, {
+      name: data.name,
+      studentIds: data.memberIds || data.studentIds
+    })
+    return NextResponse.json(group)
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 400 })
   }
-
-  const group = await prisma.group.update({
-    where: { id: params.id },
-    data: { ...(name && { name }) },
-    include: { members: { include: { student: { select: { id: true, name: true, points: true } } } } },
-  })
-  return NextResponse.json(group)
 }
 
 export async function DELETE(_: Request, { params }: { params: { id: string } }) {
-  await prisma.group.delete({ where: { id: params.id } })
-  return NextResponse.json({ ok: true })
+  try {
+    await GroupService.deleteGroup(params.id)
+    return NextResponse.json({ ok: true })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 }

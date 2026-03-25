@@ -1,21 +1,21 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { CourseService } from '@/server/services/CourseService'
 
 export async function GET() {
-  const courses = await prisma.course.findMany({
-    include: { _count: { select: { students: true } } },
-    orderBy: [{ level: 'asc' }, { parallel: 'asc' }],
-  })
-  return NextResponse.json(courses)
+  try {
+    const courses = await CourseService.getAllCourses()
+    return NextResponse.json(courses)
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 }
 
 export async function POST(req: Request) {
-  const { name, level, parallel, plant } = await req.json()
-  if (!name || !level || !parallel) {
-    return NextResponse.json({ error: 'name, level y parallel son requeridos' }, { status: 400 })
+  try {
+    const data = await req.json()
+    const course = await CourseService.createCourse(data)
+    return NextResponse.json(course, { status: 201 })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 400 })
   }
-  const course = await prisma.course.create({
-    data: { name, level, parallel, plant: plant || '' },
-  })
-  return NextResponse.json(course, { status: 201 })
 }

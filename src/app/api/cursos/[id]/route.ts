@@ -1,33 +1,31 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { CourseService } from '@/server/services/CourseService'
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
-  const course = await prisma.course.findUnique({
-    where: { id: params.id },
-    include: {
-      students: { include: { tramos: true }, orderBy: { name: 'asc' } },
-      redemptions: { include: { reward: true }, orderBy: { redeemedAt: 'desc' } },
-      pointLogs: {
-        include: { student: { select: { name: true } }, action: true },
-        orderBy: { createdAt: 'desc' },
-        take: 50,
-      },
-    },
-  })
-  if (!course) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
-  return NextResponse.json(course)
+  try {
+    const course = await CourseService.getCourseById(params.id)
+    if (!course) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
+    return NextResponse.json(course)
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 }
 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
-  const { name, level, parallel, plant, classPoints } = await req.json()
-  const course = await prisma.course.update({
-    where: { id: params.id },
-    data: { name, level, parallel, plant, classPoints },
-  })
-  return NextResponse.json(course)
+  try {
+    const data = await req.json()
+    const course = await CourseService.updateCourse(params.id, data)
+    return NextResponse.json(course)
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 400 })
+  }
 }
 
 export async function DELETE(_: Request, { params }: { params: { id: string } }) {
-  await prisma.course.delete({ where: { id: params.id } })
-  return NextResponse.json({ ok: true })
+  try {
+    await CourseService.deleteCourse(params.id)
+    return NextResponse.json({ ok: true })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 }

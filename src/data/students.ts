@@ -1,0 +1,26 @@
+/** Nóminas por course id. Agregar o quitar nombres aquí para actualizar el seed. */
+export const STUDENTS_BY_COURSE: Record<string, string[]> = {
+  'course-s2a': [
+    'Orihuela Camilo',
+    'Bled Rivero Julieta',
+    'Casso Arce Mikaela Belen',
+    'Cespedes Gonzales Andre',
+    'Cortez Velasco Camila Victoria',
+    'Hurtado Aracena Carlos Augusto',
+    'Jaramillo Sardina Romelia',
+    'Leyton Cornejo Adriana Natalia',
+    'Medina Albino Mario Daniel',
+    'Navarro Canedo André',
+    'Ramirez Pradel Hadasa',
+    'Rios Zambrana Eric Rodolfo',
+    'Rivera Ocampo Isabella',
+    'Ruiz Castillo Elisa',
+    'Sanjines Trigo Ignacio',
+    'Tarraga Flores Leandro',
+    'Vaca Garcia Victoria Elisa',
+    'Vallejo Exeni Pablo Alejandro',
+    'Velasquez Lopez Hugo Fernando',
+  ],
+  // 'course-s2b': [],
+  // 'course-s2c': [],
+}

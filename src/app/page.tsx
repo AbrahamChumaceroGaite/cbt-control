@@ -142,7 +142,7 @@ export default function App() {
       <main className="p-6 mx-auto max-w-[1400px]">
         {tab === 'aula' && <AulaSection course={course} students={students} actions={actions} rewards={rewards} logs={logs} reload={() => loadCourse(currentCourse)} showToast={showToast} />}
         {tab === 'cursos' && <CursosSection courses={courses} reload={loadAll} showToast={showToast} />}
-        {tab === 'estudiantes' && <EstudiantesSection students={students} currentCourse={currentCourse} reload={() => loadCourse(currentCourse)} reloadAll={loadAll} showToast={showToast} rewards={rewards} logs={logs} />}
+        {tab === 'estudiantes' && <EstudiantesSection students={students} currentCourse={currentCourse} reload={() => loadCourse(currentCourse)} reloadAll={loadAll} showToast={showToast} />}
         {tab === 'grupos' && <GruposSection groups={groups} students={students} currentCourse={currentCourse} reload={() => loadCourse(currentCourse)} showToast={showToast} />}
         {tab === 'acciones' && <AccionesSection actions={actions} reload={loadAll} showToast={showToast} />}
         {tab === 'recompensas' && <RecompensasSection rewards={rewards} reload={loadAll} showToast={showToast} />}
@@ -169,14 +169,16 @@ export default function App() {
    ══════════════════════════════════════════════════════════════════ */
 function AulaSection({ course, students, actions, rewards, logs, reload, showToast }: any) {
   const [awardModal, setAwardModal] = useState(false)
-  const [claimModal, setClaimModal] = useState<Reward | null>(null)
+  const [claimModal, setClaimModal] = useState<{ reward: Reward; student?: Student } | null>(null)
   const [awardTarget, setAwardTarget] = useState<'class' | string>('class') // 'class' or studentId
 
   const topStudents = [...students].sort((a: Student, b: Student) => b.points - a.points).slice(0, 5)
   const activeActions = actions.filter((a: Action) => a.isActive)
   
   // Progress Timeline tracking
-  const globalRewards = (rewards || []).filter((r: Reward) => r.isGlobal && r.isActive).sort((a: Reward, b: Reward) => a.pointsRequired - b.pointsRequired)
+  const classRewards = (rewards || []).filter((r: Reward) => r.type === 'class' && r.isActive).sort((a: Reward, b: Reward) => a.pointsRequired - b.pointsRequired)
+  const individualRewards = (rewards || []).filter((r: Reward) => r.type === 'individual' && r.isActive).sort((a: Reward, b: Reward) => a.pointsRequired - b.pointsRequired)
+  const globalRewards = classRewards // class rewards drive the class progress timeline
   const timelineRewards = [
     { id: 'start', name: 'Inicio de Curso', pointsRequired: 0, icon: '🚀', isGlobal: true, isActive: true } as Reward,
     ...globalRewards
@@ -201,12 +203,16 @@ function AulaSection({ course, students, actions, rewards, logs, reload, showToa
 
   const claimReward = async () => {
     if (!claimModal) return
+    const { reward, student: claimStudent } = claimModal
+    const body = claimStudent
+      ? { courseId: course.id, studentId: claimStudent.id, points: 0, reason: `🎁 Canjeado: ${reward.name}` }
+      : { courseId: course.id, points: 0, reason: `🎁 Canjeado: ${reward.name}` }
     const res = await fetch('/api/puntos', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ courseId: course.id, points: 0, reason: `🎁 Canjeado: ${claimModal.name}` }),
+      body: JSON.stringify(body),
     })
     if (res.ok) {
-      showToast(`¡Se ha reclamado: ${claimModal.name}!`)
+      showToast(`¡Se ha reclamado: ${reward.name}!`)
       setClaimModal(null)
       reload()
     }
@@ -251,7 +257,9 @@ function AulaSection({ course, students, actions, rewards, logs, reload, showToa
             {timelineRewards.map((r, i) => {
                const isReached = currentPts >= r.pointsRequired
                const isNext = nextReward?.id === r.id
-               
+               const isAlreadyClaimed = logs.some((l: Log) => l.reason === `🎁 Canjeado: ${r.name}`)
+               const canClaim = isReached && r.id !== 'start' && !isAlreadyClaimed
+
                const nextR = timelineRewards[i+1]
                let segmentFill = 0
                if (nextR) {
@@ -265,27 +273,36 @@ function AulaSection({ course, students, actions, rewards, logs, reload, showToa
                   <div key={r.id} className="relative flex items-center">
                      {/* Node */}
                      <div className="relative flex flex-col items-center z-10 w-28 sm:w-36">
-                        <div className={cn("w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border-4 shadow-xl transition-all relative z-10", 
-                           isReached ? "bg-amber-400 border-amber-200 text-amber-900 shadow-[0_0_20px_rgba(251,191,36,0.5)] scale-110" : 
-                           isNext ? "bg-zinc-900 border-emerald-400 text-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.5)] ring-4 ring-emerald-500/20 animate-pulse scale-110" : 
+                        <div
+                          onClick={() => canClaim && setClaimModal({ reward: r })}
+                          className={cn("w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border-4 shadow-xl transition-all relative z-10",
+                           canClaim ? "bg-amber-400 border-amber-200 text-amber-900 shadow-[0_0_20px_rgba(251,191,36,0.5)] scale-110 cursor-pointer hover:scale-125" :
+                           isAlreadyClaimed ? "bg-zinc-800 border-zinc-600 text-zinc-400 opacity-80" :
+                           isNext ? "bg-zinc-900 border-emerald-400 text-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.5)] ring-4 ring-emerald-500/20 animate-pulse scale-110" :
                            "bg-zinc-900 border-zinc-800 text-zinc-600"
                         )}>
-                           <span className={cn("text-xl sm:text-3xl drop-shadow-sm", !isReached && !isNext && "opacity-50 grayscale")}>{r.icon}</span>
+                           {isAlreadyClaimed ? <Check size={22} className="text-zinc-500" /> : <span className={cn("text-xl sm:text-3xl drop-shadow-sm", !isReached && !isNext && "opacity-50 grayscale")}>{r.icon}</span>}
                         </div>
-                        
+
                         {/* Label */}
                         <div className="absolute top-16 sm:top-20 flex flex-col items-center w-full text-center px-1">
-                           <span className={cn("text-[10px] sm:text-xs font-bold leading-tight mb-1", isReached ? "text-amber-400" : isNext ? "text-emerald-400" : "text-zinc-500")}>
+                           <span className={cn("text-[10px] sm:text-xs font-bold leading-tight mb-1",
+                             canClaim ? "text-amber-400" : isAlreadyClaimed ? "text-zinc-600 line-through" : isNext ? "text-emerald-400" : "text-zinc-500"
+                           )}>
                              {r.name}
                            </span>
-                           <span className="text-[9px] sm:text-[10px] text-zinc-500 font-mono bg-zinc-950/80 px-2 py-0.5 rounded-full border border-zinc-800/80 tracking-widest">{r.pointsRequired} pts</span>
+                           {canClaim ? (
+                             <span className="text-[10px] text-amber-900 font-bold bg-amber-400 px-2 py-0.5 rounded-full uppercase tracking-wider animate-bounce mt-0.5 cursor-pointer" onClick={() => setClaimModal({ reward: r })}>Canjear</span>
+                           ) : (
+                             <span className="text-[9px] sm:text-[10px] text-zinc-500 font-mono bg-zinc-950/80 px-2 py-0.5 rounded-full border border-zinc-800/80 tracking-widest">{r.pointsRequired} pts</span>
+                           )}
                         </div>
                      </div>
-                     
+
                      {/* Connecting Line */}
                      {i < timelineRewards.length - 1 && (
                        <div className="w-16 sm:w-24 h-3 sm:h-4 bg-zinc-950 rounded-full shadow-inner border border-zinc-900 relative -mx-4 z-0 overflow-hidden">
-                          <div 
+                          <div
                             className="absolute left-0 top-0 bottom-0 rounded-full bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-400 transition-all duration-1000 ease-out"
                             style={{ width: `${segmentFill > 0 ? Math.max(5, segmentFill) : 0}%` }}
                           >
@@ -300,52 +317,72 @@ function AulaSection({ course, students, actions, rewards, logs, reload, showToa
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* ── Top Students ── */}
-        <div className="card-base p-6 flex flex-col">
-          <h3 className="panel-title flex items-center gap-2"><Users size={18} className="text-indigo-400"/> Top Estudiantes</h3>
-          <p className="panel-subtitle">Clasificación basada en puntos individuales.</p>
-          
-          <div className="flex-1 space-y-1 mt-2">
-            {topStudents.length === 0 && <div className="text-zinc-500 text-sm text-center py-8">No hay datos de estudiantes.</div>}
-            {topStudents.map((s: Student, i: number) => (
-              <div key={s.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-900/50 transition-colors border border-transparent hover:border-zinc-800/50">
-                <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold", i === 0 ? "bg-amber-500/20 text-amber-500 border border-amber-500/30" : i === 1 ? "bg-zinc-300/20 text-zinc-300 border border-zinc-300/30" : i === 2 ? "bg-amber-700/20 text-amber-600 border border-amber-700/30" : "text-zinc-500")}>
-                  {i + 1}
+      {/* ── Individual Reward Timeline + History ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Student Cards with individual timeline */}
+        <div className="lg:col-span-2 card-base p-6">
+          <h3 className="panel-title flex items-center gap-2 mb-1"><Users size={18} className="text-indigo-400"/> Ranking de Estudiantes</h3>
+          <p className="panel-subtitle mb-4">Puntos individuales · Haz clic en un premio dorado para canjearlo.</p>
+          <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+            {students.sort((a: Student, b: Student) => b.points - a.points).map((s: Student, i: number) => {
+              const indRewards = individualRewards.sort((a: Reward, b: Reward) => a.pointsRequired - b.pointsRequired)
+              const nextInd = indRewards.find((r: Reward) => r.pointsRequired > s.points)
+              return (
+                <div key={s.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-zinc-900/40 border border-transparent hover:border-zinc-800/50 transition-all group">
+                  <div className={cn("w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0",
+                    i === 0 ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" :
+                    i === 1 ? "bg-zinc-300/20 text-zinc-300 border border-zinc-300/30" :
+                    i === 2 ? "bg-amber-700/20 text-amber-600 border border-amber-700/30" : "text-zinc-600 border border-zinc-800"
+                  )}>{i + 1}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-zinc-100 truncate">{s.name}</p>
+                    {nextInd && <p className="text-[10px] text-zinc-500 truncate">Próximo: {nextInd.icon} {nextInd.name} ({nextInd.pointsRequired} pts)</p>}
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {indRewards.slice(0, 6).map((r: Reward) => {
+                      const reached = s.points >= r.pointsRequired
+                      const isNextR = nextInd?.id === r.id
+                      return (
+                        <button
+                          key={r.id}
+                          title={`${r.name} (${r.pointsRequired} pts)`}
+                          onClick={() => reached && setClaimModal({ reward: r, student: s })}
+                          className={cn("w-7 h-7 rounded-full flex items-center justify-center text-sm border transition-all",
+                            reached ? "bg-amber-400 border-amber-200 text-amber-900 shadow-[0_0_10px_rgba(251,191,36,0.4)] hover:scale-125 cursor-pointer" :
+                            isNextR ? "bg-zinc-900 border-emerald-500/50 text-zinc-500 animate-pulse" :
+                            "bg-zinc-900 border-zinc-800 text-zinc-600 opacity-40 cursor-default grayscale"
+                          )}
+                        >
+                          {r.icon}
+                        </button>
+                      )
+                    })}
+                    <div className="ml-2 text-lg font-black text-white whitespace-nowrap">{s.points}<span className="text-xs font-medium text-zinc-500 ml-0.5">pts</span></div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-zinc-100">{s.name}</p>
-                </div>
-                <div className="text-lg font-bold text-white tracking-tight">{s.points} pts</div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 
         {/* ── Latest Timeline ── */}
         <div className="card-base p-6 flex flex-col">
-          <h3 className="panel-title flex items-center gap-2"><Network size={18} className="text-rose-400"/> Historial Reciente</h3>
-          <p className="panel-subtitle">Últimas acciones registradas en el curso.</p>
-          
-          <div className="flex-1 space-y-3 mt-2 pr-2" style={{ maxHeight: 'calc(100% - 4rem)', overflowY: 'auto' }}>
+          <h3 className="panel-title flex items-center gap-2"><TrendingUp size={18} className="text-rose-400"/> Historial Reciente</h3>
+          <p className="panel-subtitle">Últimas acciones del curso.</p>
+          <div className="flex-1 space-y-2 mt-3 overflow-y-auto max-h-[360px] pr-1">
             {logs.length === 0 && <div className="text-zinc-500 text-sm text-center py-8">No se han registrado acciones.</div>}
             {logs.slice(0, 15).map((l: Log) => {
-               const stName = l.student?.name?.split(' ')[0]
-               const colorCat = ACTION_COLORS[l.action?.category || 'blue']
-               return (
-                 <div key={l.id} className="flex items-start gap-3 p-2 group">
-                   <div className="mt-1 flex-shrink-0">
-                     <div className={cn("w-2 h-2 rounded-full", l.points > 0 ? "bg-emerald-500" : "bg-rose-500", "ring-4 ring-zinc-950 group-hover:ring-zinc-900 transition-colors")} />
-                   </div>
-                   <div className="flex-1 min-w-0">
-                     <p className="text-sm text-zinc-300 break-words">
-                       {stName ? <span className="font-semibold text-white">{stName}</span> : <span className="font-semibold text-blue-300">Clase entera</span>}
-                       {" recibió "} <span className={cn("font-medium", l.points > 0 ? "text-emerald-400" : "text-rose-400")}>{l.points > 0 ? '+' : ''}{l.points} pts</span>
-                       <span className="text-zinc-500"> por </span> {l.reason}
-                     </p>
-                   </div>
-                 </div>
-               )
+              const stName = l.student?.name?.split(' ')[0]
+              return (
+                <div key={l.id} className="flex items-start gap-3 p-2 group">
+                  <div className="mt-1.5 flex-shrink-0"><div className={cn("w-2 h-2 rounded-full ring-4 ring-zinc-950 group-hover:ring-zinc-900 transition-colors", l.points > 0 ? "bg-emerald-500" : l.points === 0 ? "bg-blue-500" : "bg-rose-500")} /></div>
+                  <p className="text-xs text-zinc-300 break-words flex-1">
+                    {stName ? <span className="font-semibold text-white">{stName}</span> : <span className="font-semibold text-blue-300">Clase</span>}
+                    {" "}<span className={cn("font-medium", l.points > 0 ? "text-emerald-400" : l.points === 0 ? "text-blue-400" : "text-rose-400")}>{l.points > 0 ? '+' : ''}{l.points} pts</span>
+                    <span className="text-zinc-500"> por </span>{l.reason}
+                  </p>
+                </div>
+              )
             })}
           </div>
         </div>
@@ -387,22 +424,26 @@ function AulaSection({ course, students, actions, rewards, logs, reload, showToa
       </Modal>
 
       {/* ── Claim Reward Modal ── */}
-      <Modal open={!!claimModal} onClose={() => setClaimModal(null)} title="Canjear Recompensa Global">
+      <Modal open={!!claimModal} onClose={() => setClaimModal(null)} title={claimModal?.student ? `Premio Individual` : `Premio Grupal`}>
         <div className="text-center py-6 space-y-6">
           <div className="w-24 h-24 rounded-full bg-amber-400 mx-auto flex items-center justify-center shadow-[0_0_30px_rgba(251,191,36,0.5)] border-4 border-amber-200 animate-pulse">
-             <span className="text-5xl">{claimModal?.icon}</span>
+             <span className="text-5xl">{claimModal?.reward.icon}</span>
           </div>
           <div>
-            <h3 className="text-2xl font-black text-white">{claimModal?.name}</h3>
-            <p className="text-zinc-400 mt-2">Nivel de {claimModal?.pointsRequired} pts alcanzado</p>
+            <h3 className="text-2xl font-black text-white">{claimModal?.reward.name}</h3>
+            {claimModal?.student && <p className="text-indigo-300 font-semibold mt-1">Para: {claimModal.student.name}</p>}
+            <p className="text-zinc-400 mt-1">{claimModal?.student ? `${claimModal.student.points} pts personales` : `Nivel de ${claimModal?.reward.pointsRequired} pts alcanzado`}</p>
           </div>
-          <div className="bg-emerald-900/20 text-emerald-400 border border-emerald-500/20 p-4 rounded-xl text-sm font-medium text-balance">
-            Esta acción registrará que la clase entera ha reclamado este premio en el historial oficial del aula. <br/><br/>
-            <strong>Nota:</strong> Los puntos de la clase no se descontarán (Ruta de Progreso Acumulativa).
+          {claimModal?.reward.description && <p className="text-zinc-400 text-sm italic">{claimModal.reward.description}</p>}
+          <div className="bg-emerald-900/20 text-emerald-400 border border-emerald-500/20 p-4 rounded-xl text-sm font-medium">
+            {claimModal?.student 
+              ? `Se registrará que ${claimModal.student.name.split(' ')[0]} canjeó este premio. Sus puntos individuales NO se descontarán.`
+              : `Se registrará que la clase entera canjeó este premio. Los puntos de clase NO se descontarán.`
+            }
           </div>
           <div className="flex gap-3 justify-center pt-4">
             <button className="btn btn-secondary px-6" onClick={() => setClaimModal(null)}>Cancelar</button>
-            <button className="btn bg-amber-500 hover:bg-amber-400 text-amber-950 px-8 disabled:opacity-50" onClick={claimReward}>
+            <button className="btn bg-amber-500 hover:bg-amber-400 text-amber-950 px-8" onClick={claimReward}>
               ¡Confirmar Canje!
             </button>
           </div>
@@ -485,15 +526,12 @@ function CursosSection({ courses, reload, showToast }: { courses: Course[]; relo
 /* ══════════════════════════════════════════════════════════════════
    ESTUDIANTES SECTION + EXCEL IMPORT
    ══════════════════════════════════════════════════════════════════ */
-function EstudiantesSection({ students, currentCourse, reload, reloadAll, showToast, rewards, logs }: any) {
+function EstudiantesSection({ students, currentCourse, reload, reloadAll, showToast }: any) {
   const [modal, setModal] = useState(false)
-  const [rewardsModal, setRewardsModal] = useState<Student | null>(null)
   const [editing, setEditing] = useState<Student | null>(null)
   const [form, setForm] = useState({ name: '', code: '', email: '' })
   const [search, setSearch] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const individualRewards = (rewards || []).filter((r: Reward) => !r.isGlobal && r.isActive).sort((a: Reward, b: Reward) => a.pointsRequired - b.pointsRequired)
 
   const openNew = () => { setForm({ name: '', code: '', email: '' }); setEditing(null); setModal(true) }
   const openEdit = (s: Student) => { setForm({ name: s.name, code: s.code, email: s.email || '' }); setEditing(s); setModal(true) }
@@ -510,18 +548,6 @@ function EstudiantesSection({ students, currentCourse, reload, reloadAll, showTo
   const del = async (id: string) => {
     if (!confirm('¿Eliminar estudiante?')) return
     await fetch(`/api/estudiantes/${id}`, { method: 'DELETE' }); showToast('Eliminado'); reload(); reloadAll()
-  }
-
-  const claimIndividualReward = async (student: Student, reward: Reward) => {
-    if (!confirm(`¿Canjear "${reward.name}" para ${student.name}?`)) return
-    const res = await fetch('/api/puntos', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ courseId: currentCourse, studentId: student.id, points: 0, reason: `🎁 Canjeado: ${reward.name}` })
-    })
-    if (res.ok) {
-       showToast(`Premio canjeado para ${student.name}`)
-       reloadAll()
-    }
   }
 
   const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -607,8 +633,7 @@ function EstudiantesSection({ students, currentCourse, reload, reloadAll, showTo
                   <td className="px-6 py-4 text-right">
                      <span className="inline-flex items-center justify-center px-2 py-1 rounded bg-zinc-800 text-zinc-200 font-bold border border-zinc-700">{s.points}</span>
                   </td>
-                  <td className="px-6 py-4 text-right opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    <button className="text-amber-400 hover:text-amber-300 font-medium text-xs mr-4" onClick={() => setRewardsModal(s)}>🎁 Pase de Batalla</button>
+                  <td className="px-6 py-4 text-right opacity-0 group-hover:opacity-100 transition-opacity">
                     <button className="text-blue-400 hover:text-blue-300 font-medium text-xs mr-3" onClick={() => openEdit(s)}>Editar</button>
                     <button className="text-red-400 hover:text-red-300 font-medium text-xs" onClick={() => del(s.id)}>Eliminar</button>
                   </td>
@@ -625,52 +650,12 @@ function EstudiantesSection({ students, currentCourse, reload, reloadAll, showTo
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? 'Editar alumno' : 'Nuevo alumno'}>
         <div className="space-y-3">
           <div><label className="label">Nombre completo</label><input className="input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></div>
-          <div><label className="label">Código / Matrícula</label><input className="input" value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value }))} /></div>
+          <div><label className="label">Código</label><input className="input" value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value }))} /></div>
           <div><label className="label">Correo</label><input className="input" type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} /></div>
         </div>
         <div className="modal-footer mt-6">
           <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
           <button className="btn btn-primary" onClick={save}>{editing ? 'Guardar' : 'Crear'}</button>
-        </div>
-      </Modal>
-
-      <Modal open={!!rewardsModal} onClose={() => setRewardsModal(null)} title={`Pase de Batalla Individual`} lg>
-        <div className="mb-6 flex justify-between items-end border-b border-zinc-800 pb-4">
-           <div>
-              <h3 className="text-xl font-bold text-white">{rewardsModal?.name}</h3>
-              <p className="text-sm text-zinc-400">Recompensas personales acumulativas</p>
-           </div>
-           <div className="text-right">
-              <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">{rewardsModal?.points ?? 0}</span>
-              <span className="text-sm text-zinc-500 font-bold ml-1 uppercase">pts</span>
-           </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-           {individualRewards.map((r: Reward) => {
-              const isClaimed = logs?.some((l: Log) => l.studentId === rewardsModal?.id && (l.reason === `🎁 Canjeado: ${r.name}` || l.reason === `Canjeado: ${r.name}`))
-              const canClaim = (rewardsModal?.points ?? 0) >= r.pointsRequired && !isClaimed
-
-              return (
-                 <div key={r.id} className={cn("p-4 rounded-xl border flex items-center justify-between transition-all", canClaim ? "border-amber-500/50 bg-amber-500/10 shadow-[0_0_15px_rgba(251,191,36,0.1)]" : isClaimed ? "border-emerald-500/30 bg-emerald-500/5 opacity-80" : "border-zinc-800 bg-zinc-900")}>
-                    <div className="flex items-center gap-3">
-                      <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-inner border", canClaim ? "bg-amber-400 text-amber-900 border-amber-200 animate-pulse" : isClaimed ? "bg-emerald-900/50 text-emerald-400 border-emerald-800/50" : "bg-zinc-800 text-zinc-600 border-zinc-700")}>{r.icon}</div>
-                      <div>
-                        <p className={cn("font-bold text-sm leading-tight max-w-[120px]", isClaimed ? "text-emerald-400 line-through" : canClaim ? "text-amber-400" : "text-zinc-300")}>{r.name}</p>
-                        <p className="text-zinc-500 text-[10px] font-mono mt-0.5 tracking-widest">{r.pointsRequired} pts</p>
-                      </div>
-                    </div>
-                    <div>
-                      {isClaimed ? <span className="text-emerald-500 text-[10px] font-bold uppercase flex items-center gap-1"><Check size={14}/> Canjeado</span> : 
-                       canClaim ? <button className="btn bg-amber-500 hover:bg-amber-400 text-amber-950 px-3 py-1.5 rounded-lg text-xs font-bold transition-transform hover:scale-105" onClick={() => claimIndividualReward(rewardsModal!, r)}>Reclamar</button> :
-                       <div className="text-zinc-600 text-[10px] font-mono bg-zinc-950 px-2 py-1 rounded opacity-80 text-center">
-                          Faltan {(r.pointsRequired - (rewardsModal?.points ?? 0))}
-                       </div>
-                      }
-                    </div>
-                 </div>
-              )
-           })}
-           {individualRewards.length === 0 && <div className="col-span-1 sm:col-span-2 border border-dashed border-zinc-700 p-8 text-center rounded-xl"><p className="text-zinc-500">No hay recompensas individuales configuradas.</p></div>}
         </div>
       </Modal>
     </div>

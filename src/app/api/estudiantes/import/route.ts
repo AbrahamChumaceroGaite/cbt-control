@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { StudentService } from '@/server/services/StudentService'
 
 export async function POST(req: Request) {
   try {
@@ -8,14 +8,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Faltan datos o lista vacía' }, { status: 400 })
     }
 
-    const result = await prisma.student.createMany({
-      data: students.map((s: any) => ({
-        courseId,
-        name: s.name,
-        email: s.email,
-        code: s.code || '',
-      })),
-    })
+    const result = await StudentService.createManyStudents(courseId, students)
 
     return NextResponse.json({ ok: true, count: result.count }, { status: 201 })
   } catch (error: any) {
