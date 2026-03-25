@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/session'
 import { StudentService } from '@/server/services/StudentService'
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
+  const authError = await requireAdmin()
+  if (authError) return authError
   try {
     const student = await StudentService.getStudentById(params.id)
     if (!student) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
@@ -12,6 +15,8 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 }
 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
+  const authError = await requireAdmin()
+  if (authError) return authError
   try {
     const data = await req.json()
     const student = await StudentService.updateStudent(params.id, data)
@@ -22,6 +27,8 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 }
 
 export async function DELETE(_: Request, { params }: { params: { id: string } }) {
+  const authError = await requireAdmin()
+  if (authError) return authError
   try {
     await StudentService.deleteStudent(params.id)
     return NextResponse.json({ ok: true })

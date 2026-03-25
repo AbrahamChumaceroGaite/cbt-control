@@ -41,13 +41,13 @@ export class StudentService {
       include: {
         tramos: { orderBy: { awardedAt: 'asc' } },
         course: true,
-        pointLogs: { include: { action: true }, orderBy: { createdAt: 'desc' }, take: 30 },
+        coinLogs: { include: { action: true }, orderBy: { createdAt: 'desc' }, take: 30 }, // renamed from pointLogs
         individualRedemptions: { include: { reward: true }, orderBy: { redeemedAt: 'desc' } },
       },
     })
   }
 
-  static async updateStudent(id: string, data: { name?: string; code?: string; points?: number; email?: string; tramos?: string[] }) {
+  static async updateStudent(id: string, data: { name?: string; code?: string; coins?: number; email?: string; tramos?: string[] }) {
     if (data.tramos && Array.isArray(data.tramos)) {
       await prisma.studentTramo.deleteMany({ where: { studentId: id } })
       if (data.tramos.length > 0) {
@@ -63,7 +63,7 @@ export class StudentService {
         ...(data.name && { name: data.name }),
         ...(data.code !== undefined && { code: data.code }),
         ...(data.email !== undefined && { email: data.email }),
-        ...(data.points !== undefined && { points: data.points })
+        ...(data.coins !== undefined && { coins: data.coins })
       },
       include: { tramos: true },
     })

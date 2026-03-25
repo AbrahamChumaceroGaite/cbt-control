@@ -4,7 +4,7 @@ export class GroupService {
   static async getGroupsByCourse(courseId?: string | null) {
     return await prisma.group.findMany({
       where: courseId ? { courseId } : undefined,
-      include: { members: { include: { student: { select: { id: true, name: true, points: true } } } } },
+      include: { members: { include: { student: { select: { id: true, name: true, coins: true } } } } },
       orderBy: { name: 'asc' },
     })
   }
@@ -26,7 +26,7 @@ export class GroupService {
   static async getGroupById(id: string) {
     return await prisma.group.findUnique({
       where: { id },
-      include: { members: { include: { student: { select: { id: true, name: true, points: true } } } } },
+      include: { members: { include: { student: { select: { id: true, name: true, coins: true } } } } },
     })
   }
 
@@ -43,7 +43,7 @@ export class GroupService {
     return await prisma.group.update({
       where: { id },
       data: { ...(data.name && { name: data.name }) },
-      include: { members: { include: { student: { select: { id: true, name: true, points: true } } } } },
+      include: { members: { include: { student: { select: { id: true, name: true, coins: true } } } } },
     })
   }
 

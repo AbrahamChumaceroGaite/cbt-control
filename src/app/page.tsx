@@ -1,19 +1,19 @@
 'use client'
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { TRAMOS, ACTION_COLORS } from '@/lib/types'
+import { ACTION_COLORS } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import { Home, BookType, Users, Network, Zap, Gift, Plus, Upload, X, Check, Search, TrendingUp, Trophy, ArrowRightCircle } from 'lucide-react'
+import { Home, BookType, Users, Network, Zap, Gift, Plus, Upload, X, Check, Search, TrendingUp, Trophy, ArrowRightCircle, UserCog, Bell, LogOut } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
 /* ── Types ── */
-type Course = { id: string; name: string; plant: string; level: string; parallel: string; classPoints: number; _count?: { students: number } }
-type Student = { id: string; courseId: string; name: string; code: string; email: string | null; points: number; tramos: { tramo: string }[]; course?: { name: string } }
-type Action = { id: string; name: string; points: number; category: string; affectsClass: boolean; affectsStudent: boolean; isActive: boolean }
-type Reward = { id: string; name: string; description: string; icon: string; pointsRequired: number; type: string; isGlobal: boolean; isActive: boolean }
-type Log = { id: string; points: number; reason: string; createdAt: string; student?: { name: string } | null; action?: { name: string, category: string } | null }
-type Group = { id: string; name: string; courseId: string; members: { id: string; studentId: string; student: { id: string; name: string; points: number } }[] }
+type Course = { id: string; name: string; level: string; parallel: string; classCoins: number; _count?: { students: number } }
+type Student = { id: string; courseId: string; name: string; code: string; email: string | null; coins: number; tramos: { tramo: string }[]; course?: { name: string } }
+type Action = { id: string; name: string; coins: number; category: string; affectsClass: boolean; affectsStudent: boolean; isActive: boolean }
+type Reward = { id: string; name: string; description: string; icon: string; coinsRequired: number; type: string; isGlobal: boolean; isActive: boolean }
+type Log = { id: string; coins: number; reason: string; createdAt: string; student?: { name: string } | null; action?: { name: string, category: string } | null }
+type Group = { id: string; name: string; courseId: string; members: { id: string; studentId: string; student: { id: string; name: string; coins: number } }[] }
 
-type Tab = 'aula' | 'cursos' | 'estudiantes' | 'grupos' | 'acciones' | 'recompensas'
+type Tab = 'aula' | 'cursos' | 'estudiantes' | 'grupos' | 'acciones' | 'recompensas' | 'solicitudes' | 'usuarios'
 
 const TABS: { id: Tab; label: string; icon: any }[] = [
   { id: 'aula', label: 'Dashboard', icon: Home },
@@ -22,12 +22,14 @@ const TABS: { id: Tab; label: string; icon: any }[] = [
   { id: 'grupos', label: 'Grupos', icon: Network },
   { id: 'acciones', label: 'Acciones', icon: Zap },
   { id: 'recompensas', label: 'Premios', icon: Gift },
+  { id: 'solicitudes', label: 'Solicitudes', icon: Bell },
+  { id: 'usuarios', label: 'Usuarios', icon: UserCog },
 ]
 
 const CATEGORIES = [
   { value: 'green',  label: 'Verde — positivo',     bg: '#166534', fg: '#bbf7d0' },
   { value: 'blue',   label: 'Azul — colaboración',  bg: '#1e3a8a', fg: '#bfdbfe' },
-  { value: 'purple', label: 'Morado — tramos',      bg: '#4c1d95', fg: '#ddd6fe' },
+  { value: 'purple', label: 'Morado — maestría',    bg: '#4c1d95', fg: '#ddd6fe' },
   { value: 'amber',  label: 'Ámbar — entregas',     bg: '#78350f', fg: '#fef3c7' },
   { value: 'mag',    label: 'Magenta — especial',   bg: '#831843', fg: '#fbcfe8' },
   { value: 'red',    label: 'Rojo — negativo',      bg: '#7f1d1d', fg: '#fecaca' },
@@ -76,21 +78,33 @@ export default function App() {
   const [groups, setGroups] = useState<Group[]>([])
   const [logs, setLogs] = useState<Log[]>([])
   const [currentCourse, setCurrentCourse] = useState('')
+  const [pendingSolicitudes, setPendingSolicitudes] = useState(0)
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
+
+  async function logout() {
+    await fetch('/api/auth/logout', { method: 'POST' })
+    window.location.href = '/login'
+  }
+
+  useEffect(() => {
+    fetch('/api/solicitudes').then(r => r.json()).then(data => {
+      if (Array.isArray(data)) setPendingSolicitudes(data.filter((s: any) => s.status === 'pending').length)
+    }).catch(() => {})
+  }, [tab])
   
   const showToast = useCallback((msg: string, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast(null), 3000) }, [])
 
   /* ── Data loading ── */
   const loadAll = useCallback(async () => {
     const [c, a, r] = await Promise.all([
-      fetch('/api/cursos').then(r => r.json()),
-      fetch('/api/acciones').then(r => r.json()),
-      fetch('/api/recompensas').then(r => r.json()),
+      fetch('/api/cursos').then(r => r.json()).catch(() => []),
+      fetch('/api/acciones').then(r => r.json()).catch(() => []),
+      fetch('/api/recompensas').then(r => r.json()).catch(() => []),
     ])
-    setCourses(c)
-    setActions(a)
-    setRewards(r)
-    if (c.length && !currentCourse) {
+    setCourses(Array.isArray(c) ? c : [])
+    setActions(Array.isArray(a) ? a : [])
+    setRewards(Array.isArray(r) ? r : [])
+    if (Array.isArray(c) && c.length && !currentCourse) {
       setCurrentCourse(c[0].id)
       loadCourse(c[0].id)
     }
@@ -98,13 +112,13 @@ export default function App() {
 
   const loadCourse = async (id: string) => {
     const [s, detail, g] = await Promise.all([
-      fetch(`/api/estudiantes?courseId=${id}`).then(r => r.json()),
-      fetch(`/api/cursos/${id}`).then(r => r.json()),
-      fetch(`/api/grupos?courseId=${id}`).then(r => r.json()),
+      fetch(`/api/estudiantes?courseId=${id}`).then(r => r.json()).catch(() => []),
+      fetch(`/api/cursos/${id}`).then(r => r.json()).catch(() => ({})),
+      fetch(`/api/grupos?courseId=${id}`).then(r => r.json()).catch(() => []),
     ])
-    setStudents(s)
-    setLogs(detail.pointLogs || [])
-    setGroups(g)
+    setStudents(Array.isArray(s) ? s : [])
+    setLogs(Array.isArray(detail?.coinLogs) ? detail.coinLogs : [])
+    setGroups(Array.isArray(g) ? g : [])
   }
 
   useEffect(() => { loadAll() }, [loadAll])
@@ -125,17 +139,19 @@ export default function App() {
           </h1>
         </div>
         
-        {courses.length > 0 && (
-          <div className="flex items-center gap-2">
-            <select 
+        <div className="flex items-center gap-2">
+          {courses.length > 0 && (
+            <select
               className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-zinc-700"
               value={currentCourse} onChange={(e) => setCurrentCourse(e.target.value)}
             >
               {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
-            {course?.plant && <div className="text-xs text-emerald-400 bg-emerald-400/10 px-2 py-1.5 rounded-md border border-emerald-400/20 hidden sm:block">🌱 {course.plant}</div>}
-          </div>
-        )}
+          )}
+          <button onClick={logout} title="Cerrar sesión" className="p-2 rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors">
+            <LogOut size={16} />
+          </button>
+        </div>
       </header>
 
       {/* ── Main Content Area ── */}
@@ -146,6 +162,8 @@ export default function App() {
         {tab === 'grupos' && <GruposSection groups={groups} students={students} currentCourse={currentCourse} reload={() => loadCourse(currentCourse)} showToast={showToast} />}
         {tab === 'acciones' && <AccionesSection actions={actions} reload={loadAll} showToast={showToast} />}
         {tab === 'recompensas' && <RecompensasSection rewards={rewards} reload={loadAll} showToast={showToast} />}
+        {tab === 'solicitudes' && <SolicitudesSection showToast={showToast} onCountChange={setPendingSolicitudes} />}
+        {tab === 'usuarios' && <UsuariosSection courses={courses} showToast={showToast} />}
       </main>
 
       {/* ── Floating Bottom Navigation ── */}
@@ -154,7 +172,14 @@ export default function App() {
           const Icon = t.icon
           return (
             <button key={t.id} onClick={() => setTab(t.id)} className={cn("nav-item", tab === t.id && "active")}>
-              <Icon className="nav-icon" strokeWidth={tab === t.id ? 2.5 : 2} />
+              <div className="relative inline-flex">
+                <Icon className="nav-icon" strokeWidth={tab === t.id ? 2.5 : 2} />
+                {t.id === 'solicitudes' && pendingSolicitudes > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-amber-500 text-black text-[9px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">
+                    {pendingSolicitudes > 9 ? '9+' : pendingSolicitudes}
+                  </span>
+                )}
+              </div>
               <span className="nav-label">{t.label}</span>
             </button>
           )
@@ -172,30 +197,29 @@ function AulaSection({ course, students, actions, rewards, logs, reload, showToa
   const [claimModal, setClaimModal] = useState<{ reward: Reward; student?: Student } | null>(null)
   const [awardTarget, setAwardTarget] = useState<'class' | string>('class') // 'class' or studentId
 
-  const topStudents = [...students].sort((a: Student, b: Student) => b.points - a.points).slice(0, 5)
-  const activeActions = actions.filter((a: Action) => a.isActive)
-  
+  const topStudents = [...(students || [])].sort((a: Student, b: Student) => b.coins - a.coins).slice(0, 5)
+  const activeActions = (actions || []).filter((a: Action) => a.isActive)
+
   // Progress Timeline tracking
-  const classRewards = (rewards || []).filter((r: Reward) => r.type === 'class' && r.isActive).sort((a: Reward, b: Reward) => a.pointsRequired - b.pointsRequired)
-  const individualRewards = (rewards || []).filter((r: Reward) => r.type === 'individual' && r.isActive).sort((a: Reward, b: Reward) => a.pointsRequired - b.pointsRequired)
+  const classRewards = (rewards || []).filter((r: Reward) => r.type === 'class' && r.isActive).sort((a: Reward, b: Reward) => a.coinsRequired - b.coinsRequired)
+  const individualRewards = (rewards || []).filter((r: Reward) => r.type === 'individual' && r.isActive).sort((a: Reward, b: Reward) => a.coinsRequired - b.coinsRequired)
   const globalRewards = classRewards // class rewards drive the class progress timeline
   const timelineRewards = [
-    { id: 'start', name: 'Inicio de Curso', pointsRequired: 0, icon: '🚀', isGlobal: true, isActive: true } as Reward,
+    { id: 'start', name: 'Inicio de Curso', coinsRequired: 0, icon: '🚀', isGlobal: true, isActive: true } as Reward,
     ...globalRewards
   ]
-  const currentPts = course?.classPoints ?? 0
-  const maxRewardPoints = globalRewards.length ? globalRewards[globalRewards.length - 1].pointsRequired : 1000
-  const nextReward = globalRewards.find((r: Reward) => r.pointsRequired > currentPts)
-  const maxGoal = Math.max(maxRewardPoints, currentPts + (currentPts >= maxRewardPoints ? 50 : 0)) // No limit
+  const currentCoins = course?.classCoins ?? 0
+  const maxRewardCoins = globalRewards.length ? globalRewards[globalRewards.length - 1].coinsRequired : 1000
+  const nextReward = globalRewards.find((r: Reward) => r.coinsRequired > currentCoins)
   
-  const awardPoints = async (pts: number, reason: string, actionId?: string) => {
+  const awardCoins = async (amount: number, reason: string, actionId?: string) => {
     const studentId = awardTarget === 'class' ? undefined : awardTarget
     const res = await fetch('/api/puntos', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ courseId: course.id, studentId, actionId, points: pts, reason }),
+      body: JSON.stringify({ courseId: course.id, studentId, actionId, coins: amount, reason }),
     })
     if (res.ok) {
-      showToast(`${pts > 0 ? '+' : ''}${pts} pts — ${reason}`, pts > 0)
+      showToast(`${amount > 0 ? '+' : ''}${amount} coins — ${reason}`, amount > 0)
       setAwardModal(false)
       reload()
     }
@@ -228,7 +252,7 @@ function AulaSection({ course, students, actions, rewards, logs, reload, showToa
         </div>
         <button className="btn btn-action-primary px-5 py-2.5 rounded-full shadow-lg shadow-blue-900/20" onClick={() => setAwardModal(true)}>
           <Plus size={16} className="mr-2" />
-          Otorgar Puntos
+          Otorgar Coins
         </button>
       </div>
 
@@ -242,20 +266,20 @@ function AulaSection({ course, students, actions, rewards, logs, reload, showToa
               <Trophy size={20} className="text-amber-500" /> Gran Ruta de Recompensas
             </h3>
             <p className="text-sm font-medium mt-1 text-zinc-300">
-              {nextReward ? <span>Próximo desbloqueo: <strong className="text-emerald-400">{nextReward.icon} {nextReward.name}</strong> a los {nextReward.pointsRequired} pts</span> : <strong className="text-emerald-400">¡Han superado todas las metas globales configuradas!</strong>}
+              {nextReward ? <span>Próximo desbloqueo: <strong className="text-emerald-400">{nextReward.icon} {nextReward.name}</strong> a los {nextReward.coinsRequired} coins</span> : <strong className="text-emerald-400">¡Han superado todas las metas globales configuradas!</strong>}
             </p>
           </div>
           <div className="text-right whitespace-nowrap bg-zinc-950 border border-zinc-800 px-4 py-2 rounded-xl shadow-inner">
-            <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 tracking-tight">{currentPts}</span>
-            <span className="text-zinc-500 font-bold ml-2 text-sm uppercase tracking-wider">pts totales</span>
+            <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 tracking-tight">{currentCoins}</span>
+            <span className="text-zinc-500 font-bold ml-2 text-sm uppercase tracking-wider">coins</span>
           </div>
         </div>
 
-        {/* Scrollable Stepper Timeline */}
-        <div className="relative w-full overflow-x-auto pb-4 pt-10 mt-2 -mx-2 px-2 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
-          <div className="flex items-center min-w-max pb-16">
+        {/* Scrollable Stepper Timeline — horizontal only */}
+        <div className="relative w-full overflow-x-auto overflow-y-hidden pb-4 pt-10 mt-2 -mx-2 px-2 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+          <div className="flex items-center min-w-max pb-20">
             {timelineRewards.map((r, i) => {
-               const isReached = currentPts >= r.pointsRequired
+               const isReached = currentCoins >= r.coinsRequired
                const isNext = nextReward?.id === r.id
                const isAlreadyClaimed = logs.some((l: Log) => l.reason === `🎁 Canjeado: ${r.name}`)
                const canClaim = isReached && r.id !== 'start' && !isAlreadyClaimed
@@ -263,9 +287,9 @@ function AulaSection({ course, students, actions, rewards, logs, reload, showToa
                const nextR = timelineRewards[i+1]
                let segmentFill = 0
                if (nextR) {
-                  if (currentPts >= nextR.pointsRequired) segmentFill = 100
-                  else if (currentPts > r.pointsRequired) {
-                     segmentFill = ((currentPts - r.pointsRequired) / (nextR.pointsRequired - r.pointsRequired)) * 100
+                  if (currentCoins >= nextR.coinsRequired) segmentFill = 100
+                  else if (currentCoins > r.coinsRequired) {
+                     segmentFill = ((currentCoins - r.coinsRequired) / (nextR.coinsRequired - r.coinsRequired)) * 100
                   }
                }
 
@@ -294,7 +318,7 @@ function AulaSection({ course, students, actions, rewards, logs, reload, showToa
                            {canClaim ? (
                              <span className="text-[10px] text-amber-900 font-bold bg-amber-400 px-2 py-0.5 rounded-full uppercase tracking-wider animate-bounce mt-0.5 cursor-pointer" onClick={() => setClaimModal({ reward: r })}>Canjear</span>
                            ) : (
-                             <span className="text-[9px] sm:text-[10px] text-zinc-500 font-mono bg-zinc-950/80 px-2 py-0.5 rounded-full border border-zinc-800/80 tracking-widest">{r.pointsRequired} pts</span>
+                             <span className="text-[9px] sm:text-[10px] text-zinc-500 font-mono bg-zinc-950/80 px-2 py-0.5 rounded-full border border-zinc-800/80 tracking-widest">{r.coinsRequired} coins</span>
                            )}
                         </div>
                      </div>
@@ -322,11 +346,11 @@ function AulaSection({ course, students, actions, rewards, logs, reload, showToa
         {/* Student Cards with individual timeline */}
         <div className="lg:col-span-2 card-base p-6">
           <h3 className="panel-title flex items-center gap-2 mb-1"><Users size={18} className="text-indigo-400"/> Ranking de Estudiantes</h3>
-          <p className="panel-subtitle mb-4">Puntos individuales · Haz clic en un premio dorado para canjearlo.</p>
+          <p className="panel-subtitle mb-4">Coins individuales · Haz clic en un premio dorado para canjearlo.</p>
           <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
-            {students.sort((a: Student, b: Student) => b.points - a.points).map((s: Student, i: number) => {
-              const indRewards = individualRewards.sort((a: Reward, b: Reward) => a.pointsRequired - b.pointsRequired)
-              const nextInd = indRewards.find((r: Reward) => r.pointsRequired > s.points)
+            {[...(students || [])].sort((a: Student, b: Student) => b.coins - a.coins).map((s: Student, i: number) => {
+              const indRewards = individualRewards.sort((a: Reward, b: Reward) => a.coinsRequired - b.coinsRequired)
+              const nextInd = indRewards.find((r: Reward) => r.coinsRequired > s.coins)
               return (
                 <div key={s.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-zinc-900/40 border border-transparent hover:border-zinc-800/50 transition-all group">
                   <div className={cn("w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0",
@@ -336,16 +360,16 @@ function AulaSection({ course, students, actions, rewards, logs, reload, showToa
                   )}>{i + 1}</div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-zinc-100 truncate">{s.name}</p>
-                    {nextInd && <p className="text-[10px] text-zinc-500 truncate">Próximo: {nextInd.icon} {nextInd.name} ({nextInd.pointsRequired} pts)</p>}
+                    {nextInd && <p className="text-[10px] text-zinc-500 truncate">Próximo: {nextInd.icon} {nextInd.name} ({nextInd.coinsRequired} coins)</p>}
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
                     {indRewards.slice(0, 6).map((r: Reward) => {
-                      const reached = s.points >= r.pointsRequired
+                      const reached = s.coins >= r.coinsRequired
                       const isNextR = nextInd?.id === r.id
                       return (
                         <button
                           key={r.id}
-                          title={`${r.name} (${r.pointsRequired} pts)`}
+                          title={`${r.name} (${r.coinsRequired} coins)`}
                           onClick={() => reached && setClaimModal({ reward: r, student: s })}
                           className={cn("w-7 h-7 rounded-full flex items-center justify-center text-sm border transition-all",
                             reached ? "bg-amber-400 border-amber-200 text-amber-900 shadow-[0_0_10px_rgba(251,191,36,0.4)] hover:scale-125 cursor-pointer" :
@@ -357,7 +381,7 @@ function AulaSection({ course, students, actions, rewards, logs, reload, showToa
                         </button>
                       )
                     })}
-                    <div className="ml-2 text-lg font-black text-white whitespace-nowrap">{s.points}<span className="text-xs font-medium text-zinc-500 ml-0.5">pts</span></div>
+                    <div className="ml-2 text-lg font-black text-white whitespace-nowrap">{s.coins}<span className="text-xs font-medium text-zinc-500 ml-0.5">coins</span></div>
                   </div>
                 </div>
               )
@@ -375,10 +399,10 @@ function AulaSection({ course, students, actions, rewards, logs, reload, showToa
               const stName = l.student?.name?.split(' ')[0]
               return (
                 <div key={l.id} className="flex items-start gap-3 p-2 group">
-                  <div className="mt-1.5 flex-shrink-0"><div className={cn("w-2 h-2 rounded-full ring-4 ring-zinc-950 group-hover:ring-zinc-900 transition-colors", l.points > 0 ? "bg-emerald-500" : l.points === 0 ? "bg-blue-500" : "bg-rose-500")} /></div>
+                  <div className="mt-1.5 flex-shrink-0"><div className={cn("w-2 h-2 rounded-full ring-4 ring-zinc-950 group-hover:ring-zinc-900 transition-colors", l.coins > 0 ? "bg-emerald-500" : l.coins === 0 ? "bg-blue-500" : "bg-rose-500")} /></div>
                   <p className="text-xs text-zinc-300 break-words flex-1">
                     {stName ? <span className="font-semibold text-white">{stName}</span> : <span className="font-semibold text-blue-300">Clase</span>}
-                    {" "}<span className={cn("font-medium", l.points > 0 ? "text-emerald-400" : l.points === 0 ? "text-blue-400" : "text-rose-400")}>{l.points > 0 ? '+' : ''}{l.points} pts</span>
+                    {" "}<span className={cn("font-medium", l.coins > 0 ? "text-emerald-400" : l.coins === 0 ? "text-blue-400" : "text-rose-400")}>{l.coins > 0 ? '+' : ''}{l.coins} coins</span>
                     <span className="text-zinc-500"> por </span>{l.reason}
                   </p>
                 </div>
@@ -389,7 +413,7 @@ function AulaSection({ course, students, actions, rewards, logs, reload, showToa
       </div>
 
       {/* ── Award Modal ── */}
-      <Modal open={awardModal} onClose={() => setAwardModal(false)} title="Otorgar Puntos" lg>
+      <Modal open={awardModal} onClose={() => setAwardModal(false)} title="Otorgar Coins" lg>
         <div className="space-y-4">
           <div>
             <label className="label">Destinatario</label>
@@ -407,10 +431,10 @@ function AulaSection({ course, students, actions, rewards, logs, reload, showToa
               {activeActions.filter((a: Action) => awardTarget === 'class' ? a.affectsClass : a.affectsStudent).map((a: Action) => {
                 const col = ACTION_COLORS[a.category] || { bg: '#1e3a8a', text: '#bfdbfe' }
                 return (
-                  <button key={a.id} onClick={() => awardPoints(a.points, a.name, a.id)}
+                  <button key={a.id} onClick={() => awardCoins(a.coins, a.name, a.id)}
                     className="flex items-center gap-3 p-3 rounded-lg border border-zinc-800/50 hover:border-zinc-700 hover:bg-zinc-900/50 transition-all text-left group">
                     <div className="flex items-center justify-center w-10 h-10 rounded-md font-bold text-lg" style={{ background: `${col.bg}40`, color: col.text, border: `1px solid ${col.bg}` }}>
-                      {a.points > 0 ? '+' : ''}{a.points}
+                      {a.coins > 0 ? '+' : ''}{a.coins}
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-zinc-200 group-hover:text-white">{a.name}</p>
@@ -432,7 +456,7 @@ function AulaSection({ course, students, actions, rewards, logs, reload, showToa
           <div>
             <h3 className="text-2xl font-black text-white">{claimModal?.reward.name}</h3>
             {claimModal?.student && <p className="text-indigo-300 font-semibold mt-1">Para: {claimModal.student.name}</p>}
-            <p className="text-zinc-400 mt-1">{claimModal?.student ? `${claimModal.student.points} pts personales` : `Nivel de ${claimModal?.reward.pointsRequired} pts alcanzado`}</p>
+            <p className="text-zinc-400 mt-1">{claimModal?.student ? `${claimModal.student.coins} coins personales` : `Nivel de ${claimModal?.reward.coinsRequired} coins alcanzado`}</p>
           </div>
           {claimModal?.reward.description && <p className="text-zinc-400 text-sm italic">{claimModal.reward.description}</p>}
           <div className="bg-emerald-900/20 text-emerald-400 border border-emerald-500/20 p-4 rounded-xl text-sm font-medium">
@@ -459,10 +483,10 @@ function AulaSection({ course, students, actions, rewards, logs, reload, showToa
 function CursosSection({ courses, reload, showToast }: { courses: Course[]; reload: () => void; showToast: (m: string, ok?: boolean) => void }) {
   const [modal, setModal] = useState(false)
   const [editing, setEditing] = useState<Course | null>(null)
-  const [form, setForm] = useState({ name: '', level: 'Secondary 2', parallel: 'A', plant: '' })
+  const [form, setForm] = useState({ name: '', level: 'Secondary 2', parallel: 'A' })
 
-  const openNew = () => { setForm({ name: '', level: 'Secondary 2', parallel: 'A', plant: '' }); setEditing(null); setModal(true) }
-  const openEdit = (c: Course) => { setForm({ name: c.name, level: c.level, parallel: c.parallel, plant: c.plant }); setEditing(c); setModal(true) }
+  const openNew = () => { setForm({ name: '', level: 'Secondary 2', parallel: 'A' }); setEditing(null); setModal(true) }
+  const openEdit = (c: Course) => { setForm({ name: c.name, level: c.level, parallel: c.parallel }); setEditing(c); setModal(true) }
 
   const save = async () => {
     const url = editing ? `/api/cursos/${editing.id}` : '/api/cursos'
@@ -482,7 +506,7 @@ function CursosSection({ courses, reload, showToast }: { courses: Course[]; relo
       <div className="flex justify-between items-end mb-6">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-white mb-1">Cursos</h2>
-          <p className="text-zinc-400 text-sm">Administra los cursos, plantas y niveles.</p>
+          <p className="text-zinc-400 text-sm">Administra los cursos y niveles.</p>
         </div>
         <button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={16} className="mr-1"/> Nuevo Curso</button>
       </div>
@@ -493,10 +517,9 @@ function CursosSection({ courses, reload, showToast }: { courses: Course[]; relo
             <div>
               <div className="flex justify-between items-start mb-2">
                 <h3 className="text-xl font-bold text-white">{c.name}</h3>
-                <span className="text-lg font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20">{c.classPoints} pts</span>
+                <span className="text-lg font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20">{c.classCoins} coins</span>
               </div>
               <div className="text-xs text-zinc-500 font-medium mb-1 uppercase tracking-wider">{c.level} — Par. {c.parallel}</div>
-              {c.plant && <div className="text-xs text-emerald-400 mt-2">🌱 Planta: {c.plant}</div>}
               <div className="mt-4 text-sm text-zinc-400 flex items-center gap-1"><Users size={14}/> {c._count?.students ?? 0} estudiantes</div>
             </div>
             <div className="flex items-center gap-2 mt-6 pt-4 border-t border-zinc-800/50">
@@ -512,7 +535,6 @@ function CursosSection({ courses, reload, showToast }: { courses: Course[]; relo
           <div><label className="label">Nombre (ej. S2A)</label><input className="input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></div>
           <div><label className="label">Nivel</label><input className="input" value={form.level} onChange={e => setForm(p => ({ ...p, level: e.target.value }))} /></div>
           <div><label className="label">Paralelo</label><input className="input" value={form.parallel} onChange={e => setForm(p => ({ ...p, parallel: e.target.value }))} /></div>
-          <div><label className="label">Planta del proyecto</label><input className="input" value={form.plant} onChange={e => setForm(p => ({ ...p, plant: e.target.value }))} /></div>
         </div>
         <div className="modal-footer mt-6">
           <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
@@ -529,12 +551,12 @@ function CursosSection({ courses, reload, showToast }: { courses: Course[]; relo
 function EstudiantesSection({ students, currentCourse, reload, reloadAll, showToast }: any) {
   const [modal, setModal] = useState(false)
   const [editing, setEditing] = useState<Student | null>(null)
-  const [form, setForm] = useState({ name: '', code: '', email: '' })
+  const [form, setForm] = useState({ name: '', code: '', email: '', coins: 0 })
   const [search, setSearch] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const openNew = () => { setForm({ name: '', code: '', email: '' }); setEditing(null); setModal(true) }
-  const openEdit = (s: Student) => { setForm({ name: s.name, code: s.code, email: s.email || '' }); setEditing(s); setModal(true) }
+  const openNew = () => { setForm({ name: '', code: '', email: '', coins: 0 }); setEditing(null); setModal(true) }
+  const openEdit = (s: Student) => { setForm({ name: s.name, code: s.code, email: s.email || '', coins: s.coins }); setEditing(s); setModal(true) }
 
   const save = async () => {
     if (!form.name) return
@@ -588,7 +610,7 @@ function EstudiantesSection({ students, currentCourse, reload, reloadAll, showTo
     }
   }
 
-  const filtered = students.filter((s: Student) => !search || s.name.toLowerCase().includes(search.toLowerCase()))
+  const filtered = (students || []).filter((s: Student) => !search || s.name.toLowerCase().includes(search.toLowerCase()))
 
   return (
     <div className="animate-in fade-in duration-500">
@@ -618,7 +640,7 @@ function EstudiantesSection({ students, currentCourse, reload, reloadAll, showTo
                 <th className="px-6 py-4">Estudiante</th>
                 <th className="px-6 py-4">Código</th>
                 <th className="px-6 py-4">Correo</th>
-                <th className="px-6 py-4 text-right">Puntos</th>
+                <th className="px-6 py-4 text-right">Coins</th>
                 <th className="px-6 py-4 text-right">Acciones</th>
               </tr>
             </thead>
@@ -631,7 +653,7 @@ function EstudiantesSection({ students, currentCourse, reload, reloadAll, showTo
                   <td className="px-6 py-4 text-zinc-400">{s.code || '-'}</td>
                   <td className="px-6 py-4 text-zinc-400">{s.email || '-'}</td>
                   <td className="px-6 py-4 text-right">
-                     <span className="inline-flex items-center justify-center px-2 py-1 rounded bg-zinc-800 text-zinc-200 font-bold border border-zinc-700">{s.points}</span>
+                     <span className="inline-flex items-center justify-center px-2 py-1 rounded bg-zinc-800 text-zinc-200 font-bold border border-zinc-700">{s.coins}</span>
                   </td>
                   <td className="px-6 py-4 text-right opacity-0 group-hover:opacity-100 transition-opacity">
                     <button className="text-blue-400 hover:text-blue-300 font-medium text-xs mr-3" onClick={() => openEdit(s)}>Editar</button>
@@ -715,7 +737,7 @@ function GruposSection({ groups, students, currentCourse, reload, showToast }: a
                  {g.members.map((m: any) => (
                    <div key={m.id} className="text-sm text-zinc-300 flex justify-between items-center bg-zinc-900/50 px-2 py-1 rounded">
                      <span>{m.student.name}</span>
-                     <span className="text-xs font-mono text-zinc-500">{m.student.points} pts</span>
+                     <span className="text-xs font-mono text-zinc-500">{m.student.coins} coins</span>
                    </div>
                  ))}
                  {g.members.length === 0 && <div className="text-zinc-500 text-sm italic">Sin miembros</div>}
@@ -763,9 +785,9 @@ function GruposSection({ groups, students, currentCourse, reload, showToast }: a
 function AccionesSection({ actions, reload, showToast }: { actions: Action[]; reload: () => void; showToast: (m: string, ok?: boolean) => void }) {
   const [modal, setModal] = useState(false)
   const [editing, setEditing] = useState<Action | null>(null)
-  const [form, setForm] = useState({ name: '', points: 10, category: 'blue', affectsClass: false, affectsStudent: true, isActive: true })
+  const [form, setForm] = useState({ name: '', coins: 2, category: 'blue', affectsClass: false, affectsStudent: true, isActive: true })
 
-  const openNew = () => { setForm({ name: '', points: 10, category: 'blue', affectsClass: false, affectsStudent: true, isActive: true }); setEditing(null); setModal(true) }
+  const openNew = () => { setForm({ name: '', coins: 2, category: 'blue', affectsClass: false, affectsStudent: true, isActive: true }); setEditing(null); setModal(true) }
   const openEdit = (a: Action) => { setForm({ ...a }); setEditing(a); setModal(true) }
 
   const save = async () => {
@@ -799,7 +821,7 @@ function AccionesSection({ actions, reload, showToast }: { actions: Action[]; re
               <div>
                 <div className="flex justify-between items-start mb-3">
                   <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-lg" style={{ background: `${col.bg}40`, color: col.text, border: `1px solid ${col.bg}` }}>
-                    {a.points > 0 ? '+' : ''}{a.points}
+                    {a.coins > 0 ? '+' : ''}{a.coins}
                   </div>
                   {!a.isActive && <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-widest">Inactiva</span>}
                 </div>
@@ -823,7 +845,7 @@ function AccionesSection({ actions, reload, showToast }: { actions: Action[]; re
           <div><label className="label">Nombre descriptivo</label><input className="input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></div>
           
           <div className="grid grid-cols-2 gap-4">
-            <div><label className="label">Puntos</label><input className="input" type="number" value={form.points} onChange={e => setForm(p => ({ ...p, points: parseInt(e.target.value) || 0 }))} /></div>
+            <div><label className="label">Coins</label><input className="input" type="number" value={form.coins} onChange={e => setForm(p => ({ ...p, coins: parseInt(e.target.value) || 0 }))} /></div>
             <div>
               <label className="label">Categoría/Color</label>
               <select className="select" value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))}>
@@ -862,9 +884,9 @@ function AccionesSection({ actions, reload, showToast }: { actions: Action[]; re
 function RecompensasSection({ rewards, reload, showToast }: { rewards: Reward[]; reload: () => void; showToast: (m: string, ok?: boolean) => void }) {
   const [modal, setModal] = useState(false)
   const [editing, setEditing] = useState<Reward | null>(null)
-  const [form, setForm] = useState({ name: '', description: '', icon: '★', pointsRequired: 100, type: 'privilege', isGlobal: true, isActive: true })
+  const [form, setForm] = useState({ name: '', description: '', icon: '★', coinsRequired: 100, type: 'privilege', isGlobal: true, isActive: true })
 
-  const openNew = () => { setForm({ name: '', description: '', icon: '★', pointsRequired: 100, type: 'privilege', isGlobal: true, isActive: true }); setEditing(null); setModal(true) }
+  const openNew = () => { setForm({ name: '', description: '', icon: '★', coinsRequired: 100, type: 'privilege', isGlobal: true, isActive: true }); setEditing(null); setModal(true) }
   const openEdit = (r: Reward) => { setForm({ ...r }); setEditing(r); setModal(true) }
 
   const save = async () => {
@@ -898,7 +920,7 @@ function RecompensasSection({ rewards, reload, showToast }: { rewards: Reward[];
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-amber-500/10 text-amber-500 border border-amber-500/20 text-xl">
                     {r.icon}
                   </div>
-                  <span className="text-xs font-bold px-2 py-1 rounded bg-zinc-800 text-zinc-300">{r.pointsRequired} pts</span>
+                  <span className="text-xs font-bold px-2 py-1 rounded bg-zinc-800 text-zinc-300">{r.coinsRequired} coins</span>
                </div>
                <h3 className="text-lg font-semibold text-white mb-1">{r.name}</h3>
                <p className="text-sm text-zinc-400 line-clamp-2">{r.description || 'Sin descripción'}</p>
@@ -922,7 +944,7 @@ function RecompensasSection({ rewards, reload, showToast }: { rewards: Reward[];
           <div><label className="label">Descripción</label><input className="input" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} /></div>
           
           <div className="grid grid-cols-2 gap-4">
-            <div><label className="label">Costo en Puntos</label><input className="input" type="number" value={form.pointsRequired} onChange={e => setForm(p => ({ ...p, pointsRequired: parseInt(e.target.value) || 0 }))} /></div>
+            <div><label className="label">Costo en Coins</label><input className="input" type="number" value={form.coinsRequired} onChange={e => setForm(p => ({ ...p, coinsRequired: parseInt(e.target.value) || 0 }))} /></div>
             <div>
               <label className="label">Icono</label>
               <select className="select" value={form.icon} onChange={e => setForm(p => ({ ...p, icon: e.target.value }))}>
@@ -964,3 +986,310 @@ function RecompensasSection({ rewards, reload, showToast }: { rewards: Reward[];
     </div>
   )
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   SOLICITUDES SECTION
+   ══════════════════════════════════════════════════════════════════ */
+type SolicitudFull = {
+  id: string; status: string; createdAt: string; notes: string
+  student: { id: string; name: string; coins: number; course: { name: string } }
+  reward: { name: string; icon: string; coinsRequired: number }
+}
+
+function SolicitudesSection({ showToast, onCountChange }: { showToast: (msg: string, ok?: boolean) => void; onCountChange: (n: number) => void }) {
+  const [items, setItems] = useState<SolicitudFull[]>([])
+  const [filter, setFilter] = useState<'pending' | 'all'>('pending')
+  const [processing, setProcessing] = useState<string | null>(null)
+
+  const load = async () => {
+    const data = await fetch('/api/solicitudes').then(r => r.json()).catch(() => [])
+    if (Array.isArray(data)) {
+      setItems(data)
+      onCountChange(data.filter((s: SolicitudFull) => s.status === 'pending').length)
+    }
+  }
+
+  useEffect(() => { load() }, [])
+
+  const visible = filter === 'pending' ? items.filter(i => i.status === 'pending') : items
+
+  async function handle(id: string, status: 'approved' | 'rejected') {
+    setProcessing(id)
+    try {
+      const res = await fetch(`/api/solicitudes/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      if (res.ok) {
+        showToast(status === 'approved' ? 'Solicitud aprobada ✓' : 'Solicitud rechazada', status === 'approved')
+        load()
+      } else {
+        const d = await res.json()
+        showToast(d.error ?? 'Error', false)
+      }
+    } finally {
+      setProcessing(null)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-white">Solicitudes de Recompensas</h2>
+        <div className="flex gap-2">
+          <button onClick={() => setFilter('pending')} className={cn('btn text-xs px-3 py-1.5', filter === 'pending' ? 'btn-primary' : 'btn-secondary')}>Pendientes</button>
+          <button onClick={() => setFilter('all')} className={cn('btn text-xs px-3 py-1.5', filter === 'all' ? 'btn-primary' : 'btn-secondary')}>Todas</button>
+        </div>
+      </div>
+
+      {visible.length === 0 ? (
+        <div className="text-center py-16 text-zinc-600">No hay solicitudes {filter === 'pending' ? 'pendientes' : ''}</div>
+      ) : (
+        <div className="space-y-3">
+          {visible.map(s => (
+            <div key={s.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex items-center gap-4">
+              <div className="text-3xl">{s.reward.icon}</div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium text-zinc-200">{s.student.name}</span>
+                  <span className="text-xs text-zinc-500">·</span>
+                  <span className="text-xs text-zinc-500">{s.student.course.name}</span>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ml-1 ${
+                    s.status === 'approved' ? 'bg-green-900/50 text-green-400' :
+                    s.status === 'rejected' ? 'bg-red-900/50 text-red-400' :
+                    'bg-amber-900/50 text-amber-400'
+                  }`}>
+                    {s.status === 'approved' ? 'Aprobado' : s.status === 'rejected' ? 'Rechazado' : 'Pendiente'}
+                  </span>
+                </div>
+                <div className="text-sm text-zinc-400 mt-0.5">
+                  {s.reward.name} <span className="text-zinc-600">·</span> <span className="text-amber-500">{s.reward.coinsRequired} coins</span>
+                </div>
+                <div className="text-xs text-zinc-600 mt-0.5">
+                  {new Date(s.createdAt).toLocaleDateString('es-BO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  {' '}<span className="text-zinc-700">·</span> Estudiante tiene {s.student.coins} coins
+                </div>
+              </div>
+              {s.status === 'pending' && (
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    onClick={() => handle(s.id, 'approved')}
+                    disabled={processing === s.id}
+                    className="btn btn-primary text-xs px-3 py-1.5"
+                  >
+                    {processing === s.id ? '...' : 'Aprobar'}
+                  </button>
+                  <button
+                    onClick={() => handle(s.id, 'rejected')}
+                    disabled={processing === s.id}
+                    className="btn btn-danger text-xs px-3 py-1.5"
+                  >
+                    Rechazar
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   USUARIOS SECTION
+   ══════════════════════════════════════════════════════════════════ */
+type UserFull = {
+  id: string; code: string; role: string; fullName: string; isActive: boolean; createdAt: string
+  student?: { id: string; name: string; course?: { name: string } } | null
+}
+
+function UsuariosSection({ courses, showToast }: { courses: Course[]; showToast: (msg: string, ok?: boolean) => void }) {
+  const [users, setUsers] = useState<UserFull[]>([])
+  const [modal, setModal] = useState(false)
+  const [editUser, setEditUser] = useState<UserFull | null>(null)
+  const [form, setForm] = useState({ code: '', password: '', role: 'student', fullName: '', isActive: true })
+  const [search, setSearch] = useState('')
+  const [processing, setProcessing] = useState<string | null>(null)
+
+  const load = async () => {
+    const data = await fetch('/api/usuarios').then(r => r.json()).catch(() => [])
+    if (Array.isArray(data)) setUsers(data)
+  }
+
+  useEffect(() => { load() }, [])
+
+  function openCreate() {
+    setEditUser(null)
+    setForm({ code: '', password: '', role: 'student', fullName: '', isActive: true })
+    setModal(true)
+  }
+
+  function openEdit(u: UserFull) {
+    setEditUser(u)
+    setForm({ code: u.code, password: '', role: u.role, fullName: u.fullName, isActive: u.isActive })
+    setModal(true)
+  }
+
+  async function save() {
+    try {
+      if (editUser) {
+        const body: any = { fullName: form.fullName, isActive: form.isActive }
+        if (form.password) body.password = form.password
+        const res = await fetch(`/api/usuarios/${editUser.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        if (res.ok) { showToast('Usuario actualizado'); setModal(false); load() }
+        else { const d = await res.json(); showToast(d.error ?? 'Error', false) }
+      } else {
+        const res = await fetch('/api/usuarios', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: form.code, password: form.password, role: form.role, fullName: form.fullName }),
+        })
+        if (res.ok) { showToast('Usuario creado'); setModal(false); load() }
+        else { const d = await res.json(); showToast(d.error ?? 'Error', false) }
+      }
+    } catch { showToast('Error de conexión', false) }
+  }
+
+  async function toggleActive(u: UserFull) {
+    setProcessing(u.id)
+    try {
+      const res = await fetch(`/api/usuarios/${u.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !u.isActive }),
+      })
+      if (res.ok) { showToast(u.isActive ? 'Usuario desactivado' : 'Usuario activado', !u.isActive); load() }
+      else { const d = await res.json(); showToast(d.error ?? 'Error', false) }
+    } finally { setProcessing(null) }
+  }
+
+  async function remove(u: UserFull) {
+    if (!confirm(`¿Eliminar usuario ${u.code}?`)) return
+    setProcessing(u.id)
+    try {
+      const res = await fetch(`/api/usuarios/${u.id}`, { method: 'DELETE' })
+      if (res.ok) { showToast('Usuario eliminado'); load() }
+      else { const d = await res.json(); showToast(d.error ?? 'Error', false) }
+    } finally { setProcessing(null) }
+  }
+
+  const filtered = users.filter(u =>
+    !search || u.code.includes(search.toLowerCase()) || u.fullName.toLowerCase().includes(search.toLowerCase())
+  )
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-white">Usuarios del Sistema</h2>
+        <button onClick={openCreate} className="btn btn-primary"><Plus size={16} className="mr-1.5" />Nuevo Usuario</button>
+      </div>
+
+      <div className="relative">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+        <input
+          className="input pl-9 w-full max-w-xs"
+          placeholder="Buscar por código o nombre..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
+
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-zinc-800 text-zinc-500 text-xs uppercase tracking-wide">
+              <th className="text-left px-4 py-3">Código</th>
+              <th className="text-left px-4 py-3">Nombre</th>
+              <th className="text-left px-4 py-3">Rol</th>
+              <th className="text-left px-4 py-3">Estudiante</th>
+              <th className="text-left px-4 py-3">Estado</th>
+              <th className="px-4 py-3" />
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(u => (
+              <tr key={u.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+                <td className="px-4 py-3 font-mono text-zinc-300">{u.code}</td>
+                <td className="px-4 py-3 text-zinc-200">{u.fullName || '—'}</td>
+                <td className="px-4 py-3">
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                    u.role === 'admin' ? 'bg-purple-900/50 text-purple-400' : 'bg-blue-900/50 text-blue-400'
+                  }`}>
+                    {u.role === 'admin' ? 'Admin' : 'Estudiante'}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-zinc-500 text-xs">
+                  {u.student ? `${u.student.name} (${u.student.course?.name ?? '—'})` : '—'}
+                </td>
+                <td className="px-4 py-3">
+                  <span className={`text-xs font-medium ${u.isActive ? 'text-green-400' : 'text-zinc-600'}`}>
+                    {u.isActive ? 'Activo' : 'Inactivo'}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-1 justify-end">
+                    <button onClick={() => openEdit(u)} className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-md transition-colors" title="Editar">
+                      <UserCog size={14} />
+                    </button>
+                    <button
+                      onClick={() => toggleActive(u)}
+                      disabled={processing === u.id}
+                      className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-md transition-colors text-xs"
+                      title={u.isActive ? 'Desactivar' : 'Activar'}
+                    >
+                      {u.isActive ? '⏸' : '▶'}
+                    </button>
+                    {u.role !== 'admin' && (
+                      <button onClick={() => remove(u)} disabled={processing === u.id} className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-950/30 rounded-md transition-colors" title="Eliminar">
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {filtered.length === 0 && (
+              <tr><td colSpan={6} className="text-center py-8 text-zinc-600">Sin usuarios</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <Modal open={modal} onClose={() => setModal(false)} title={editUser ? 'Editar Usuario' : 'Nuevo Usuario'}>
+        <div className="space-y-4">
+          {!editUser && (
+            <>
+              <div><label className="label">Código (login)</label><input className="input" value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value }))} placeholder="ej. s1a01 o admin" /></div>
+              <div>
+                <label className="label">Rol</label>
+                <select className="select" value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))}>
+                  <option value="student">Estudiante</option>
+                  <option value="admin">Administrador</option>
+                </select>
+              </div>
+            </>
+          )}
+          <div><label className="label">Nombre Completo</label><input className="input" value={form.fullName} onChange={e => setForm(p => ({ ...p, fullName: e.target.value }))} placeholder="Nombre para mostrar" /></div>
+          <div><label className="label">{editUser ? 'Nueva Contraseña (dejar vacío para no cambiar)' : 'Contraseña'}</label><input className="input" type="password" value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} placeholder="••••••••" /></div>
+          {editUser && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={form.isActive} onChange={e => setForm(p => ({ ...p, isActive: e.target.checked }))} className="w-4 h-4 rounded border-zinc-700 bg-zinc-900" />
+              <span className="text-sm text-zinc-300">Cuenta activa</span>
+            </label>
+          )}
+        </div>
+        <div className="modal-footer mt-6">
+          <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
+          <button className="btn btn-primary" onClick={save}>{editUser ? 'Guardar' : 'Crear Usuario'}</button>
+        </div>
+      </Modal>
+    </div>
+  )
+}
+

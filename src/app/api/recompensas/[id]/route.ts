@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/session'
 import { RewardService } from '@/server/services/RewardService'
 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
+  const authError = await requireAdmin()
+  if (authError) return authError
   try {
     const data = await req.json()
     const reward = await RewardService.updateReward(params.id, data)
@@ -12,6 +15,8 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 }
 
 export async function DELETE(_: Request, { params }: { params: { id: string } }) {
+  const authError = await requireAdmin()
+  if (authError) return authError
   try {
     await RewardService.deleteReward(params.id)
     return NextResponse.json({ ok: true })

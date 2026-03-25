@@ -12,13 +12,12 @@ model Course {
   name        String   // "S2A"
   level       String   // "Secondary 1" | "Secondary 2"
   parallel    String   // "A" | "B" | "C"
-  plant       String   @default("")
-  classPoints Int      @default(0)
+  classCoins  Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   students    Student[]
-  pointLogs   PointLog[]
+  coinLogs    CoinLog[]
   redemptions Redemption[]
   groups      Group[]
 }
@@ -28,22 +27,24 @@ model Student {
   courseId  String
   code      String   @default("")
   name      String
-  email     String?  // NEW
-  points    Int      @default(0)
+  email     String?
+  coins     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   course               Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  pointLogs            PointLog[]
+  coinLogs             CoinLog[]
   tramos               StudentTramo[]
   individualRedemptions StudentRedemption[]
   groupMemberships     GroupMember[]
+  user                 User?
+  redemptionRequests   RedemptionRequest[]
 }
 
 model StudentTramo {
   id        String   @id @default(cuid())
   studentId String
-  tramo     String   // "T1" | "T2" | ... | "T7"
+  tramo     String
   awardedAt DateTime @default(now())
 
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
@@ -56,7 +57,7 @@ model Reward {
   name           String
   description    String   @default("")
   icon           String   @default("★")
-  pointsRequired Int
+  coinsRequired  Int
   type           String   @default("class") // "class" | "individual"
   isGlobal       Boolean  @default(true)
   isActive       Boolean  @default(true)
@@ -65,6 +66,7 @@ model Reward {
 
   redemptions           Redemption[]
   individualRedemptions StudentRedemption[]
+  redemptionRequests    RedemptionRequest[]
 }
 
 model Redemption {
@@ -91,7 +93,7 @@ model StudentRedemption {
 model Action {
   id             String   @id @default(cuid())
   name           String
-  points         Int
+  coins          Int
   category       String   @default("blue") // "green"|"blue"|"red"|"amber"|"purple"|"mag"
   affectsClass   Boolean  @default(true)
   affectsStudent Boolean  @default(true)
@@ -99,15 +101,15 @@ model Action {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  pointLogs PointLog[]
+  coinLogs CoinLog[]
 }
 
-model PointLog {
+model CoinLog {
   id        String   @id @default(cuid())
   courseId  String
   studentId String?
   actionId  String?
-  points    Int
+  coins     Int
   reason    String
   createdAt DateTime @default(now())
 
@@ -137,4 +139,33 @@ model GroupMember {
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([groupId, studentId])
+}
+
+// ── Auth ─────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  code         String   @unique   // login username: "admin" | "s1a01" | "s2b12"
+  passwordHash String
+  role         String   @default("student") // "admin" | "student"
+  studentId    String?  @unique
+  fullName     String   @default("")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  student Student? @relation(fields: [studentId], references: [id], onDelete: SetNull)
+}
+
+model RedemptionRequest {
+  id        String   @id @default(cuid())
+  studentId String
+  rewardId  String
+  status    String   @default("pending") // "pending" | "approved" | "rejected"
+  notes     String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  reward  Reward  @relation(fields: [rewardId], references: [id])
 }

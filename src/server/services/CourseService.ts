@@ -8,7 +8,7 @@ export class CourseService {
     })
   }
 
-  static async createCourse(data: { name: string; level: string; parallel: string; plant?: string }) {
+  static async createCourse(data: { name: string; level: string; parallel: string }) {
     if (!data.name || !data.level || !data.parallel) {
       throw new Error('Name, level and parallel are required')
     }
@@ -17,7 +17,6 @@ export class CourseService {
         name: data.name,
         level: data.level,
         parallel: data.parallel,
-        plant: data.plant || '',
       },
     })
   }
@@ -30,7 +29,7 @@ export class CourseService {
           orderBy: { name: 'asc' },
           include: { tramos: true }
         },
-        pointLogs: {
+        coinLogs: {
           orderBy: { createdAt: 'desc' },
           take: 50,
           include: { student: true, action: true }
@@ -39,14 +38,13 @@ export class CourseService {
     })
   }
 
-  static async updateCourse(id: string, data: { name: string; level: string; parallel: string; plant?: string }) {
+  static async updateCourse(id: string, data: { name: string; level: string; parallel: string }) {
     return await prisma.course.update({
       where: { id },
       data: {
         name: data.name,
         level: data.level,
         parallel: data.parallel,
-        plant: data.plant || '',
       },
     })
   }

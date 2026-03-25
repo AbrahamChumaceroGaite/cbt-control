@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/session'
 import { GroupService } from '@/server/services/GroupService'
 
 export async function GET(req: Request) {
+  const authError = await requireAdmin()
+  if (authError) return authError
   try {
     const { searchParams } = new URL(req.url)
     const courseId = searchParams.get('courseId')
@@ -13,6 +16,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const authError = await requireAdmin()
+  if (authError) return authError
   try {
     const data = await req.json()
     const group = await GroupService.createGroup({
