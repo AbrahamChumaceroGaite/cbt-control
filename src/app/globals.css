@@ -90,28 +90,31 @@
     color: #a1a1aa; /* zinc-400 */
   }
 
-  /* Buttons */
+  /* Buttons — aligned with simulador-plantas CVA style */
   .btn {
-    @apply inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium border border-solid transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer;
+    @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 cursor-pointer;
   }
-  .btn-primary { background-color: #fafafa; color: #18181b; border-color: #fafafa; }
-  .btn-primary:hover { background-color: #e4e4e7; border-color: #e4e4e7; box-shadow: 0 4px 14px rgba(250,250,250,0.15); transform: translateY(-1px); }
+  /* primary = white bg, dark text (matches Button variant="default") */
+  .btn-primary { @apply bg-white text-zinc-900 hover:bg-zinc-100 active:bg-zinc-200; }
 
-  .btn-secondary { background-color: #27272a; color: #fafafa; border-color: #3f3f46; }
-  .btn-secondary:hover { background-color: #3f3f46; border-color: #52525b; }
+  /* secondary = dark bg, light text */
+  .btn-secondary { @apply bg-zinc-800 text-zinc-300 hover:bg-zinc-700; }
 
-  .btn-ghost { color: #a1a1aa; background-color: transparent; border-color: transparent; }
-  .btn-ghost:hover { background-color: #27272a; color: #fafafa; border-color: #27272a; }
+  /* ghost = transparent, muted */
+  .btn-ghost { @apply text-zinc-400 hover:text-white hover:bg-zinc-800; }
 
-  .btn-danger { background-color: #7f1d1d; color: #fecaca; border-color: #7f1d1d; }
-  .btn-danger:hover { background-color: #991b1b; border-color: #991b1b; box-shadow: 0 4px 14px rgba(127,29,29,0.4); transform: translateY(-1px); }
+  /* danger = red tinted */
+  .btn-danger { @apply bg-red-900/40 text-red-400 border border-red-900 hover:bg-red-900/60; }
 
-  .btn-action-primary { background-color: #2563eb; color: white; border-color: #2563eb; }
-  .btn-action-primary:hover { background-color: #1d4ed8; border-color: #1d4ed8; box-shadow: 0 4px 14px rgba(37,99,235,0.4); transform: translateY(-1px); }
+  /* action-primary = blue */
+  .btn-action-primary { @apply bg-blue-600 text-white hover:bg-blue-500; }
 
-  .btn-sm { @apply h-9 px-3; }
-  .btn-md { @apply h-10 px-4 py-2; }
-  .btn-lg { @apply h-11 px-8; }
+  /* outline */
+  .btn-outline { @apply border border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white; }
+
+  .btn-sm { @apply h-8 px-3 text-xs; }
+  .btn-md { @apply h-9 px-4; }
+  .btn-lg { @apply h-11 px-6 text-base; }
 
   /* Dashboard Grids */
   .dashboard-grid {
