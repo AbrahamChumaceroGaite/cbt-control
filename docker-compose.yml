@@ -1,31 +1,30 @@
 version: '3.8'
 
 services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app
+    restart: unless-stopped
+
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "3001:3001"
+    expose:
+      - "3001"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=file:/app/data/dev.db
+      - JWT_SECRET=${JWT_SECRET:-cbt-aula-change-in-production}
       - PORT=3001
-    depends_on:
-      - db
-    restart: always
-
-  db:
-    image: postgres:14-alpine
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=cbt_control_aula
     volumes:
-      - pgdata_control_aula:/var/lib/postgresql/data
-    restart: always
+      - sqlite_data:/app/data
+    restart: unless-stopped
 
 volumes:
-  pgdata_control_aula:
+  sqlite_data:

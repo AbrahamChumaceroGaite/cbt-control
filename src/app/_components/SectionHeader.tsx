@@ -1,5 +1,6 @@
 'use client'
 import { Search } from 'lucide-react'
+import { Input } from '@/components/ui'
 
 export function SectionHeader({ title, subtitle, search, onSearch, actions }: {
   title: string; subtitle?: string
@@ -15,8 +16,8 @@ export function SectionHeader({ title, subtitle, search, onSearch, actions }: {
       <div className="flex items-center gap-2">
         {onSearch !== undefined && (
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
-            <input className="input pl-9 w-[200px]" placeholder="Buscar..." value={search} onChange={e => onSearch(e.target.value)} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 w-4 h-4" />
+            <Input className="pl-9 w-[200px]" placeholder="Buscar..." value={search} onChange={e => onSearch(e.target.value)} />
           </div>
         )}
         {actions}

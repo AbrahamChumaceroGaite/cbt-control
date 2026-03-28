@@ -3,8 +3,8 @@ generator client {
   binaryTargets = ["native", "linux-musl-openssl-3.0.x", "rhel-openssl-3.0.x"]
 }
 
-// LOCAL DEV: provider = "sqlite", DATABASE_URL = "file:./dev.db"
-// VERCEL:    provider = "postgresql", DATABASE_URL = "postgresql://...", DIRECT_URL = "postgresql://..."
+// LOCAL DEV:  DATABASE_URL="file:./dev.db"
+// DOCKER:     DATABASE_URL="file:/app/data/dev.db"  (volumen persistente en /app/data)
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")

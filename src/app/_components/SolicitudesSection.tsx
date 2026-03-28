@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui'
 
 type SolicitudFull = {
   id: string; status: string; createdAt: string; notes: string
@@ -47,8 +48,8 @@ export function SolicitudesSection({ showToast, onCountChange }: SolicitudesSect
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-white">Solicitudes de Recompensas</h2>
         <div className="flex gap-2">
-          <button onClick={() => setFilter('pending')} className={cn('btn text-xs px-3 py-1.5', filter === 'pending' ? 'btn-primary' : 'btn-secondary')}>Pendientes</button>
-          <button onClick={() => setFilter('all')}     className={cn('btn text-xs px-3 py-1.5', filter === 'all'     ? 'btn-primary' : 'btn-secondary')}>Todas</button>
+          <Button size="sm" variant={filter === 'pending' ? 'default' : 'secondary'} onClick={() => setFilter('pending')}>Pendientes</Button>
+          <Button size="sm" variant={filter === 'all'     ? 'default' : 'secondary'} onClick={() => setFilter('all')}>Todas</Button>
         </div>
       </div>
 
@@ -82,12 +83,12 @@ export function SolicitudesSection({ showToast, onCountChange }: SolicitudesSect
               </div>
               {s.status === 'pending' && (
                 <div className="flex gap-2 shrink-0">
-                  <button onClick={() => handle(s.id, 'approved')} disabled={processing === s.id} className="btn btn-primary text-xs px-3 py-1.5">
+                  <Button size="sm" onClick={() => handle(s.id, 'approved')} disabled={processing === s.id}>
                     {processing === s.id ? '...' : 'Aprobar'}
-                  </button>
-                  <button onClick={() => handle(s.id, 'rejected')} disabled={processing === s.id} className="btn btn-danger text-xs px-3 py-1.5">
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => handle(s.id, 'rejected')} disabled={processing === s.id}>
                     Rechazar
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>

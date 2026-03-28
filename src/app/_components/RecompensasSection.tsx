@@ -3,9 +3,10 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Reward } from '@/lib/types'
-import { Modal } from './Modal'
+import { Modal, Button, Input, Label, Select, Tooltip } from '@/components/ui'
 import { SectionHeader } from './SectionHeader'
 import { CardActions } from './CardActions'
+import { Pagination } from './Pagination'
 
 const ICONS = ['★', '♪', '♫', '▶', '◉', '⇄', '◆', '+', '❄', '⚡', '♛', '⊕']
 
@@ -19,6 +20,8 @@ export function RecompensasSection({ rewards, reload, showToast }: RecompensasSe
   const [modal, setModal]     = useState(false)
   const [editing, setEditing] = useState<Reward | null>(null)
   const [form, setForm]       = useState({ name: '', description: '', icon: '★', coinsRequired: 100, type: 'privilege', isGlobal: true, isActive: true })
+  const [page, setPage]       = useState(0)
+  const [pageSize, setPageSize] = useState(12)
 
   const openNew  = () => { setForm({ name: '', description: '', icon: '★', coinsRequired: 100, type: 'privilege', isGlobal: true, isActive: true }); setEditing(null); setModal(true) }
   const openEdit = (r: Reward) => { setForm({ ...r }); setEditing(r); setModal(true) }
@@ -37,13 +40,19 @@ export function RecompensasSection({ rewards, reload, showToast }: RecompensasSe
     showToast('Eliminada'); reload()
   }
 
+  const paginated = rewards.slice(page * pageSize, (page + 1) * pageSize)
+
   return (
     <div className="animate-in fade-in duration-500">
       <SectionHeader title="Tienda de Recompensas" subtitle="Gestiona los premios y privilegios canjeables."
-        actions={<button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={16} /></button>} />
+        actions={
+          <Tooltip content="Nueva recompensa">
+            <Button size="sm" onClick={openNew}><Plus className="w-4 h-4" /></Button>
+          </Tooltip>
+        } />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {rewards.map(r => (
+        {paginated.map(r => (
           <div key={r.id} className={cn('group relative card-base p-5 flex flex-col justify-between transition-opacity hover:border-zinc-600', !r.isActive && 'opacity-60')}>
             <div>
               <div className="flex justify-between items-start mb-3">
@@ -62,36 +71,51 @@ export function RecompensasSection({ rewards, reload, showToast }: RecompensasSe
             <CardActions onEdit={() => openEdit(r)} onDelete={() => del(r.id)} />
           </div>
         ))}
+        {rewards.length === 0 && <div className="col-span-full text-center py-12 text-zinc-500">No hay recompensas creadas.</div>}
+      </div>
+
+      <div className="mt-4">
+        <Pagination page={page} totalItems={rewards.length} pageSize={pageSize}
+          onPageSizeChange={s => { setPageSize(s); setPage(0) }} onChange={setPage} />
       </div>
 
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? 'Editar Recompensa' : 'Nueva Recompensa'}>
         <div className="space-y-4">
-          <div><label className="label">Nombre / Título</label><input className="input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></div>
-          <div><label className="label">Descripción</label><input className="input" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} /></div>
+          <div className="space-y-1.5">
+            <Label>Nombre / Título</Label>
+            <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Descripción</Label>
+            <Input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
+          </div>
           <div className="grid grid-cols-2 gap-4">
-            <div><label className="label">Costo en Coins</label><input className="input" type="number" value={form.coinsRequired} onChange={e => setForm(p => ({ ...p, coinsRequired: parseInt(e.target.value) || 0 }))} /></div>
-            <div>
-              <label className="label">Icono</label>
-              <select className="select" value={form.icon} onChange={e => setForm(p => ({ ...p, icon: e.target.value }))}>
+            <div className="space-y-1.5">
+              <Label>Costo en Coins</Label>
+              <Input type="number" value={form.coinsRequired} onChange={e => setForm(p => ({ ...p, coinsRequired: parseInt(e.target.value) || 0 }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Icono</Label>
+              <Select value={form.icon} onChange={e => setForm(p => ({ ...p, icon: e.target.value }))}>
                 {ICONS.map(i => <option key={i} value={i}>{i}</option>)}
-              </select>
+              </Select>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="label">Tipo de Premio</label>
-              <select className="select" value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}>
+            <div className="space-y-1.5">
+              <Label>Tipo de Premio</Label>
+              <Select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}>
                 <option value="privilege">Privilegio</option>
                 <option value="physical">Físico</option>
                 <option value="digital">Digital (Medalla)</option>
-              </select>
+              </Select>
             </div>
-            <div>
-              <label className="label">Aplica a</label>
-              <select className="select" value={form.isGlobal ? 'true' : 'false'} onChange={e => setForm(p => ({ ...p, isGlobal: e.target.value === 'true' }))}>
+            <div className="space-y-1.5">
+              <Label>Aplica a</Label>
+              <Select value={form.isGlobal ? 'true' : 'false'} onChange={e => setForm(p => ({ ...p, isGlobal: e.target.value === 'true' }))}>
                 <option value="true">Clase entera</option>
                 <option value="false">Estudiante Individual</option>
-              </select>
+              </Select>
             </div>
           </div>
           <div className="pt-2 border-t border-zinc-800">
@@ -100,10 +124,10 @@ export function RecompensasSection({ rewards, reload, showToast }: RecompensasSe
               <span className="text-sm text-zinc-300">Activa (Disponible para canje)</span>
             </label>
           </div>
-        </div>
-        <div className="modal-footer mt-6">
-          <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
-          <button className="btn btn-primary" onClick={save}>{editing ? 'Guardar' : 'Crear Premio'}</button>
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" onClick={() => setModal(false)} className="flex-1">Cancelar</Button>
+            <Button onClick={save} className="flex-1">{editing ? 'Guardar' : 'Crear Premio'}</Button>
+          </div>
         </div>
       </Modal>
     </div>

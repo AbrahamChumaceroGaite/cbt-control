@@ -6,7 +6,6 @@ export type Reward  = { id: string; name: string; description: string; icon: str
 export type Log     = { id: string; coins: number; reason: string; createdAt: string; student?: { name: string } | null; action?: { name: string; category: string } | null }
 export type Group   = { id: string; name: string; courseId: string; members: { id: string; studentId: string; student: { id: string; name: string; coins: number } }[] }
 export type AppTab  = 'aula' | 'cursos' | 'estudiantes' | 'grupos' | 'acciones' | 'recompensas' | 'solicitudes' | 'usuarios'
-export const PAGE_SIZE = 10
 
 // ── Prisma-layer types (used in services + API routes) ───────────────────────
 export type CourseWithStudents = {

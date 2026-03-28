@@ -4,9 +4,10 @@ import { Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ACTION_COLORS } from '@/lib/types'
 import type { Action } from '@/lib/types'
-import { Modal } from './Modal'
+import { Modal, Button, Input, Label, Select, Tooltip } from '@/components/ui'
 import { SectionHeader } from './SectionHeader'
 import { CardActions } from './CardActions'
+import { Pagination } from './Pagination'
 
 const CATEGORIES = [
   { value: 'green',  label: 'Verde — positivo'    },
@@ -27,6 +28,8 @@ export function AccionesSection({ actions, reload, showToast }: AccionesSectionP
   const [modal, setModal]     = useState(false)
   const [editing, setEditing] = useState<Action | null>(null)
   const [form, setForm]       = useState({ name: '', coins: 2, category: 'blue', affectsClass: false, affectsStudent: true, isActive: true })
+  const [page, setPage]       = useState(0)
+  const [pageSize, setPageSize] = useState(12)
 
   const openNew  = () => { setForm({ name: '', coins: 2, category: 'blue', affectsClass: false, affectsStudent: true, isActive: true }); setEditing(null); setModal(true) }
   const openEdit = (a: Action) => { setForm({ ...a }); setEditing(a); setModal(true) }
@@ -45,13 +48,19 @@ export function AccionesSection({ actions, reload, showToast }: AccionesSectionP
     showToast('Eliminada'); reload()
   }
 
+  const paginated = actions.slice(page * pageSize, (page + 1) * pageSize)
+
   return (
     <div className="animate-in fade-in duration-500">
       <SectionHeader title="Catálogo de Acciones" subtitle="Configura los comportamientos y sus puntajes."
-        actions={<button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={16} /></button>} />
+        actions={
+          <Tooltip content="Nueva acción">
+            <Button size="sm" onClick={openNew}><Plus className="w-4 h-4" /></Button>
+          </Tooltip>
+        } />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {actions.map(a => {
+        {paginated.map(a => {
           const col = ACTION_COLORS[a.category] || { bg: '#1e3a8a', text: '#bfdbfe' }
           return (
             <div key={a.id} className={cn('group relative card-base p-5 flex flex-col justify-between transition-opacity hover:border-zinc-600', !a.isActive && 'opacity-60')}>
@@ -72,18 +81,30 @@ export function AccionesSection({ actions, reload, showToast }: AccionesSectionP
             </div>
           )
         })}
+        {actions.length === 0 && <div className="col-span-full text-center py-12 text-zinc-500">No hay acciones configuradas.</div>}
+      </div>
+
+      <div className="mt-4">
+        <Pagination page={page} totalItems={actions.length} pageSize={pageSize}
+          onPageSizeChange={s => { setPageSize(s); setPage(0) }} onChange={setPage} />
       </div>
 
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? 'Editar Acción' : 'Nueva Acción'}>
         <div className="space-y-4">
-          <div><label className="label">Nombre descriptivo</label><input className="input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></div>
+          <div className="space-y-1.5">
+            <Label>Nombre descriptivo</Label>
+            <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
+          </div>
           <div className="grid grid-cols-2 gap-4">
-            <div><label className="label">Coins</label><input className="input" type="number" value={form.coins} onChange={e => setForm(p => ({ ...p, coins: parseInt(e.target.value) || 0 }))} /></div>
-            <div>
-              <label className="label">Categoría/Color</label>
-              <select className="select" value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))}>
+            <div className="space-y-1.5">
+              <Label>Coins</Label>
+              <Input type="number" value={form.coins} onChange={e => setForm(p => ({ ...p, coins: parseInt(e.target.value) || 0 }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Categoría/Color</Label>
+              <Select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))}>
                 {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-              </select>
+              </Select>
             </div>
           </div>
           <div className="space-y-2 pt-2 border-t border-zinc-800">
@@ -100,10 +121,10 @@ export function AccionesSection({ actions, reload, showToast }: AccionesSectionP
               <span className="text-sm text-zinc-300">Acción Activa (Visible en app)</span>
             </label>
           </div>
-        </div>
-        <div className="modal-footer mt-6">
-          <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
-          <button className="btn btn-primary" onClick={save}>{editing ? 'Guardar' : 'Crear Acción'}</button>
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" onClick={() => setModal(false)} className="flex-1">Cancelar</Button>
+            <Button onClick={save} className="flex-1">{editing ? 'Guardar' : 'Crear Acción'}</Button>
+          </div>
         </div>
       </Modal>
     </div>

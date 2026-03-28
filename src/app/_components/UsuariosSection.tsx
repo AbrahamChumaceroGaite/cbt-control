@@ -2,10 +2,10 @@
 import { useEffect, useState } from 'react'
 import { Plus, UserCog, X } from 'lucide-react'
 import type { Course } from '@/lib/types'
-import { PAGE_SIZE } from '@/lib/types'
-import { Modal } from './Modal'
+import { Modal, Button, Input, Label, Select, Tooltip } from '@/components/ui'
 import { SectionHeader } from './SectionHeader'
 import { Pagination } from './Pagination'
+import { BackupSection } from './BackupSection'
 
 type UserFull = {
   id: string; code: string; role: string; fullName: string; isActive: boolean; createdAt: string
@@ -24,6 +24,7 @@ export function UsuariosSection({ courses, showToast }: UsuariosSectionProps) {
   const [form, setForm]             = useState({ code: '', password: '', role: 'student', fullName: '', isActive: true })
   const [search, setSearch]         = useState('')
   const [page, setPage]             = useState(0)
+  const [pageSize, setPageSize]     = useState(10)
   const [processing, setProcessing] = useState<string | null>(null)
 
   async function load() {
@@ -74,16 +75,19 @@ export function UsuariosSection({ courses, showToast }: UsuariosSectionProps) {
     } finally { setProcessing(null) }
   }
 
-  const filtered   = users.filter(u => !search || u.code.includes(search.toLowerCase()) || u.fullName.toLowerCase().includes(search.toLowerCase()))
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
-  const paginated  = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+  const filtered  = users.filter(u => !search || u.code.includes(search.toLowerCase()) || u.fullName.toLowerCase().includes(search.toLowerCase()))
+  const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize)
 
   return (
     <div className="space-y-6">
       <SectionHeader
         title="Usuarios del Sistema" subtitle="Gestiona las cuentas de acceso al panel."
         search={search} onSearch={v => { setSearch(v); setPage(0) }}
-        actions={<button onClick={openCreate} className="btn btn-primary btn-sm"><Plus size={16} /></button>}
+        actions={
+          <Tooltip content="Nuevo usuario">
+            <Button size="sm" onClick={openCreate}><Plus className="w-4 h-4" /></Button>
+          </Tooltip>
+        }
       />
 
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
@@ -116,12 +120,18 @@ export function UsuariosSection({ courses, showToast }: UsuariosSectionProps) {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1 justify-end">
-                    <button onClick={() => openEdit(u)} className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-md transition-colors"><UserCog size={14} /></button>
-                    <button onClick={() => toggleActive(u)} disabled={processing === u.id} className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-md transition-colors text-xs" title={u.isActive ? 'Desactivar' : 'Activar'}>
-                      {u.isActive ? '⏸' : '▶'}
-                    </button>
+                    <Tooltip content="Editar usuario">
+                      <button onClick={() => openEdit(u)} className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-md transition-colors"><UserCog className="w-3.5 h-3.5" /></button>
+                    </Tooltip>
+                    <Tooltip content={u.isActive ? 'Desactivar' : 'Activar'}>
+                      <button onClick={() => toggleActive(u)} disabled={processing === u.id} className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-md transition-colors text-xs">
+                        {u.isActive ? '⏸' : '▶'}
+                      </button>
+                    </Tooltip>
                     {u.role !== 'admin' && (
-                      <button onClick={() => remove(u)} disabled={processing === u.id} className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-950/30 rounded-md transition-colors"><X size={14} /></button>
+                      <Tooltip content="Eliminar usuario">
+                        <button onClick={() => remove(u)} disabled={processing === u.id} className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-950/30 rounded-md transition-colors"><X className="w-3.5 h-3.5" /></button>
+                      </Tooltip>
                     )}
                   </div>
                 </td>
@@ -132,25 +142,28 @@ export function UsuariosSection({ courses, showToast }: UsuariosSectionProps) {
         </table>
       </div>
 
-      <Pagination page={page} total={totalPages} onChange={setPage} />
+      <Pagination page={page} totalItems={filtered.length} pageSize={pageSize}
+        onPageSizeChange={s => { setPageSize(s); setPage(0) }} onChange={setPage} />
+
+      <BackupSection showToast={showToast} />
 
       <Modal open={modal} onClose={() => setModal(false)} title={editUser ? 'Editar Usuario' : 'Nuevo Usuario'}>
         <div className="space-y-4">
           {!editUser && (
             <>
-              <div><label className="label">Código (login)</label><input className="input" value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value }))} placeholder="ej. s1a01 o admin" /></div>
-              <div>
-                <label className="label">Rol</label>
-                <select className="select" value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))}>
+              <div className="space-y-1.5"><Label>Código (login)</Label><Input value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value }))} placeholder="ej. s1a01 o admin" /></div>
+              <div className="space-y-1.5">
+                <Label>Rol</Label>
+                <Select value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))}>
                   <option value="student">Estudiante</option>
                   <option value="admin">Administrador</option>
-                </select>
+                </Select>
               </div>
             </>
           )}
-          <div><label className="label">Nombre Completo</label><input className="input" value={form.fullName} onChange={e => setForm(p => ({ ...p, fullName: e.target.value }))} placeholder="Nombre para mostrar" /></div>
+          <div className="space-y-1.5"><Label>Nombre Completo</Label><Input value={form.fullName} onChange={e => setForm(p => ({ ...p, fullName: e.target.value }))} placeholder="Nombre para mostrar" /></div>
           {(!editUser || form.role === 'admin') && (
-            <div><label className="label">{editUser ? 'Nueva Contraseña (vacío = sin cambio)' : 'Contraseña'}</label><input className="input" type="password" value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} placeholder="••••••••" /></div>
+            <div className="space-y-1.5"><Label>{editUser ? 'Nueva Contraseña (vacío = sin cambio)' : 'Contraseña'}</Label><Input type="password" value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} placeholder="••••••••" /></div>
           )}
           {editUser && (
             <label className="flex items-center gap-2 cursor-pointer">
@@ -159,9 +172,9 @@ export function UsuariosSection({ courses, showToast }: UsuariosSectionProps) {
             </label>
           )}
         </div>
-        <div className="modal-footer mt-6">
-          <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
-          <button className="btn btn-primary" onClick={save}>{editUser ? 'Guardar' : 'Crear Usuario'}</button>
+        <div className="flex gap-2 pt-4">
+          <Button variant="outline" onClick={() => setModal(false)} className="flex-1">Cancelar</Button>
+          <Button onClick={save} className="flex-1">{editUser ? 'Guardar' : 'Crear Usuario'}</Button>
         </div>
       </Modal>
     </div>

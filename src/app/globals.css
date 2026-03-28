@@ -24,7 +24,7 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
-    
+
     --p-surface-0: #ffffff;
     --p-surface-50: #f5f7f7;
     --p-text-color: #1f2937;
@@ -32,7 +32,7 @@
     --p-content-border-color: #e5e7eb;
     --p-border-radius-full: 9999px;
   }
- 
+
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -53,7 +53,7 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    
+
     --p-surface-0: #0a0e0e;
     --p-surface-50: #161f1f;
     --p-text-color: #f3f4f6;
@@ -63,100 +63,20 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground font-sans antialiased overflow-x-hidden;
-  }
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground font-sans antialiased overflow-x-hidden; }
 }
 
-
 @layer components {
-  /* Base ShadCN-like Card Style */
   .card-base {
     @apply border rounded-xl overflow-hidden shadow-sm;
     background-color: #0c0c0e;
-    border-color: #27272a; /* zinc-800 */
-  }
-
-  .panel-title {
-    @apply text-lg font-bold tracking-tight mb-1;
-    color: #fff;
-  }
-
-  .panel-subtitle {
-    @apply text-sm mb-6;
-    color: #a1a1aa; /* zinc-400 */
-  }
-
-  /* Buttons — aligned with simulador-plantas CVA style */
-  .btn {
-    @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 cursor-pointer;
-  }
-  /* primary = white bg, dark text (matches Button variant="default") */
-  .btn-primary { @apply bg-white text-zinc-900 hover:bg-zinc-100 active:bg-zinc-200; }
-
-  /* secondary = dark bg, light text */
-  .btn-secondary { @apply bg-zinc-800 text-zinc-300 hover:bg-zinc-700; }
-
-  /* ghost = transparent, muted */
-  .btn-ghost { @apply text-zinc-400 hover:text-white hover:bg-zinc-800; }
-
-  /* danger = red tinted */
-  .btn-danger { @apply bg-red-900/40 text-red-400 border border-red-900 hover:bg-red-900/60; }
-
-  /* action-primary = blue */
-  .btn-action-primary { @apply bg-blue-600 text-white hover:bg-blue-500; }
-
-  /* outline */
-  .btn-outline { @apply border border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white; }
-
-  .btn-sm { @apply h-8 px-3 text-xs; }
-  .btn-md { @apply h-9 px-4; }
-  .btn-lg { @apply h-11 px-6 text-base; }
-
-  /* Dashboard Grids */
-  .dashboard-grid {
-    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4;
-  }
-
-  /* Modals */
-  .modal-overlay {
-    @apply fixed inset-0 z-50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 flex items-center justify-center p-4;
-    background-color: rgba(0,0,0,0.8);
-  }
-  .modal-content {
-    @apply border shadow-xl sm:rounded-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh];
-    background-color: #09090b;
     border-color: #27272a;
-    animation: modal-enter 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  @keyframes modal-enter {
-    0% { opacity: 0; transform: scale(0.95); }
-    100% { opacity: 1; transform: scale(1); }
-  }
+  .panel-title   { @apply text-lg font-bold tracking-tight mb-1; color: #fff; }
+  .panel-subtitle { @apply text-sm mb-6; color: #a1a1aa; }
 
-  .modal-header { @apply px-6 py-4 border-b; border-color: #27272a; }
-  .modal-title { @apply text-lg font-semibold leading-none tracking-tight flex justify-between items-center; color: #fff; }
-  .modal-body { @apply p-6 overflow-y-auto flex-1; }
-  .modal-footer { @apply px-6 py-4 border-t flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2; border-color: #27272a; }
-
-  /* Forms */
-  .label { @apply text-sm font-medium leading-none pb-2 block; color: #d4d4d8; }
-  .input {
-    @apply flex h-10 w-full rounded-lg border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-600 disabled:cursor-not-allowed disabled:opacity-50 transition duration-200;
-    background-color: #09090b;
-    border-color: #27272a;
-    color: #f4f4f5;
-  }
-  .input::placeholder { color: #52525b; }
-  .input:hover { background-color: #18181b; border-color: #3f3f46; }
-  .input:focus { background-color: #0c0c0e; border-color: #52525b; }
-  .select { @apply input appearance-none; }
-  .select option { background-color: #09090b; color: #f4f4f5; }
-
-  /* Premium Floating Nav - AI Studio Style */
+  /* Premium Floating Nav */
   .floating-nav {
     @apply fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 p-1.5 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.4)] border transition-all;
     background: rgba(10, 14, 14, 0.75);
@@ -168,74 +88,82 @@
     @apply flex items-center justify-center gap-2 px-4 h-10 rounded-full transition-all duration-300 ease-out cursor-pointer;
     color: var(--p-text-muted-color);
   }
-  .nav-item:hover { 
-    background-color: rgba(255,255,255,0.06); 
-    color: var(--p-text-color-white);
-  }
+  .nav-item:hover { background-color: rgba(255,255,255,0.06); color: var(--p-text-color-white); }
   .nav-item.active {
     color: #fff;
     background-color: rgba(255, 255, 255, 0.12);
     box-shadow: inset 0 1px 1px rgba(255,255,255,0.1);
   }
-  .nav-icon { @apply w-[18px] h-[18px]; }
+  .nav-icon  { @apply w-[18px] h-[18px]; }
   .nav-label { @apply text-xs flex mt-px font-semibold tracking-wide; }
 
-  /* Tramos Progress Bar */
-  .progress-rail { @apply h-2 w-full rounded-full overflow-hidden; background-color: #27272a; }
-  .progress-fill { @apply h-full transition-all duration-500 ease-in-out; background-color: #3b82f6; }
-
-  /* Pills */
-  .pill { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2; }
-
-  /* Main content wrapper padding to account for floating nav */
-  .page-wrapper {
-    @apply pb-32;
-  }
+  /* Page wrapper */
+  .page-wrapper { @apply pb-32; }
 }
 
-/* Scrollbar styling */
+/* ── Scrollbar ───────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { border-radius: 9999px; background-color: #27272a; }
-::-webkit-scrollbar-thumb:hover { background-color: #3f3f46; }
+::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #52525b; }
 
-/* ── Animated background blobs ── */
+/* ── Animated background blobs ──────────────────────────────────────────────── */
 @keyframes blob1 {
   0%, 100% { transform: translate(0, 0) scale(1); }
   33%       { transform: translate(40px, -30px) scale(1.08); }
-  66%       { transform: translate(-25px, 20px) scale(0.94); }
+  66%       { transform: translate(-20px, 20px) scale(0.95); }
 }
 @keyframes blob2 {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  33%       { transform: translate(-35px, 25px) scale(1.06); }
-  66%       { transform: translate(30px, -20px) scale(1.1); }
+  33%       { transform: translate(-50px, 30px) scale(1.05); }
+  66%       { transform: translate(30px, -40px) scale(1.1); }
 }
 @keyframes blob3 {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  50%       { transform: translate(20px, 30px) scale(0.92); }
+  33%       { transform: translate(30px, 50px) scale(0.97); }
+  66%       { transform: translate(-40px, -20px) scale(1.06); }
 }
 .blob {
   position: absolute;
   border-radius: 9999px;
   filter: blur(80px);
-  opacity: 0.12;
+  pointer-events: none;
 }
+/* Colors: amber + blue + red — identidad visual de CBT Control Aula */
 .blob-1 {
   width: 500px; height: 500px;
-  top: -10%; left: -5%;
-  background: radial-gradient(circle, #fbbf24, transparent 70%);
+  background: #d97706;
+  opacity: 0.07;
+  top: -150px; left: -150px;
   animation: blob1 18s ease-in-out infinite;
 }
 .blob-2 {
-  width: 400px; height: 400px;
-  top: 40%; right: -8%;
-  background: radial-gradient(circle, #3b82f6, transparent 70%);
+  width: 450px; height: 450px;
+  background: #3b82f6;
+  opacity: 0.06;
+  bottom: -100px; right: -100px;
   animation: blob2 22s ease-in-out infinite;
 }
 .blob-3 {
   width: 350px; height: 350px;
-  bottom: 10%; left: 30%;
-  background: radial-gradient(circle, #ef4444, transparent 70%);
+  background: #ef4444;
+  opacity: 0.05;
+  top: 40%; left: 40%;
   animation: blob3 26s ease-in-out infinite;
-  opacity: 0.07;
 }
+
+/* ── Range slider thumb ──────────────────────────────────────────────────────── */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  border: 2px solid #52525b;
+  transition: border-color .15s;
+}
+input[type="range"]::-webkit-slider-thumb:hover { border-color: white; }
+input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; }
+
+/* ── Number input spinner ────────────────────────────────────────────────────── */
+input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }

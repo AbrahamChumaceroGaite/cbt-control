@@ -3,8 +3,7 @@ import { useState, useRef } from 'react'
 import { Plus, Upload, Pencil, Trash2 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import type { Student } from '@/lib/types'
-import { PAGE_SIZE } from '@/lib/types'
-import { Modal } from './Modal'
+import { Modal, Button, Input, Label, Tooltip } from '@/components/ui'
 import { SectionHeader } from './SectionHeader'
 import { Pagination } from './Pagination'
 
@@ -22,6 +21,7 @@ export function EstudiantesSection({ students, currentCourse, reload, reloadAll,
   const [form, setForm]       = useState({ name: '', code: '', email: '', coins: 0 })
   const [search, setSearch]   = useState('')
   const [page, setPage]       = useState(0)
+  const [pageSize, setPageSize] = useState(10)
   const fileInputRef          = useRef<HTMLInputElement>(null)
 
   const openNew  = () => { setForm({ name: '', code: '', email: '', coins: 0 }); setEditing(null); setModal(true) }
@@ -73,9 +73,8 @@ export function EstudiantesSection({ students, currentCourse, reload, reloadAll,
     }
   }
 
-  const filtered   = (students || []).filter(s => !search || s.name.toLowerCase().includes(search.toLowerCase()))
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
-  const paginated  = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+  const filtered  = (students || []).filter(s => !search || s.name.toLowerCase().includes(search.toLowerCase()))
+  const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize)
 
   return (
     <div className="animate-in fade-in duration-500">
@@ -85,11 +84,15 @@ export function EstudiantesSection({ students, currentCourse, reload, reloadAll,
         search={search} onSearch={v => { setSearch(v); setPage(0) }}
         actions={
           <>
-            <button className="btn btn-secondary btn-sm" onClick={() => fileInputRef.current?.click()} title="Importar Excel">
-              <Upload size={16} className="mr-2" /> Importar Excel
-            </button>
+            <Tooltip content="Importar desde Excel (.xlsx)">
+              <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
+                <Upload className="w-4 h-4 mr-2" /> Importar Excel
+              </Button>
+            </Tooltip>
             <input type="file" ref={fileInputRef} accept=".xlsx,.xls,.csv" className="hidden" onChange={handleExcelUpload} />
-            <button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={16} /></button>
+            <Tooltip content="Nuevo alumno">
+              <Button size="sm" onClick={openNew}><Plus className="w-4 h-4" /></Button>
+            </Tooltip>
           </>
         }
       />
@@ -117,8 +120,12 @@ export function EstudiantesSection({ students, currentCourse, reload, reloadAll,
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openEdit(s)} className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-md transition-colors"><Pencil size={14} /></button>
-                      <button onClick={() => del(s.id)} className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-950/30 rounded-md transition-colors"><Trash2 size={14} /></button>
+                      <Tooltip content="Editar alumno">
+                        <button onClick={() => openEdit(s)} className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-md transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
+                      </Tooltip>
+                      <Tooltip content="Eliminar alumno">
+                        <button onClick={() => del(s.id)} className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-950/30 rounded-md transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </Tooltip>
                     </div>
                   </td>
                 </tr>
@@ -130,18 +137,21 @@ export function EstudiantesSection({ students, currentCourse, reload, reloadAll,
           </table>
         </div>
       </div>
-      <div className="mt-4"><Pagination page={page} total={totalPages} onChange={setPage} /></div>
+      <div className="mt-4">
+        <Pagination page={page} totalItems={filtered.length} pageSize={pageSize}
+          onPageSizeChange={s => { setPageSize(s); setPage(0) }} onChange={setPage} />
+      </div>
 
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? 'Editar alumno' : 'Nuevo alumno'}>
         <div className="space-y-3">
-          <div><label className="label">Nombre completo</label><input className="input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></div>
-          <div><label className="label">Código</label><input className="input" value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value }))} /></div>
-          <div><label className="label">Correo</label><input className="input" type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} /></div>
-          {editing && <div><label className="label">Coins</label><input className="input" type="number" value={form.coins} onChange={e => setForm(p => ({ ...p, coins: parseInt(e.target.value) || 0 }))} /></div>}
+          <div className="space-y-1.5"><Label>Nombre completo</Label><Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></div>
+          <div className="space-y-1.5"><Label>Código</Label><Input value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value }))} /></div>
+          <div className="space-y-1.5"><Label>Correo</Label><Input type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} /></div>
+          {editing && <div className="space-y-1.5"><Label>Coins</Label><Input type="number" value={form.coins} onChange={e => setForm(p => ({ ...p, coins: parseInt(e.target.value) || 0 }))} /></div>}
         </div>
-        <div className="modal-footer mt-6">
-          <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
-          <button className="btn btn-primary" onClick={save}>{editing ? 'Guardar' : 'Crear'}</button>
+        <div className="flex gap-2 pt-4">
+          <Button variant="outline" onClick={() => setModal(false)} className="flex-1">Cancelar</Button>
+          <Button onClick={save} className="flex-1">{editing ? 'Guardar' : 'Crear'}</Button>
         </div>
       </Modal>
     </div>
