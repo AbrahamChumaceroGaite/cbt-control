@@ -1,8 +1,9 @@
 #!/bin/sh
 set -e
 
-# Fix permissions on the volume-mounted prisma directory (runs as root)
-chown -R nestjs:nodejs /app/prisma
+# Crear directorio de datos y fijar permisos (volumen montado)
+mkdir -p /app/data
+chown -R nestjs:nodejs /app/data
 
 echo "[api] Running prisma db push..."
 su-exec nestjs npx prisma db push --skip-generate

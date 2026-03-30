@@ -7,11 +7,12 @@ import { GetGroupsHandler }      from './application/queries/get-groups.query'
 import { CreateGroupHandler }    from './application/commands/create-group.command'
 import { UpdateGroupHandler }    from './application/commands/update-group.command'
 import { DeleteGroupHandler }    from './application/commands/delete-group.command'
+import { AuthModule }            from '../auth/auth.module'
 
 const handlers = [GetGroupsHandler, CreateGroupHandler, UpdateGroupHandler, DeleteGroupHandler]
 
 @Module({
-  imports:     [CqrsModule],
+  imports:     [CqrsModule, AuthModule],
   controllers: [GroupController],
   providers:   [
     { provide: GroupRepository, useClass: GroupRepositoryImpl },

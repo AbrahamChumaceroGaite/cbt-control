@@ -8,11 +8,12 @@ import { CreateStudentHandler }     from './application/commands/create-student.
 import { ImportStudentsHandler }    from './application/commands/import-students.command'
 import { UpdateStudentHandler }     from './application/commands/update-student.command'
 import { DeleteStudentHandler }     from './application/commands/delete-student.command'
+import { AuthModule }               from '../auth/auth.module'
 
 const handlers = [GetStudentsHandler, CreateStudentHandler, ImportStudentsHandler, UpdateStudentHandler, DeleteStudentHandler]
 
 @Module({
-  imports:     [CqrsModule],
+  imports:     [CqrsModule, AuthModule],
   controllers: [StudentController],
   providers:   [
     { provide: StudentRepository, useClass: StudentRepositoryImpl },

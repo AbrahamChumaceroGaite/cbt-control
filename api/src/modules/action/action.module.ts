@@ -7,11 +7,12 @@ import { GetActionsHandler }     from './application/queries/get-actions.query'
 import { CreateActionHandler }   from './application/commands/create-action.command'
 import { UpdateActionHandler }   from './application/commands/update-action.command'
 import { DeleteActionHandler }   from './application/commands/delete-action.command'
+import { AuthModule }            from '../auth/auth.module'
 
 const handlers = [GetActionsHandler, CreateActionHandler, UpdateActionHandler, DeleteActionHandler]
 
 @Module({
-  imports:     [CqrsModule],
+  imports:     [CqrsModule, AuthModule],
   controllers: [ActionController],
   providers:   [
     { provide: ActionRepository, useClass: ActionRepositoryImpl },

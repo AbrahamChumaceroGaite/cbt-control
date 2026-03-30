@@ -4,9 +4,10 @@ import { PointController }       from './point.controller'
 import { PointRepository }       from './domain/point.repository'
 import { PointRepositoryImpl }   from './infrastructure/point.repository.impl'
 import { AwardCoinsHandler }     from './application/commands/award-coins.command'
+import { AuthModule }            from '../auth/auth.module'
 
 @Module({
-  imports:     [CqrsModule],
+  imports:     [CqrsModule, AuthModule],
   controllers: [PointController],
   providers:   [
     { provide: PointRepository, useClass: PointRepositoryImpl },
