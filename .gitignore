@@ -78,6 +78,13 @@ web_modules/
 .next
 out
 
+# NestJS build output
+api/dist/
+
+# SQLite databases
+*.db
+*.db-journal
+
 # Nuxt.js build / generate output
 .nuxt
 dist

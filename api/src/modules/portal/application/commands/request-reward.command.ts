@@ -1,0 +1,20 @@
+import { ICommandHandler, CommandHandler } from '@nestjs/cqrs'
+import { IsNotEmpty, IsString }           from 'class-validator'
+import { PortalRepository }               from '../../domain/portal.repository'
+
+export class RequestRewardDto {
+  @IsString() @IsNotEmpty() rewardId!: string
+}
+
+export class RequestRewardCommand {
+  constructor(public readonly studentId: string, public readonly dto: RequestRewardDto) {}
+}
+
+@CommandHandler(RequestRewardCommand)
+export class RequestRewardHandler implements ICommandHandler<RequestRewardCommand, { id: string; status: string }> {
+  constructor(private readonly repo: PortalRepository) {}
+
+  execute({ studentId, dto }: RequestRewardCommand) {
+    return this.repo.requestReward(studentId, dto.rewardId)
+  }
+}

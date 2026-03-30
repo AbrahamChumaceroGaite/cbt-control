@@ -1,39 +1,13 @@
 {
-  "name": "control-aula",
-  "version": "1.0.0",
+  "name": "cbt-control-aula",
   "private": true,
+  "workspaces": ["shared", "api", "web"],
   "scripts": {
-    "dev": "next dev -p 3001",
-    "build": "prisma generate && next build",
-    "postinstall": "prisma generate",
-    "start": "next start -p 3001",
-    "db:push": "npx prisma db push",
-    "db:seed": "npx tsx prisma/seed.ts",
-    "db:studio": "npx prisma studio"
-  },
-  "dependencies": {
-    "@prisma/client": "^5.14.0",
-    "bcryptjs": "^3.0.3",
-    "clsx": "^2.1.1",
-    "jose": "^6.2.2",
-    "lucide-react": "^1.0.1",
-    "next": "14.2.3",
-    "react": "^18",
-    "react-dom": "^18",
-    "tailwind-merge": "^3.5.0",
-    "tailwindcss-animate": "^1.0.7",
-    "xlsx": "^0.18.5"
-  },
-  "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "autoprefixer": "^10.0.1",
-    "postcss": "^8",
-    "prisma": "^5.14.0",
-    "tailwindcss": "^3.4.1",
-    "ts-node": "^10.9.2",
-    "typescript": "^5"
+    "build":        "npm run build -w shared && npm run build -w api && npm run build -w web",
+    "build:shared": "npm run build -w shared",
+    "build:api":    "npm run build -w api",
+    "build:web":    "npm run build -w web",
+    "dev:api":      "npm run dev -w api",
+    "dev:web":      "npm run dev -w web"
   }
 }
