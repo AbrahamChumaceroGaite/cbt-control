@@ -45,10 +45,12 @@ export function AulaSection({ course, students, actions, rewards, logs, reload, 
   async function claimReward() {
     if (!claimModal) return
     const { reward, student: s } = claimModal
-    const body = s
-      ? { courseId: course!.id, studentId: s.id, points: 0, reason: `🎁 Canjeado: ${reward.name}` }
-      : { courseId: course!.id, points: 0, reason: `🎁 Canjeado: ${reward.name}` }
-    await pointsService.award({ ...body, coins: 0 })
+    await pointsService.award({
+      courseId:  course!.id,
+      ...(s ? { studentId: s.id } : {}),
+      coins:     0,
+      reason:    `Canjeado: ${reward.name}`,
+    })
     showToast(`¡Se ha reclamado: ${reward.name}!`)
     setClaimModal(null)
     reload()

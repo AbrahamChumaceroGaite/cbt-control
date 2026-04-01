@@ -1,14 +1,14 @@
 import { ICommandHandler, CommandHandler } from '@nestjs/cqrs'
-import { IsNotEmpty, IsString }           from 'class-validator'
-import { UnauthorizedException }          from '@nestjs/common'
-import { JwtService }                     from '@nestjs/jwt'
-import * as bcrypt                        from 'bcryptjs'
-import { UserRepository }                 from '../../domain/user.repository'
-import type { SessionPayload }            from '../../domain/user.entity'
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator'
+import { UnauthorizedException }            from '@nestjs/common'
+import { JwtService }                       from '@nestjs/jwt'
+import * as bcrypt                          from 'bcryptjs'
+import { UserRepository }                   from '../../domain/user.repository'
+import type { SessionPayload }              from '../../domain/user.entity'
 
 export class LoginDto {
   @IsString() @IsNotEmpty() code!:     string
-  @IsString() @IsNotEmpty() password!: string
+  @IsOptional() @IsString() password?: string
 }
 
 export class LoginCommand {
@@ -26,7 +26,10 @@ export class LoginHandler implements ICommandHandler<LoginCommand, { token: stri
     const user = await this.repo.findByCode(dto.code)
     if (!user || !user.isActive) throw new UnauthorizedException('Credenciales inválidas')
 
-    const valid = await bcrypt.compare(dto.password, user.passwordHash)
+    // Students log in with only their code (seed sets password = code).
+    // Admins must supply an explicit password.
+    const attempt = dto.password ?? dto.code
+    const valid   = await bcrypt.compare(attempt, user.passwordHash)
     if (!valid) throw new UnauthorizedException('Credenciales inválidas')
 
     const payload: SessionPayload = {

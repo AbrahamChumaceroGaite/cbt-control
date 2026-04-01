@@ -11,33 +11,63 @@ import { Pagination }    from '@/components/shared/Pagination'
 
 const ICONS = ['★', '♪', '♫', '▶', '◉', '⇄', '◆', '+', '❄', '⚡', '♛', '⊕']
 
+// Only valid types that the schema and the UI recognise
+const REWARD_TYPES = [
+  { value: 'class',      label: 'Grupal (Clase)'       },
+  { value: 'individual', label: 'Individual (Alumno)'  },
+] as const
+type RewardType = 'class' | 'individual'
+
 interface RecompensasSectionProps {
   rewards: RewardResponse[]
   reload: () => void
   showToast: (msg: string, ok?: boolean) => void
 }
 
+const EMPTY_FORM = { name: '', description: '', icon: '★', coinsRequired: 100, type: 'class' as RewardType, isGlobal: true, isActive: true }
+
 export function RecompensasSection({ rewards, reload, showToast }: RecompensasSectionProps) {
   const [modal, setModal]     = useState(false)
   const [editing, setEditing] = useState<RewardResponse | null>(null)
-  const [form, setForm]       = useState({ name: '', description: '', icon: '★', coinsRequired: 100, type: 'privilege', isGlobal: true, isActive: true })
+  const [form, setForm]       = useState(EMPTY_FORM)
   const [page, setPage]       = useState(0)
   const [pageSize, setPageSize] = useState(12)
 
-  const openNew  = () => { setForm({ name: '', description: '', icon: '★', coinsRequired: 100, type: 'privilege', isGlobal: true, isActive: true }); setEditing(null); setModal(true) }
-  const openEdit = (r: RewardResponse) => { setForm({ ...r }); setEditing(r); setModal(true) }
+  function changeType(t: RewardType) {
+    // isGlobal is determined by type: class = global, individual = personal
+    setForm(p => ({ ...p, type: t, isGlobal: t === 'class' }))
+  }
+
+  const openNew  = () => { setForm(EMPTY_FORM); setEditing(null); setModal(true) }
+  const openEdit = (r: RewardResponse) => {
+    setForm({
+      name:          r.name,
+      description:   r.description,
+      icon:          r.icon,
+      coinsRequired: r.coinsRequired,
+      type:          (r.type === 'individual' ? 'individual' : 'class') as RewardType,
+      isGlobal:      r.isGlobal,
+      isActive:      r.isActive,
+    })
+    setEditing(r)
+    setModal(true)
+  }
 
   async function save() {
     if (!form.name) return
-    if (editing) {
-      await rewardsService.update(editing.id, form)
-      showToast('Recompensa actualizada')
-    } else {
-      await rewardsService.create(form)
-      showToast('Recompensa creada')
+    try {
+      if (editing) {
+        await rewardsService.update(editing.id, form)
+        showToast('Recompensa actualizada')
+      } else {
+        await rewardsService.create(form)
+        showToast('Recompensa creada')
+      }
+      setModal(false)
+      reload()
+    } catch {
+      showToast('Error al guardar la recompensa', false)
     }
-    setModal(false)
-    reload()
   }
 
   async function del(id: string) {
@@ -51,7 +81,7 @@ export function RecompensasSection({ rewards, reload, showToast }: RecompensasSe
 
   return (
     <div className="animate-in fade-in duration-500">
-      <SectionHeader title="Tienda de Recompensas" subtitle="Gestiona los premios y privilegios canjeables."
+      <SectionHeader title="Tienda de Recompensas" subtitle="Gestiona los premios canjeables por clase o por alumno."
         actions={
           <Tooltip content="Nueva recompensa">
             <Button size="sm" onClick={openNew}><Plus className="w-4 h-4" /></Button>
@@ -69,10 +99,10 @@ export function RecompensasSection({ rewards, reload, showToast }: RecompensasSe
               <h3 className="text-lg font-semibold text-white mb-1">{r.name}</h3>
               <p className="text-sm text-zinc-400 line-clamp-2">{r.description || 'Sin descripción'}</p>
               <div className="flex gap-2 text-xs mt-4">
-                <span className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">{r.type === 'physical' ? 'Física' : r.type === 'digital' ? 'Digital' : 'Privilegio'}</span>
-                {r.isGlobal
-                  ? <span className="px-2 py-0.5 rounded bg-blue-900/30 text-blue-300">Global</span>
-                  : <span className="px-2 py-0.5 rounded bg-rose-900/30 text-rose-300">Personal</span>}
+                {r.type === 'class'
+                  ? <span className="px-2 py-0.5 rounded bg-blue-900/30 text-blue-300">Grupal (Clase)</span>
+                  : <span className="px-2 py-0.5 rounded bg-rose-900/30 text-rose-300">Individual (Alumno)</span>}
+                {!r.isActive && <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-500">Inactiva</span>}
               </div>
             </div>
             <CardActions onEdit={() => openEdit(r)} onDelete={() => del(r.id)} />
@@ -108,22 +138,16 @@ export function RecompensasSection({ rewards, reload, showToast }: RecompensasSe
               </Select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label>Tipo de Premio</Label>
-              <Select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}>
-                <option value="privilege">Privilegio</option>
-                <option value="physical">Físico</option>
-                <option value="digital">Digital (Medalla)</option>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Aplica a</Label>
-              <Select value={form.isGlobal ? 'true' : 'false'} onChange={e => setForm(p => ({ ...p, isGlobal: e.target.value === 'true' }))}>
-                <option value="true">Clase entera</option>
-                <option value="false">Estudiante Individual</option>
-              </Select>
-            </div>
+          <div className="space-y-1.5">
+            <Label>Tipo de Premio</Label>
+            <Select value={form.type} onChange={e => changeType(e.target.value as RewardType)}>
+              {REWARD_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </Select>
+            <p className="text-xs text-zinc-500 pl-1">
+              {form.type === 'class'
+                ? 'Canjeable con coins grupales desde el panel de Aula'
+                : 'Canjeable con coins personales desde el portal del alumno'}
+            </p>
           </div>
           <div className="pt-2 border-t border-zinc-800">
             <label className="flex items-center gap-2 cursor-pointer pt-2">

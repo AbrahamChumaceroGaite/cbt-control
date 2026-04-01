@@ -120,12 +120,12 @@ shared/src/types/
 | `student` | `GET/POST/PUT/DELETE /api/estudiantes` + `POST /import` | CRUD alumnos + importación masiva |
 | `action` | `GET/POST/PUT/DELETE /api/acciones` | CRUD acciones/comportamientos |
 | `reward` | `GET/POST/PUT/DELETE /api/recompensas` | CRUD recompensas |
+| `reward` (SolicitudesController) | `GET/PATCH/DELETE /api/solicitudes` | Gestión de solicitudes de recompensas (admin); controller definido dentro de `reward/` |
 | `group` | `GET/POST/PUT/DELETE /api/grupos` | CRUD grupos de alumnos |
 | `point` | `POST /api/puntos` | Otorgar monedas (transacción atómica) |
 | `auth` | `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me` | Autenticación JWT (cookie) |
-| `usuarios` | `GET/POST/DELETE /api/usuarios` | Gestión usuarios del sistema |
+| `auth` (UserController) | `GET/POST/DELETE /api/usuarios` | Gestión usuarios del sistema; controller definido dentro de `auth/` |
 | `portal` | `GET /api/portal/me`, `GET /api/portal/recompensas`, `POST /api/portal/solicitudes` | Portal del estudiante |
-| `solicitudes` | `GET/PATCH/DELETE /api/solicitudes` | Gestión de solicitudes de recompensas (admin) |
 | `backup` | `GET /api/backup` | Descarga JSON completo de la BD |
 
 ### Frontend (`web/src/`) — Feature-Sliced Design (FSD)
@@ -133,11 +133,11 @@ shared/src/types/
 La arquitectura del frontend sigue **Feature-Sliced Design**: dependencias en una sola dirección, de capas inferiores hacia superiores.
 
 ```
-lib/           (utilidades sin estado — apiFetch, jwt, constants)
+lib/           (utilidades sin estado — apiFetch, jwt, constants, utils)
     ↓
 services/      (llamadas HTTP por dominio — coursesService, studentsService…)
     ↓
-components/    (primitivos reutilizables — SectionHeader, CardActions, Pagination)
+components/    (primitivos UI — ui/ base reutilizable, shared/ compuestos de sección)
     ↓
 features/      (secciones de UI por dominio — aula/, cursos/, estudiantes/…)
     ↓
@@ -148,9 +148,10 @@ Analogía con el backend: `lib` ≈ dominio/infraestructura, `services` ≈ apli
 
 | Capa | Directorio | Responsabilidad |
 |------|-----------|----------------|
-| **lib** | `src/lib/` | `apiFetch<T>()`, `verifyToken` (JWT edge-safe), `ACTION_COLORS` |
+| **lib** | `src/lib/` | `apiFetch<T>()`, `verifyToken` (JWT edge-safe con `jose`), `ACTION_COLORS`, utilidades de formato |
 | **services** | `src/services/` | Un objeto por dominio con todos los métodos HTTP; ningún componente llama `apiFetch` directamente |
-| **components** | `src/components/shared/` | Primitivos sin lógica de negocio, reutilizados entre features |
+| **components/ui** | `src/components/ui/` | Primitivos base sin lógica de negocio: Button, Card, Modal, Badge, Input, Select, Slider, Toast, etc. |
+| **components/shared** | `src/components/shared/` | Compuestos de sección reutilizados entre features: SectionHeader, CardActions, Pagination |
 | **features** | `src/features/[domain]/` | Componentes con lógica de UI por dominio; importan su service |
 | **app** | `src/app/` | Pages como orquestadores: estado global, composición de features, rutas |
 
@@ -241,7 +242,7 @@ docker-compose.yml
 └── nginx → :80  (/api/* → api, /* → web)
 ```
 
-**Base de datos:** SQLite con volumen Docker (`sqlite_data`) montado en `/app/prisma`. El archivo `dev.db` persiste entre reinicios. Esto es apropiado para despliegue en servidor único; para escalado horizontal, cambiar `DATABASE_URL` a PostgreSQL.
+**Base de datos:** SQLite con volumen Docker (`sqlite_data`) montado en `/app/data`. El archivo `prod.db` persiste entre reinicios. Esto es apropiado para despliegue en servidor único; para escalado horizontal, cambiar `DATABASE_URL` a PostgreSQL.
 
 El entrypoint del API (`api/docker-entrypoint.sh`) ejecuta automáticamente `prisma db push` y `npm run db:seed` antes de arrancar, garantizando que la BD esté migrada y con datos iniciales.
 

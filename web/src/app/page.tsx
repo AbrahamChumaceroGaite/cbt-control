@@ -57,8 +57,8 @@ export default function App() {
 
   useEffect(() => {
     authService.me().then(d => {
-      if (d?.user?.fullName) setAdminName(d.user.fullName)
-      else if (d?.user?.code) setAdminName(d.user.code)
+      if (d?.fullName) setAdminName(d.fullName)
+      else if (d?.code) setAdminName(d.code)
     }).catch(() => {})
   }, [])
 
