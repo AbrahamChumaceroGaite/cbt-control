@@ -251,16 +251,17 @@ export function UsuariosSection({ showToast }: Props) {
                 <div className="flex items-start gap-3">
                   {/* Avatar */}
                   <div className={`w-10 h-10 rounded-xl border flex items-center justify-center text-base font-black flex-shrink-0 ${avatarBg}`}>
-                    {(u.fullName || u.code).charAt(0).toUpperCase()}
+                    {u.fullName ? u.fullName.charAt(0).toUpperCase() : u.code.replace(/[^a-zA-Z]/g, '').charAt(0).toUpperCase() || '?'}
                   </div>
 
                   {/* Info */}
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-zinc-100 truncate leading-tight">
-                      {u.fullName || u.code}
-                    </p>
+                    <p className="text-[11px] text-zinc-500 font-mono truncate leading-tight">{u.code}</p>
                     {u.fullName && (
-                      <p className="text-[11px] text-zinc-500 font-mono truncate">{u.code}</p>
+                      <p className="text-sm font-semibold text-zinc-100 truncate leading-tight mt-0.5">{u.fullName}</p>
+                    )}
+                    {u.student?.course && (
+                      <p className="text-[10px] text-zinc-600 truncate mt-0.5">{u.student.course.name}</p>
                     )}
                     <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${roleBadge}`}>
@@ -280,13 +281,6 @@ export function UsuariosSection({ showToast }: Props) {
                     : <BellOff className="w-3 h-3 text-zinc-700" />
                   }
                 </div>
-
-                {/* Student/course info */}
-                {u.student && (
-                  <p className="mt-2.5 text-[11px] text-zinc-600 truncate border-t border-zinc-800/50 pt-2">
-                    {u.student.name}{u.student.course ? ` · ${u.student.course.name}` : ''}
-                  </p>
-                )}
               </button>
             )
           })}

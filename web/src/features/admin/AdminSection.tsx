@@ -2,14 +2,15 @@
 import React, { useState } from 'react'
 import { UserCog, Database, Shield } from 'lucide-react'
 import type { CourseResponse } from '@control-aula/shared'
+import { SectionHeader }   from '@/components/shared/SectionHeader'
 import { UsuariosSection } from '@/features/usuarios/UsuariosSection'
 import { BackupSection }   from '@/features/backup/BackupSection'
 
 type AdminTab = 'usuarios' | 'backup'
 
 const ADMIN_TABS: { id: AdminTab; label: string; icon: React.ElementType; desc: string }[] = [
-  { id: 'usuarios', label: 'Usuarios',  icon: UserCog,  desc: 'Cuentas de acceso al sistema' },
-  { id: 'backup',   label: 'Backup',    icon: Database, desc: 'Exportar e importar datos'     },
+  { id: 'usuarios', label: 'Usuarios', icon: UserCog,  desc: 'Cuentas de acceso al sistema' },
+  { id: 'backup',   label: 'Backup',   icon: Database, desc: 'Exportar e importar datos'    },
 ]
 
 interface Props {
@@ -23,19 +24,14 @@ export function AdminSection({ courses, showToast, reloadAll }: Props) {
 
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
+      <SectionHeader
+        icon={Shield}
+        iconClass="text-purple-400"
+        title="Administración"
+        subtitle="Gestión de usuarios y datos del sistema"
+      />
 
-      {/* ── Section header ────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 pb-1">
-        <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center flex-shrink-0">
-          <Shield className="w-4 h-4 text-purple-400" />
-        </div>
-        <div>
-          <h2 className="text-base font-bold text-zinc-100 leading-none">Administración</h2>
-          <p className="text-xs text-zinc-500 mt-0.5">Gestión de usuarios y datos del sistema</p>
-        </div>
-      </div>
-
-      {/* ── Sub-navigation ────────────────────────────────────────────────── */}
+      {/* Sub-navigation */}
       <div className="flex gap-1 p-1 bg-zinc-900/60 border border-zinc-800 rounded-2xl w-fit">
         {ADMIN_TABS.map(t => {
           const Icon   = t.icon
@@ -60,7 +56,6 @@ export function AdminSection({ courses, showToast, reloadAll }: Props) {
         })}
       </div>
 
-      {/* ── Content ───────────────────────────────────────────────────────── */}
       {activeTab === 'usuarios' && (
         <UsuariosSection courses={courses} showToast={showToast} reloadAll={reloadAll} />
       )}

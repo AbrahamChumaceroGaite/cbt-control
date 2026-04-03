@@ -1,6 +1,6 @@
 'use client'
-import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { Plus, SlidersHorizontal, X, ChevronDown, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ACTION_COLORS } from '@/lib/constants'
 import type { ActionResponse } from '@control-aula/shared'
@@ -19,18 +19,29 @@ const CATEGORIES = [
   { value: 'red',    label: 'Rojo — negativo'     },
 ]
 
-interface AccionesSectionProps {
-  actions: ActionResponse[]
-  reload: () => void
+interface Props {
+  actions:   ActionResponse[]
+  reload:    () => void
   showToast: (msg: string, ok?: boolean) => void
 }
 
-export function AccionesSection({ actions, reload, showToast }: AccionesSectionProps) {
-  const [modal, setModal]     = useState(false)
-  const [editing, setEditing] = useState<ActionResponse | null>(null)
-  const [form, setForm]       = useState({ name: '', coins: 2, category: 'blue', affectsClass: false, affectsStudent: true, isActive: true })
-  const [page, setPage]       = useState(0)
+type StatusFilter = 'all' | 'active' | 'inactive'
+type ScopeFilter  = 'all' | 'class' | 'student'
+
+export function AccionesSection({ actions, reload, showToast }: Props) {
+  const [modal,    setModal]    = useState(false)
+  const [editing,  setEditing]  = useState<ActionResponse | null>(null)
+  const [form,     setForm]     = useState({ name: '', coins: 2, category: 'blue', affectsClass: false, affectsStudent: true, isActive: true })
+  const [search,   setSearch]   = useState('')
+  const [page,     setPage]     = useState(0)
   const [pageSize, setPageSize] = useState(12)
+
+  // Filters
+  const [showFilters, setShowFilters] = useState(false)
+  const [category, setCategory] = useState('all')
+  const [status,   setStatus]   = useState<StatusFilter>('all')
+  const [scope,    setScope]    = useState<ScopeFilter>('all')
+  const filterRef = useRef<HTMLDivElement>(null)
 
   const openNew  = () => { setForm({ name: '', coins: 2, category: 'blue', affectsClass: false, affectsStudent: true, isActive: true }); setEditing(null); setModal(true) }
   const openEdit = (a: ActionResponse) => { setForm({ ...a }); setEditing(a); setModal(true) }
@@ -44,9 +55,7 @@ export function AccionesSection({ actions, reload, showToast }: AccionesSectionP
       showToast(message)
       setModal(false)
       reload()
-    } catch (err: any) {
-      showToast(err.message ?? 'Error al guardar', false)
-    }
+    } catch (err: any) { showToast(err.message ?? 'Error al guardar', false) }
   }
 
   async function del(id: string) {
@@ -55,21 +64,97 @@ export function AccionesSection({ actions, reload, showToast }: AccionesSectionP
       const { message } = await actionsService.delete(id)
       showToast(message)
       reload()
-    } catch (err: any) {
-      showToast(err.message ?? 'Error al eliminar', false)
-    }
+    } catch (err: any) { showToast(err.message ?? 'Error al eliminar', false) }
   }
 
-  const paginated = actions.slice(page * pageSize, (page + 1) * pageSize)
+  const filtersActive = category !== 'all' || status !== 'all' || scope !== 'all'
+
+  const filtered = actions.filter(a => {
+    if (search && !a.name.toLowerCase().includes(search.toLowerCase())) return false
+    if (category !== 'all' && a.category !== category) return false
+    if (status === 'active'   && !a.isActive) return false
+    if (status === 'inactive' &&  a.isActive) return false
+    if (scope === 'class'   && !a.affectsClass)   return false
+    if (scope === 'student' && !a.affectsStudent) return false
+    return true
+  })
+
+  const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize)
+
+  const FilterButton = (
+    <div className="relative" ref={filterRef}>
+      <button
+        onClick={() => setShowFilters(v => !v)}
+        className={`flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium border transition-colors ${
+          filtersActive
+            ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
+            : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600'
+        }`}
+      >
+        <SlidersHorizontal className="w-3.5 h-3.5" />
+        Filtros
+        {filtersActive && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 ml-0.5" />}
+        <ChevronDown className={`w-3 h-3 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+      </button>
+
+      {showFilters && (
+        <div className="absolute left-0 top-[calc(100%+6px)] z-[200] w-64 bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl shadow-black/60 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-zinc-300">Filtros</span>
+            {filtersActive && (
+              <button onClick={() => { setCategory('all'); setStatus('all'); setScope('all'); setPage(0) }} className="text-[10px] text-zinc-500 hover:text-amber-400 flex items-center gap-1">
+                <X className="w-3 h-3" />Limpiar
+              </button>
+            )}
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] text-zinc-500 uppercase tracking-wide">Categoría</label>
+            <select value={category} onChange={e => { setCategory(e.target.value); setPage(0) }}
+              className="w-full bg-zinc-900 border border-zinc-700 text-zinc-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-zinc-500">
+              <option value="all">Todas</option>
+              {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] text-zinc-500 uppercase tracking-wide">Estado</label>
+            <select value={status} onChange={e => { setStatus(e.target.value as StatusFilter); setPage(0) }}
+              className="w-full bg-zinc-900 border border-zinc-700 text-zinc-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-zinc-500">
+              <option value="all">Todos</option>
+              <option value="active">Activas</option>
+              <option value="inactive">Inactivas</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] text-zinc-500 uppercase tracking-wide">Alcance</label>
+            <select value={scope} onChange={e => { setScope(e.target.value as ScopeFilter); setPage(0) }}
+              className="w-full bg-zinc-900 border border-zinc-700 text-zinc-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-zinc-500">
+              <option value="all">Todos</option>
+              <option value="class">Solo Clase</option>
+              <option value="student">Solo Estudiante</option>
+            </select>
+          </div>
+          <p className="text-[10px] text-zinc-600 text-right">{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</p>
+        </div>
+      )}
+    </div>
+  )
 
   return (
-    <div className="animate-in fade-in duration-500">
-      <SectionHeader title="Catálogo de Acciones" subtitle="Configura los comportamientos y sus puntajes."
+    <div className="animate-in fade-in duration-300">
+      <SectionHeader
+        icon={Zap}
+        iconClass="text-amber-400"
+        title="Catálogo de Acciones"
+        subtitle="Configura los comportamientos y sus puntajes."
+        search={search}
+        onSearch={v => { setSearch(v); setPage(0) }}
+        filters={FilterButton}
         actions={
           <Tooltip content="Nueva acción">
             <Button size="sm" onClick={openNew}><Plus className="w-4 h-4" /></Button>
           </Tooltip>
-        } />
+        }
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {paginated.map(a => {
@@ -93,11 +178,11 @@ export function AccionesSection({ actions, reload, showToast }: AccionesSectionP
             </div>
           )
         })}
-        {actions.length === 0 && <div className="col-span-full text-center py-12 text-zinc-500">No hay acciones configuradas.</div>}
+        {filtered.length === 0 && <div className="col-span-full text-center py-12 text-zinc-500">Sin acciones.</div>}
       </div>
 
       <div className="mt-4">
-        <Pagination page={page} totalItems={actions.length} pageSize={pageSize}
+        <Pagination page={page} totalItems={filtered.length} pageSize={pageSize}
           onPageSizeChange={s => { setPageSize(s); setPage(0) }} onChange={setPage} />
       </div>
 

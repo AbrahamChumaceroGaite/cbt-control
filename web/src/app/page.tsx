@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
-import { Home, BookType, Users, Network, Zap, Gift, Bell, Shield, LogOut } from 'lucide-react'
+import { Home, BookType, Users, Network, Gift, Bell, Shield, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Toast } from '@/components/ui'
 import type { CourseResponse, StudentResponse, ActionResponse, RewardResponse, CoinLogResponse, GroupResponse } from '@control-aula/shared'
@@ -17,22 +17,20 @@ import { AulaSection }        from '@/features/aula/AulaSection'
 import { CursosSection }      from '@/features/cursos/CursosSection'
 import { EstudiantesSection } from '@/features/estudiantes/EstudiantesSection'
 import { GruposSection }      from '@/features/grupos/GruposSection'
-import { AccionesSection }    from '@/features/acciones/AccionesSection'
-import { RecompensasSection } from '@/features/recompensas/RecompensasSection'
+import { StoreSection }       from '@/features/tienda/StoreSection'
 import { SolicitudesSection } from '@/features/solicitudes/SolicitudesSection'
 import { AdminSection }       from '@/features/admin/AdminSection'
 
-type AppTab = 'aula' | 'cursos' | 'estudiantes' | 'grupos' | 'acciones' | 'recompensas' | 'solicitudes' | 'admin'
+type AppTab = 'aula' | 'cursos' | 'estudiantes' | 'grupos' | 'tienda' | 'solicitudes' | 'admin'
 
 const TABS: { id: AppTab; label: string; icon: React.ElementType }[] = [
-  { id: 'aula',         label: 'Dashboard',   icon: Home     },
-  { id: 'cursos',       label: 'Cursos',      icon: BookType },
-  { id: 'estudiantes',  label: 'Alumnos',     icon: Users    },
-  { id: 'grupos',       label: 'Grupos',      icon: Network  },
-  { id: 'acciones',     label: 'Acciones',    icon: Zap      },
-  { id: 'recompensas',  label: 'Premios',     icon: Gift     },
-  { id: 'solicitudes',  label: 'Solicitudes', icon: Bell     },
-  { id: 'admin',        label: 'Admin',       icon: Shield   },
+  { id: 'aula',        label: 'Dashboard',   icon: Home     },
+  { id: 'cursos',      label: 'Cursos',      icon: BookType },
+  { id: 'estudiantes', label: 'Alumnos',     icon: Users    },
+  { id: 'grupos',      label: 'Grupos',      icon: Network  },
+  { id: 'tienda',      label: 'Tienda',      icon: Gift     },
+  { id: 'solicitudes', label: 'Solicitudes', icon: Bell     },
+  { id: 'admin',       label: 'Admin',       icon: Shield   },
 ]
 
 export default function App() {
@@ -153,8 +151,7 @@ export default function App() {
         {tab === 'cursos'      && <CursosSection      courses={courses} reload={loadAll} showToast={showToast} />}
         {tab === 'estudiantes' && <EstudiantesSection students={students} currentCourse={currentCourse} reload={() => loadCourse(currentCourse)} reloadAll={loadAll} showToast={showToast} />}
         {tab === 'grupos'      && <GruposSection      groups={groups} students={students} currentCourse={currentCourse} reload={() => loadCourse(currentCourse)} showToast={showToast} />}
-        {tab === 'acciones'    && <AccionesSection    actions={actions} reload={loadAll} showToast={showToast} />}
-        {tab === 'recompensas' && <RecompensasSection rewards={rewards} reload={loadAll} showToast={showToast} />}
+        {tab === 'tienda'      && <StoreSection        actions={actions} rewards={rewards} reload={loadAll} showToast={showToast} />}
         {tab === 'solicitudes' && <SolicitudesSection showToast={showToast} onCountChange={setPendingSolicitudes} />}
         {tab === 'admin'       && <AdminSection       courses={courses} showToast={showToast} reloadAll={loadAll} />}
       </main>

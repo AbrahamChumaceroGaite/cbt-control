@@ -1,6 +1,6 @@
 'use client'
 import { useState, useRef } from 'react'
-import { Plus, Upload, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Upload, Pencil, Trash2, Users, SlidersHorizontal, X, ChevronDown } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import type { StudentResponse } from '@control-aula/shared'
 import { Modal, Button, Input, Label, Tooltip } from '@/components/ui'
@@ -8,22 +8,32 @@ import { studentsService } from '@/services/students.service'
 import { SectionHeader } from '@/components/shared/SectionHeader'
 import { Pagination }    from '@/components/shared/Pagination'
 
-interface EstudiantesSectionProps {
-  students: StudentResponse[]
+interface Props {
+  students:      StudentResponse[]
   currentCourse: string
-  reload: () => void
-  reloadAll: () => void
-  showToast: (msg: string, ok?: boolean) => void
+  reload:        () => void
+  reloadAll:     () => void
+  showToast:     (msg: string, ok?: boolean) => void
 }
 
-export function EstudiantesSection({ students, currentCourse, reload, reloadAll, showToast }: EstudiantesSectionProps) {
-  const [modal, setModal]     = useState(false)
-  const [editing, setEditing] = useState<StudentResponse | null>(null)
-  const [form, setForm]       = useState({ name: '', code: '', email: '', coins: 0 })
-  const [search, setSearch]   = useState('')
-  const [page, setPage]       = useState(0)
+export function EstudiantesSection({ students, currentCourse, reload, reloadAll, showToast }: Props) {
+  const [modal,    setModal]    = useState(false)
+  const [editing,  setEditing]  = useState<StudentResponse | null>(null)
+  const [form,     setForm]     = useState({ name: '', code: '', email: '', coins: 0 })
+  const [search,   setSearch]   = useState('')
+  const [page,     setPage]     = useState(0)
   const [pageSize, setPageSize] = useState(10)
-  const fileInputRef          = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Coin range filter
+  const maxCoins    = students.length ? Math.max(...students.map(s => s.coins), 0) : 500
+  const [showFilters,  setShowFilters]  = useState(false)
+  const [coinMin,      setCoinMin]      = useState(0)
+  const [coinMax,      setCoinMax]      = useState<number | null>(null)
+  const filterRef = useRef<HTMLDivElement>(null)
+
+  const effectiveMax  = coinMax ?? maxCoins
+  const filtersActive = coinMin > 0 || (coinMax !== null && coinMax < maxCoins)
 
   const openNew  = () => { setForm({ name: '', code: '', email: '', coins: 0 }); setEditing(null); setModal(true) }
   const openEdit = (s: StudentResponse) => { setForm({ name: s.name, code: s.code, email: s.email || '', coins: s.coins }); setEditing(s); setModal(true) }
@@ -34,25 +44,16 @@ export function EstudiantesSection({ students, currentCourse, reload, reloadAll,
       const { message } = editing
         ? await studentsService.update(editing.id, form)
         : await studentsService.create({ ...form, courseId: currentCourse })
-      showToast(message)
-      setModal(false)
-      reload()
-      reloadAll()
-    } catch (err: any) {
-      showToast(err.message ?? 'Error al guardar', false)
-    }
+      showToast(message); setModal(false); reload(); reloadAll()
+    } catch (err: any) { showToast(err.message ?? 'Error al guardar', false) }
   }
 
   async function del(id: string) {
     if (!confirm('¿Eliminar estudiante?')) return
     try {
       const { message } = await studentsService.delete(id)
-      showToast(message)
-      reload()
-      reloadAll()
-    } catch (err: any) {
-      showToast(err.message ?? 'Error al eliminar', false)
-    }
+      showToast(message); reload(); reloadAll()
+    } catch (err: any) { showToast(err.message ?? 'Error al eliminar', false) }
   }
 
   async function handleExcelUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -60,8 +61,8 @@ export function EstudiantesSection({ students, currentCourse, reload, reloadAll,
     if (!file) return
     try {
       showToast('Analizando Excel...', true)
-      const buffer   = await file.arrayBuffer()
-      const workbook = XLSX.read(buffer)
+      const buffer    = await file.arrayBuffer()
+      const workbook  = XLSX.read(buffer)
       const worksheet = workbook.Sheets[workbook.SheetNames[0]]
       const jsonData  = XLSX.utils.sheet_to_json(worksheet)
       const parsed    = (jsonData as any[]).map(row => ({
@@ -72,29 +73,112 @@ export function EstudiantesSection({ students, currentCourse, reload, reloadAll,
       if (parsed.length === 0) throw new Error('No se encontraron columnas de NOMBRE válidas')
       const { data, message } = await studentsService.import(currentCourse, parsed)
       showToast(message || `${data.count} estudiantes importados`)
-      reload()
-      reloadAll()
-    } catch (err: any) {
-      showToast(`Error: ${err.message}`, false)
-    } finally {
-      if (fileInputRef.current) fileInputRef.current.value = ''
-    }
+      reload(); reloadAll()
+    } catch (err: any) { showToast(`Error: ${err.message}`, false) }
+    finally { if (fileInputRef.current) fileInputRef.current.value = '' }
   }
 
-  const filtered  = (students || []).filter(s => !search || s.name.toLowerCase().includes(search.toLowerCase()))
+  const filtered  = (students || []).filter(s => {
+    if (search && !s.name.toLowerCase().includes(search.toLowerCase()) && !s.code.toLowerCase().includes(search.toLowerCase())) return false
+    if (s.coins < coinMin) return false
+    if (coinMax !== null && s.coins > coinMax) return false
+    return true
+  })
   const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize)
+
+  const FilterButton = (
+    <div className="relative" ref={filterRef}>
+      <button
+        onClick={() => setShowFilters(v => !v)}
+        className={`flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium border transition-colors ${
+          filtersActive
+            ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
+            : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600'
+        }`}
+      >
+        <SlidersHorizontal className="w-3.5 h-3.5" />
+        Filtros
+        {filtersActive && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 ml-0.5" />}
+        <ChevronDown className={`w-3 h-3 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+      </button>
+
+      {showFilters && (
+        <div className="absolute left-0 top-[calc(100%+6px)] z-[200] w-72 bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl shadow-black/60 p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-zinc-300">Filtrar por Coins</span>
+            {filtersActive && (
+              <button onClick={() => { setCoinMin(0); setCoinMax(null); setPage(0) }} className="text-[10px] text-zinc-500 hover:text-amber-400 flex items-center gap-1">
+                <X className="w-3 h-3" />Limpiar
+              </button>
+            )}
+          </div>
+
+          {/* Range display */}
+          <div className="flex items-center justify-between text-xs font-mono">
+            <span className="text-amber-400 font-bold">{coinMin}</span>
+            <span className="text-zinc-600">—</span>
+            <span className="text-amber-400 font-bold">{effectiveMax}</span>
+          </div>
+
+          {/* Min slider */}
+          <div className="space-y-1">
+            <label className="text-[10px] text-zinc-500 uppercase tracking-wide">Mínimo: {coinMin}</label>
+            <input
+              type="range"
+              min={0}
+              max={maxCoins}
+              step={1}
+              value={coinMin}
+              onChange={e => {
+                const v = parseInt(e.target.value)
+                setCoinMin(v)
+                if (coinMax !== null && v > coinMax) setCoinMax(v)
+                setPage(0)
+              }}
+              className="w-full h-1.5 bg-zinc-700 rounded-full appearance-none cursor-pointer accent-amber-500"
+            />
+          </div>
+
+          {/* Max slider */}
+          <div className="space-y-1">
+            <label className="text-[10px] text-zinc-500 uppercase tracking-wide">Máximo: {effectiveMax}</label>
+            <input
+              type="range"
+              min={0}
+              max={maxCoins}
+              step={1}
+              value={effectiveMax}
+              onChange={e => {
+                const v = parseInt(e.target.value)
+                setCoinMax(v >= maxCoins ? null : v)
+                if (v < coinMin) setCoinMin(v)
+                setPage(0)
+              }}
+              className="w-full h-1.5 bg-zinc-700 rounded-full appearance-none cursor-pointer accent-amber-500"
+            />
+          </div>
+
+          <p className="text-[10px] text-zinc-600 text-right">{filtered.length} alumno{filtered.length !== 1 ? 's' : ''}</p>
+        </div>
+      )}
+    </div>
+  )
 
   return (
     <div className="animate-in fade-in duration-500">
       <SectionHeader
+        icon={Users}
+        iconClass="text-blue-400"
         title="Directorio de Alumnos"
         subtitle={`${students.length} estudiantes en el curso seleccionado.`}
-        search={search} onSearch={v => { setSearch(v); setPage(0) }}
+        search={search}
+        onSearch={v => { setSearch(v); setPage(0) }}
+        filters={FilterButton}
         actions={
           <>
             <Tooltip content="Importar desde Excel (.xlsx)">
               <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
-                <Upload className="w-4 h-4 mr-2" /> Importar Excel
+                <Upload className="w-4 h-4 mr-2" /> Importar
               </Button>
             </Tooltip>
             <input type="file" ref={fileInputRef} accept=".xlsx,.xls,.csv" className="hidden" onChange={handleExcelUpload} />
@@ -145,6 +229,7 @@ export function EstudiantesSection({ students, currentCourse, reload, reloadAll,
           </table>
         </div>
       </div>
+
       <div className="mt-4">
         <Pagination page={page} totalItems={filtered.length} pageSize={pageSize}
           onPageSizeChange={s => { setPageSize(s); setPage(0) }} onChange={setPage} />
