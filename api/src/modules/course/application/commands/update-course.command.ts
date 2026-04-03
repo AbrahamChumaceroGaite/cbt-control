@@ -1,13 +1,14 @@
 import { ICommandHandler, CommandHandler } from '@nestjs/cqrs'
-import { IsOptional, IsString }            from 'class-validator'
+import { IsNumber, IsOptional, IsString }  from 'class-validator'
 import { CourseRepository }               from '../../domain/course.repository'
 import { CourseMapper }                   from '../course.mapper'
 import type { CourseResponse }            from '@control-aula/shared'
 
 export class UpdateCourseDto {
-  @IsOptional() @IsString() name?:     string
-  @IsOptional() @IsString() level?:    string
-  @IsOptional() @IsString() parallel?: string
+  @IsOptional() @IsString() name?:       string
+  @IsOptional() @IsString() level?:      string
+  @IsOptional() @IsString() parallel?:   string
+  @IsOptional() @IsNumber() classCoins?: number
 }
 
 export class UpdateCourseCommand {

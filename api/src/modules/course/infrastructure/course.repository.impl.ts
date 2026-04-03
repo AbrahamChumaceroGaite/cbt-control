@@ -31,7 +31,7 @@ export class CourseRepositoryImpl extends CourseRepository {
     return this.prisma.course.create({ data })
   }
 
-  update(id: string, data: { name?: string; level?: string; parallel?: string }): Promise<CourseEntity> {
+  update(id: string, data: { name?: string; level?: string; parallel?: string; classCoins?: number }): Promise<CourseEntity> {
     return this.prisma.course.update({ where: { id }, data })
   }
 

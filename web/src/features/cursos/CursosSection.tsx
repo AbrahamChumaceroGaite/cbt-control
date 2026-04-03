@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { Plus, Users } from 'lucide-react'
+import { Plus, Users, BookType } from 'lucide-react'
 import type { CourseResponse } from '@control-aula/shared'
 import { Modal, Button, Input, Label, Tooltip } from '@/components/ui'
 import { coursesService } from '@/services/courses.service'
@@ -17,12 +17,12 @@ interface CursosSectionProps {
 export function CursosSection({ courses, reload, showToast }: CursosSectionProps) {
   const [modal, setModal]   = useState(false)
   const [editing, setEditing] = useState<CourseResponse | null>(null)
-  const [form, setForm]     = useState({ name: '', level: 'Secondary 2', parallel: 'A' })
+  const [form, setForm]     = useState({ name: '', level: 'Secondary 2', parallel: 'A', classCoins: 0 })
   const [page, setPage]     = useState(0)
   const [pageSize, setPageSize] = useState(12)
 
-  const openNew  = () => { setForm({ name: '', level: 'Secondary 2', parallel: 'A' }); setEditing(null); setModal(true) }
-  const openEdit = (c: CourseResponse) => { setForm({ name: c.name, level: c.level, parallel: c.parallel }); setEditing(c); setModal(true) }
+  const openNew  = () => { setForm({ name: '', level: 'Secondary 2', parallel: 'A', classCoins: 0 }); setEditing(null); setModal(true) }
+  const openEdit = (c: CourseResponse) => { setForm({ name: c.name, level: c.level, parallel: c.parallel, classCoins: c.classCoins }); setEditing(c); setModal(true) }
 
   async function save() {
     try {
@@ -52,12 +52,17 @@ export function CursosSection({ courses, reload, showToast }: CursosSectionProps
 
   return (
     <div className="animate-in fade-in duration-500">
-      <SectionHeader title="Cursos" subtitle="Administra los cursos y niveles."
+      <SectionHeader
+        icon={BookType}
+        iconClass="text-blue-400"
+        title="Cursos"
+        subtitle="Administra los cursos y niveles."
         actions={
           <Tooltip content="Nuevo curso">
             <Button size="sm" onClick={openNew}><Plus className="w-4 h-4" /></Button>
           </Tooltip>
-        } />
+        }
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {paginated.map(c => (
@@ -86,6 +91,12 @@ export function CursosSection({ courses, reload, showToast }: CursosSectionProps
           <div className="space-y-1.5"><Label>Nombre (ej. S2A)</Label><Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></div>
           <div className="space-y-1.5"><Label>Nivel</Label><Input value={form.level} onChange={e => setForm(p => ({ ...p, level: e.target.value }))} /></div>
           <div className="space-y-1.5"><Label>Paralelo</Label><Input value={form.parallel} onChange={e => setForm(p => ({ ...p, parallel: e.target.value }))} /></div>
+          {editing && (
+            <div className="space-y-1.5">
+              <Label>Coins de Clase <span className="text-zinc-600 font-normal">(ajuste manual)</span></Label>
+              <Input type="number" value={form.classCoins} onChange={e => setForm(p => ({ ...p, classCoins: parseInt(e.target.value) || 0 }))} />
+            </div>
+          )}
         </div>
         <div className="flex gap-2 pt-4">
           <Button variant="outline" onClick={() => setModal(false)} className="flex-1">Cancelar</Button>

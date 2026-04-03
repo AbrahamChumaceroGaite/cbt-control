@@ -59,12 +59,12 @@ export default function PortalPage() {
   if (loading) return <PortalSkeleton />
   if (!student) return null
 
-  const pendingCount = student.redemptionRequests.filter(r => r.status === 'pending').length
+  const solicitudesCount = student.redemptionRequests.length
 
   const TABS: { id: Tab; icon: React.ElementType; label: string; badge?: number }[] = [
     { id: 'perfil',      icon: Home,          label: 'Perfil' },
     { id: 'recompensas', icon: Gift,          label: 'Premios' },
-    { id: 'solicitudes', icon: ClipboardList, label: 'Mis Solicitudes', badge: pendingCount },
+    { id: 'solicitudes', icon: ClipboardList, label: 'Mis Solicitudes', badge: solicitudesCount },
   ]
 
   return (
