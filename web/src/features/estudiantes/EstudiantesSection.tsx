@@ -31,12 +31,10 @@ export function EstudiantesSection({ students, currentCourse, reload, reloadAll,
   async function save() {
     if (!form.name) return
     try {
-      if (editing) {
-        await studentsService.update(editing.id, form)
-      } else {
-        await studentsService.create({ ...form, courseId: currentCourse })
-      }
-      showToast(editing ? 'Actualizado' : 'Creado')
+      const { message } = editing
+        ? await studentsService.update(editing.id, form)
+        : await studentsService.create({ ...form, courseId: currentCourse })
+      showToast(message)
       setModal(false)
       reload()
       reloadAll()
@@ -48,8 +46,8 @@ export function EstudiantesSection({ students, currentCourse, reload, reloadAll,
   async function del(id: string) {
     if (!confirm('¿Eliminar estudiante?')) return
     try {
-      await studentsService.delete(id)
-      showToast('Eliminado')
+      const { message } = await studentsService.delete(id)
+      showToast(message)
       reload()
       reloadAll()
     } catch (err: any) {
@@ -62,8 +60,8 @@ export function EstudiantesSection({ students, currentCourse, reload, reloadAll,
     if (!file) return
     try {
       showToast('Analizando Excel...', true)
-      const data     = await file.arrayBuffer()
-      const workbook = XLSX.read(data)
+      const buffer   = await file.arrayBuffer()
+      const workbook = XLSX.read(buffer)
       const worksheet = workbook.Sheets[workbook.SheetNames[0]]
       const jsonData  = XLSX.utils.sheet_to_json(worksheet)
       const parsed    = (jsonData as any[]).map(row => ({
@@ -72,8 +70,8 @@ export function EstudiantesSection({ students, currentCourse, reload, reloadAll,
         email: row['CORREO'] || row['Correo'] || '',
       })).filter(s => s.name)
       if (parsed.length === 0) throw new Error('No se encontraron columnas de NOMBRE válidas')
-      const body = await studentsService.import(currentCourse, parsed)
-      showToast(`${body.count} estudiantes importados exitosamente.`)
+      const { data, message } = await studentsService.import(currentCourse, parsed)
+      showToast(message || `${data.count} estudiantes importados`)
       reload()
       reloadAll()
     } catch (err: any) {

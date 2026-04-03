@@ -38,13 +38,10 @@ export function AccionesSection({ actions, reload, showToast }: AccionesSectionP
   async function save() {
     if (!form.name) return
     try {
-      if (editing) {
-        await actionsService.update(editing.id, form)
-        showToast('Acción actualizada')
-      } else {
-        await actionsService.create(form)
-        showToast('Acción creada')
-      }
+      const { message } = editing
+        ? await actionsService.update(editing.id, form)
+        : await actionsService.create(form)
+      showToast(message)
       setModal(false)
       reload()
     } catch (err: any) {
@@ -55,8 +52,8 @@ export function AccionesSection({ actions, reload, showToast }: AccionesSectionP
   async function del(id: string) {
     if (!confirm('¿Eliminar acción permanentemente?')) return
     try {
-      await actionsService.delete(id)
-      showToast('Eliminada')
+      const { message } = await actionsService.delete(id)
+      showToast(message)
       reload()
     } catch (err: any) {
       showToast(err.message ?? 'Error al eliminar', false)

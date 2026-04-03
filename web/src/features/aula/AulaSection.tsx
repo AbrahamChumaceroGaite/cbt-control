@@ -37,8 +37,8 @@ export function AulaSection({ course, students, actions, rewards, logs, reload, 
   async function awardCoins(amount: number, reason: string, actionId?: string) {
     try {
       const studentId = awardTarget === 'class' ? undefined : awardTarget
-      await pointsService.award({ courseId: course!.id, studentId, actionId, coins: amount, reason })
-      showToast(`${amount > 0 ? '+' : ''}${amount} coins — ${reason}`, amount > 0)
+      const { message } = await pointsService.award({ courseId: course!.id, studentId, actionId, coins: amount, reason })
+      showToast(`${message} — ${reason}`, amount >= 0)
       setAwardModal(false)
       reload()
     } catch (err: any) {
@@ -50,13 +50,13 @@ export function AulaSection({ course, students, actions, rewards, logs, reload, 
     if (!claimModal) return
     try {
       const { reward, student: s } = claimModal
-      await pointsService.award({
+      const { message } = await pointsService.award({
         courseId:  course!.id,
         ...(s ? { studentId: s.id } : {}),
         coins:     0,
         reason:    `Canjeado: ${reward.name}`,
       })
-      showToast(`¡Se ha reclamado: ${reward.name}!`)
+      showToast(message)
       setClaimModal(null)
       reload()
     } catch (err: any) {

@@ -26,13 +26,10 @@ export function CursosSection({ courses, reload, showToast }: CursosSectionProps
 
   async function save() {
     try {
-      if (editing) {
-        await coursesService.update(editing.id, form)
-        showToast('Curso actualizado')
-      } else {
-        await coursesService.create(form)
-        showToast('Curso creado')
-      }
+      const { message } = editing
+        ? await coursesService.update(editing.id, form)
+        : await coursesService.create(form)
+      showToast(message)
       setModal(false)
       reload()
     } catch (err: any) {
@@ -43,8 +40,8 @@ export function CursosSection({ courses, reload, showToast }: CursosSectionProps
   async function del(id: string) {
     if (!confirm('¿Eliminar este curso y todos sus estudiantes?')) return
     try {
-      await coursesService.delete(id)
-      showToast('Curso eliminado')
+      const { message } = await coursesService.delete(id)
+      showToast(message)
       reload()
     } catch (err: any) {
       showToast(err.message ?? 'Error al eliminar', false)

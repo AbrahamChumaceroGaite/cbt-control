@@ -11,6 +11,8 @@ import { rewardsService }    from '@/services/rewards.service'
 import { groupsService }     from '@/services/groups.service'
 import { solicitudesService } from '@/services/solicitudes.service'
 import { authService }       from '@/services/auth.service'
+import { PushBell }          from '@/components/ui'
+import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { AulaSection }        from '@/features/aula/AulaSection'
 import { CursosSection }      from '@/features/cursos/CursosSection'
 import { EstudiantesSection } from '@/features/estudiantes/EstudiantesSection'
@@ -45,12 +47,14 @@ export default function App() {
   const [pendingSolicitudes, setPendingSolicitudes] = useState(0)
   const [adminName, setAdminName]           = useState('CBT')
   const [toast, setToast]                   = useState<{ msg: string; ok: boolean } | null>(null)
+  const { unsubscribeForLogout }            = usePushNotifications()
 
   const showToast = useCallback((msg: string, ok = true) => {
     setToast({ msg, ok }); setTimeout(() => setToast(null), 3000)
   }, [])
 
   async function logout() {
+    await unsubscribeForLogout()
     await authService.logout()
     window.location.href = '/login'
   }
@@ -131,6 +135,7 @@ export default function App() {
               {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           )}
+          <PushBell />
           <button onClick={logout} title="Cerrar sesión" className="p-2 rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors">
             <LogOut className="w-4 h-4" />
           </button>
@@ -145,7 +150,7 @@ export default function App() {
         {tab === 'acciones'    && <AccionesSection    actions={actions} reload={loadAll} showToast={showToast} />}
         {tab === 'recompensas' && <RecompensasSection rewards={rewards} reload={loadAll} showToast={showToast} />}
         {tab === 'solicitudes' && <SolicitudesSection showToast={showToast} onCountChange={setPendingSolicitudes} />}
-        {tab === 'usuarios'    && <UsuariosSection    courses={courses} showToast={showToast} />}
+        {tab === 'usuarios'    && <UsuariosSection    courses={courses} showToast={showToast} reloadAll={loadAll} />}
       </main>
 
       <footer className="relative z-10 text-center py-6 text-zinc-700 text-xs">

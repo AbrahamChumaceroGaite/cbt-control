@@ -2,13 +2,16 @@ import 'reflect-metadata'
 import { NestFactory }           from '@nestjs/core'
 import { ValidationPipe }        from '@nestjs/common'
 import * as cookieParser         from 'cookie-parser'
+import * as express              from 'express'
 import { AppModule }             from './app.module'
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  const app = await NestFactory.create(AppModule, { bodyParser: false })
 
   app.use(cookieParser())
+  app.use(express.json({ limit: '20mb' }))
+  app.use(express.urlencoded({ extended: true, limit: '20mb' }))
   app.setGlobalPrefix('api')
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }))
   app.useGlobalFilters(new GlobalExceptionFilter())

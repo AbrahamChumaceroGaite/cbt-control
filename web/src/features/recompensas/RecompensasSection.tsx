@@ -56,25 +56,22 @@ export function RecompensasSection({ rewards, reload, showToast }: RecompensasSe
   async function save() {
     if (!form.name) return
     try {
-      if (editing) {
-        await rewardsService.update(editing.id, form)
-        showToast('Recompensa actualizada')
-      } else {
-        await rewardsService.create(form)
-        showToast('Recompensa creada')
-      }
+      const { message } = editing
+        ? await rewardsService.update(editing.id, form)
+        : await rewardsService.create(form)
+      showToast(message)
       setModal(false)
       reload()
-    } catch {
-      showToast('Error al guardar la recompensa', false)
+    } catch (err: any) {
+      showToast(err.message ?? 'Error al guardar', false)
     }
   }
 
   async function del(id: string) {
     if (!confirm('¿Eliminar recompensa permanentemente?')) return
     try {
-      await rewardsService.delete(id)
-      showToast('Eliminada')
+      const { message } = await rewardsService.delete(id)
+      showToast(message)
       reload()
     } catch (err: any) {
       showToast(err.message ?? 'Error al eliminar', false)

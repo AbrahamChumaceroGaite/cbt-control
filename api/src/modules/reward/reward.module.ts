@@ -10,11 +10,12 @@ import { UpdateRewardHandler }       from './application/commands/update-reward.
 import { DeleteRewardHandler }       from './application/commands/delete-reward.command'
 import { ProcessRedemptionHandler }  from './application/commands/process-redemption.command'
 import { AuthModule }                from '../auth/auth.module'
+import { PushModule }                from '../push/push.module'
 
 const handlers = [GetRewardsHandler, CreateRewardHandler, UpdateRewardHandler, DeleteRewardHandler, ProcessRedemptionHandler]
 
 @Module({
-  imports:     [CqrsModule, AuthModule],
+  imports:     [CqrsModule, AuthModule, PushModule],
   controllers: [RewardController, SolicitudesController],
   providers:   [
     { provide: RewardRepository, useClass: RewardRepositoryImpl },

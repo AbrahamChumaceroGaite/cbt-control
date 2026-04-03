@@ -7,11 +7,12 @@ import { GetPortalStudentHandler }     from './application/queries/get-portal-st
 import { GetIndividualRewardsHandler } from './application/queries/get-individual-rewards.query'
 import { RequestRewardHandler }        from './application/commands/request-reward.command'
 import { AuthModule }            from '../auth/auth.module'
+import { PushModule }            from '../push/push.module'
 
 const handlers = [GetPortalStudentHandler, GetIndividualRewardsHandler, RequestRewardHandler]
 
 @Module({
-  imports:     [CqrsModule, AuthModule],
+  imports:     [CqrsModule, AuthModule, PushModule],
   controllers: [PortalController],
   providers:   [
     { provide: PortalRepository, useClass: PortalRepositoryImpl },

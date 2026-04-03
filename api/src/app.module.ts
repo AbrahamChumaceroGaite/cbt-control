@@ -13,12 +13,14 @@ import { PointModule }  from './modules/point/point.module'
 import { AuthModule }   from './modules/auth/auth.module'
 import { PortalModule }  from './modules/portal/portal.module'
 import { BackupModule }  from './modules/backup/backup.module'
+import { PushModule }    from './modules/push/push.module'
 
 @Module({
   controllers: [AppController],
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
+    PushModule,
     CourseModule,
     StudentModule,
     ActionModule,

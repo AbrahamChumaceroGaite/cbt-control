@@ -1,20 +1,40 @@
 'use client'
-import { useEffect, useState } from 'react'
-import { Plus, UserCog, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Plus, UserCog, X, Upload, Download } from 'lucide-react'
 import type { CourseResponse } from '@control-aula/shared'
 import { Modal, Button, Input, Label, Select, Tooltip } from '@/components/ui'
 import { usersService, type UserFull } from '@/services/users.service'
-import { backupService } from '@/services/backup.service'
+import { backupService, type RestoreResult } from '@/services/backup.service'
 import { SectionHeader } from '@/components/shared/SectionHeader'
 import { Pagination }    from '@/components/shared/Pagination'
-import { Download, DatabaseBackup } from 'lucide-react'
 
 interface UsuariosSectionProps {
   courses: CourseResponse[]
   showToast: (msg: string, ok?: boolean) => void
+  reloadAll: () => void
 }
 
-export function UsuariosSection({ courses, showToast }: UsuariosSectionProps) {
+// ── Export sections ──────────────────────────────────────────────────────────
+const EXPORT_SECTIONS = [
+  { key: 'courses',    label: 'Cursos, Alumnos y Grupos', desc: 'Toda la estructura de clases' },
+  { key: 'actions',    label: 'Catálogo de Acciones',     desc: 'Comportamientos y puntos' },
+  { key: 'rewards',    label: 'Catálogo de Premios',      desc: 'Recompensas disponibles' },
+  { key: 'coinLogs',   label: 'Historial de Coins',       desc: 'Últimas 5 000 transacciones' },
+  { key: 'solicitudes',label: 'Solicitudes de Canje',     desc: 'Historial de solicitudes' },
+]
+
+const DETAIL_LABELS: Record<string, string> = {
+  courses:    'Cursos',
+  students:   'Alumnos',
+  groups:     'Grupos',
+  actions:    'Acciones',
+  rewards:    'Premios',
+  coinLogs:   'Historial',
+  solicitudes:'Solicitudes',
+}
+
+// ── Component ────────────────────────────────────────────────────────────────
+export function UsuariosSection({ courses, showToast, reloadAll }: UsuariosSectionProps) {
   const [users, setUsers]           = useState<UserFull[]>([])
   const [modal, setModal]           = useState(false)
   const [editUser, setEditUser]     = useState<UserFull | null>(null)
@@ -23,7 +43,17 @@ export function UsuariosSection({ courses, showToast }: UsuariosSectionProps) {
   const [page, setPage]             = useState(0)
   const [pageSize, setPageSize]     = useState(10)
   const [processing, setProcessing] = useState<string | null>(null)
-  const [backupLoading, setBackupLoading] = useState(false)
+
+  // Export state
+  const [exportSections, setExportSections] = useState<Set<string>>(
+    () => new Set(['courses', 'actions', 'rewards'])
+  )
+  const [exporting, setExporting] = useState(false)
+
+  // Import state
+  const [importing, setImporting]       = useState(false)
+  const [importResult, setImportResult] = useState<RestoreResult | null>(null)
+  const importFileRef = useRef<HTMLInputElement>(null)
 
   async function load() {
     const data = await usersService.getAll().catch(() => [] as UserFull[])
@@ -37,25 +67,25 @@ export function UsuariosSection({ courses, showToast }: UsuariosSectionProps) {
 
   async function save() {
     try {
+      let message: string
       if (editUser) {
         const body: { fullName: string; isActive: boolean; password?: string } = { fullName: form.fullName, isActive: form.isActive }
         if (form.password) body.password = form.password
-        await usersService.update(editUser.id, body)
-        showToast('Usuario actualizado')
+        ;({ message } = await usersService.update(editUser.id, body))
       } else {
-        await usersService.create({ code: form.code, password: form.password, role: form.role, fullName: form.fullName })
-        showToast('Usuario creado')
+        ;({ message } = await usersService.create({ code: form.code, password: form.password, role: form.role, fullName: form.fullName }))
       }
+      showToast(message)
       setModal(false)
       load()
-    } catch { showToast('Error de conexión', false) }
+    } catch (err: any) { showToast(err.message ?? 'Error de conexión', false) }
   }
 
   async function toggleActive(u: UserFull) {
     setProcessing(u.id)
     try {
-      await usersService.update(u.id, { isActive: !u.isActive })
-      showToast(u.isActive ? 'Usuario desactivado' : 'Usuario activado', !u.isActive)
+      const { message } = await usersService.update(u.id, { isActive: !u.isActive })
+      showToast(message, !u.isActive)
       load()
     } catch (err: any) {
       showToast(err.message ?? 'Error al actualizar usuario', false)
@@ -66,18 +96,28 @@ export function UsuariosSection({ courses, showToast }: UsuariosSectionProps) {
     if (!confirm(`¿Eliminar usuario ${u.code}?`)) return
     setProcessing(u.id)
     try {
-      await usersService.delete(u.id)
-      showToast('Usuario eliminado')
+      const { message } = await usersService.delete(u.id)
+      showToast(message)
       load()
     } catch (err: any) {
       showToast(err.message ?? 'Error al eliminar usuario', false)
     } finally { setProcessing(null) }
   }
 
+  // ── Export ──────────────────────────────────────────────────────────────
+  function toggleSection(key: string) {
+    setExportSections(prev => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
+      return next
+    })
+  }
+
   async function downloadBackup() {
-    setBackupLoading(true)
+    if (exportSections.size === 0) { showToast('Selecciona al menos una sección', false); return }
+    setExporting(true)
     try {
-      const res = await backupService.download()
+      const res = await backupService.download(Array.from(exportSections))
       if (!res.ok) { showToast('Error al generar el backup', false); return }
       const blob = await res.blob()
       const url  = URL.createObjectURL(blob)
@@ -86,11 +126,32 @@ export function UsuariosSection({ courses, showToast }: UsuariosSectionProps) {
       a.download = `backup-cbt-${new Date().toISOString().split('T')[0]}.json`
       a.click()
       URL.revokeObjectURL(url)
-      showToast('Backup descargado correctamente')
-    } catch {
-      showToast('Error de conexión', false)
+      showToast('Backup descargado')
+    } catch (err: any) {
+      showToast(err.message ?? 'Error de conexión', false)
+    } finally { setExporting(false) }
+  }
+
+  // ── Import ──────────────────────────────────────────────────────────────
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImporting(true)
+    setImportResult(null)
+    try {
+      const text = await file.text()
+      const json = JSON.parse(text)
+      if (!json.version || !json.exportedAt) throw new Error('Archivo no válido — no parece un backup de CBT')
+      const result = await backupService.restore(json)
+      setImportResult(result)
+      showToast(`Importación completada — ${result.detected.length} sección(es) procesada(s)`)
+      reloadAll()
+      load()
+    } catch (err: any) {
+      showToast(err.message ?? 'Error al importar', false)
     } finally {
-      setBackupLoading(false)
+      setImporting(false)
+      if (importFileRef.current) importFileRef.current.value = ''
     }
   }
 
@@ -99,6 +160,7 @@ export function UsuariosSection({ courses, showToast }: UsuariosSectionProps) {
 
   return (
     <div className="space-y-6">
+      {/* ── Tabla de usuarios ───────────────────────────────────────────── */}
       <SectionHeader
         title="Usuarios del Sistema" subtitle="Gestiona las cuentas de acceso al panel."
         search={search} onSearch={v => { setSearch(v); setPage(0) }}
@@ -164,23 +226,101 @@ export function UsuariosSection({ courses, showToast }: UsuariosSectionProps) {
       <Pagination page={page} totalItems={filtered.length} pageSize={pageSize}
         onPageSizeChange={s => { setPageSize(s); setPage(0) }} onChange={setPage} />
 
-      {/* Backup inline */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 flex items-center justify-between gap-4">
+      {/* ── Export ─────────────────────────────────────────────────────── */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 space-y-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center flex-shrink-0">
-            <DatabaseBackup className="w-5 h-5 text-zinc-400" />
+          <div className="w-9 h-9 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center flex-shrink-0">
+            <Download className="w-4 h-4 text-zinc-400" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-zinc-200">Backup de datos</p>
-            <p className="text-xs text-zinc-500">Exporta todos los cursos, estudiantes, acciones, premios y registros en un archivo JSON.</p>
+            <p className="text-sm font-semibold text-zinc-200">Exportar backup</p>
+            <p className="text-xs text-zinc-500">Selecciona qué secciones incluir en el archivo JSON.</p>
           </div>
         </div>
-        <Button variant="secondary" size="sm" onClick={downloadBackup} disabled={backupLoading} className="flex-shrink-0">
-          <Download className="w-4 h-4" />
-          {backupLoading ? 'Generando...' : 'Descargar'}
-        </Button>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {EXPORT_SECTIONS.map(s => (
+            <label key={s.key} className="flex items-start gap-3 p-3 rounded-lg border border-zinc-800 hover:border-zinc-700 bg-zinc-900/50 cursor-pointer transition-colors">
+              <input
+                type="checkbox"
+                className="mt-0.5 w-4 h-4 rounded border-zinc-700 bg-zinc-900 accent-blue-500"
+                checked={exportSections.has(s.key)}
+                onChange={() => toggleSection(s.key)}
+              />
+              <div>
+                <p className="text-sm font-medium text-zinc-200 leading-tight">{s.label}</p>
+                <p className="text-xs text-zinc-500 mt-0.5">{s.desc}</p>
+              </div>
+            </label>
+          ))}
+        </div>
+
+        <div className="flex justify-end">
+          <Button variant="secondary" size="sm" onClick={downloadBackup} disabled={exporting || exportSections.size === 0}>
+            <Download className="w-4 h-4 mr-2" />
+            {exporting ? 'Generando...' : `Descargar JSON (${exportSections.size} secc.)`}
+          </Button>
+        </div>
       </div>
 
+      {/* ── Import ─────────────────────────────────────────────────────── */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center flex-shrink-0">
+            <Upload className="w-4 h-4 text-zinc-400" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-zinc-200">Importar backup</p>
+            <p className="text-xs text-zinc-500">Sube un archivo .json — los registros existentes se actualizan, los nuevos se crean automáticamente.</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <input
+            ref={importFileRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={handleImport}
+          />
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => importFileRef.current?.click()}
+            disabled={importing}
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            {importing ? 'Importando...' : 'Seleccionar archivo JSON'}
+          </Button>
+          {importing && <span className="text-xs text-zinc-500 animate-pulse">Procesando datos…</span>}
+        </div>
+
+        {/* Resultado de la última importación */}
+        {importResult && (
+          <div className="rounded-lg border border-emerald-800/50 bg-emerald-950/20 p-4 space-y-2">
+            <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+              Última importación — {importResult.detected.length} sección(es) detectada(s)
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(importResult.details).map(([key, val]) => {
+                if (!val) return null
+                const label = DETAIL_LABELS[key] ?? key
+                const parts: string[] = []
+                if ('updated' in val && (val.updated ?? 0) > 0) parts.push(`${val.updated} actualizados`)
+                if (val.created > 0) parts.push(`${val.created} nuevos`)
+                if (parts.length === 0) parts.push('sin cambios')
+                return (
+                  <span key={key} className="text-xs px-2.5 py-1 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300">
+                    <span className="text-zinc-400">{label}:</span> {parts.join(', ')}
+                  </span>
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Modal de usuario ─────────────────────────────────────────── */}
       <Modal open={modal} onClose={() => setModal(false)} title={editUser ? 'Editar Usuario' : 'Nuevo Usuario'}>
         <div className="space-y-4">
           {!editUser && (

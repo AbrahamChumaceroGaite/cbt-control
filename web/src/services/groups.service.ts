@@ -1,4 +1,4 @@
-import { apiFetch } from '@/lib/api'
+import { apiFetch, apiFetchFull } from '@/lib/api'
 import type { GroupResponse, GroupInput } from '@control-aula/shared'
 
 export const groupsService = {
@@ -6,19 +6,19 @@ export const groupsService = {
     apiFetch<GroupResponse[]>(`/api/grupos?courseId=${courseId}`),
 
   create: (body: GroupInput & { courseId: string }) =>
-    apiFetch<GroupResponse>('/api/grupos', {
+    apiFetchFull<GroupResponse>('/api/grupos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     }),
 
   update: (id: string, body: GroupInput) =>
-    apiFetch<GroupResponse>(`/api/grupos/${id}`, {
+    apiFetchFull<GroupResponse>(`/api/grupos/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     }),
 
   delete: (id: string) =>
-    apiFetch<null>(`/api/grupos/${id}`, { method: 'DELETE' }),
+    apiFetchFull<null>(`/api/grupos/${id}`, { method: 'DELETE' }),
 }

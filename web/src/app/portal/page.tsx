@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation'
 import { Gift, ClipboardList, Home, LogOut } from 'lucide-react'
 import { portalService, type StudentData, type IndividualReward } from '@/services/portal.service'
 import { authService } from '@/services/auth.service'
+import { PushBell }    from '@/components/ui'
+import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { PortalSkeleton }  from '@/features/portal/PortalSkeleton'
 import { PerfilTab }       from '@/features/portal/PerfilTab'
 import { RecompensasTab }  from '@/features/portal/RecompensasTab'
@@ -19,6 +21,7 @@ export default function PortalPage() {
   const [loading,    setLoading]    = useState(true)
   const [requesting, setRequesting] = useState<string | null>(null)
   const [toast,      setToast]      = useState('')
+  const { unsubscribeForLogout }    = usePushNotifications()
 
   useEffect(() => {
     Promise.all([
@@ -36,6 +39,7 @@ export default function PortalPage() {
   }
 
   async function logout() {
+    await unsubscribeForLogout()
     await authService.logout()
     router.push('/login')
   }
@@ -43,10 +47,12 @@ export default function PortalPage() {
   async function requestReward(rewardId: string) {
     setRequesting(rewardId)
     try {
-      await portalService.requestReward(rewardId)
-      showToast('¡Solicitud enviada!')
+      const { message } = await portalService.requestReward(rewardId)
+      showToast(message)
       const me = await portalService.getMe()
       setStudent(me)
+    } catch (err: any) {
+      showToast(err.message ?? 'Error al enviar solicitud')
     } finally { setRequesting(null) }
   }
 
@@ -87,6 +93,7 @@ export default function PortalPage() {
                 <div className="text-xl font-black text-amber-400 leading-none">{student.coins}</div>
                 <div className="text-[10px] text-zinc-600 font-medium uppercase tracking-wider">coins</div>
               </div>
+              <PushBell />
               <button onClick={logout}
                 className="w-8 h-8 rounded-xl bg-zinc-800 border border-zinc-700/50 flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700 transition-all">
                 <LogOut className="w-3.5 h-3.5" />

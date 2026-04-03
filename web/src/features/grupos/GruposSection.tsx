@@ -29,13 +29,10 @@ export function GruposSection({ groups, students, currentCourse, reload, showToa
   async function save() {
     if (!form.name) return
     try {
-      if (editing) {
-        await groupsService.update(editing.id, { ...form, courseId: currentCourse })
-        showToast('Grupo actualizado')
-      } else {
-        await groupsService.create({ ...form, courseId: currentCourse })
-        showToast('Grupo creado')
-      }
+      const { message } = editing
+        ? await groupsService.update(editing.id, { ...form, courseId: currentCourse })
+        : await groupsService.create({ ...form, courseId: currentCourse })
+      showToast(message)
       setModal(false)
       reload()
     } catch (err: any) {
@@ -46,8 +43,8 @@ export function GruposSection({ groups, students, currentCourse, reload, showToa
   async function del(id: string) {
     if (!confirm('¿Eliminar grupo?')) return
     try {
-      await groupsService.delete(id)
-      showToast('Eliminado')
+      const { message } = await groupsService.delete(id)
+      showToast(message)
       reload()
     } catch (err: any) {
       showToast(err.message ?? 'Error al eliminar', false)

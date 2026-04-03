@@ -1,7 +1,8 @@
 import { ICommandHandler, CommandHandler } from '@nestjs/cqrs'
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common'
 import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator'
-import { PrismaService } from '../../../../infrastructure/prisma/prisma.service'
+import { PrismaService }      from '../../../../infrastructure/prisma/prisma.service'
+import { NotificationService } from '../../../push/application/notification.service'
 
 export class ProcessRedemptionDto {
   @IsString() @IsNotEmpty() @IsIn(['approved', 'rejected']) status!: string
@@ -14,7 +15,10 @@ export class ProcessRedemptionCommand {
 
 @CommandHandler(ProcessRedemptionCommand)
 export class ProcessRedemptionHandler implements ICommandHandler<ProcessRedemptionCommand> {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma:         PrismaService,
+    private readonly notifications:  NotificationService,
+  ) {}
 
   async execute({ id, dto }: ProcessRedemptionCommand) {
     const request = await this.prisma.redemptionRequest.findUnique({
@@ -22,10 +26,10 @@ export class ProcessRedemptionHandler implements ICommandHandler<ProcessRedempti
       include: { reward: true },
     })
 
-    if (!request)                   throw new NotFoundException('Solicitud no encontrada')
+    if (!request)                     throw new NotFoundException('Solicitud no encontrada')
     if (request.status !== 'pending') throw new ConflictException('Solicitud ya procesada')
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       if (dto.status === 'approved') {
         const student = await tx.student.update({
           where: { id: request.studentId },
@@ -53,5 +57,12 @@ export class ProcessRedemptionHandler implements ICommandHandler<ProcessRedempti
         },
       })
     })
+
+    // Fire-and-forget push notification
+    this.notifications
+      .notifyRequestProcessed(result.studentId, result.reward.name, dto.status === 'approved')
+      .catch(() => {})
+
+    return result
   }
 }

@@ -27,8 +27,8 @@ export function SolicitudesSection({ showToast, onCountChange }: SolicitudesSect
   async function handle(id: string, status: 'approved' | 'rejected') {
     setProcessing(id)
     try {
-      await solicitudesService.process(id, status)
-      showToast(status === 'approved' ? 'Solicitud aprobada ✓' : 'Solicitud rechazada', status === 'approved')
+      const { message } = await solicitudesService.process(id, status)
+      showToast(message, status === 'approved')
       load()
     } catch (err: any) {
       showToast(err.message ?? 'Error al procesar solicitud', false)
