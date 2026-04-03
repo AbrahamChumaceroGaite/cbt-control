@@ -30,23 +30,31 @@ export function EstudiantesSection({ students, currentCourse, reload, reloadAll,
 
   async function save() {
     if (!form.name) return
-    if (editing) {
-      await studentsService.update(editing.id, form)
-    } else {
-      await studentsService.create({ ...form, courseId: currentCourse })
+    try {
+      if (editing) {
+        await studentsService.update(editing.id, form)
+      } else {
+        await studentsService.create({ ...form, courseId: currentCourse })
+      }
+      showToast(editing ? 'Actualizado' : 'Creado')
+      setModal(false)
+      reload()
+      reloadAll()
+    } catch (err: any) {
+      showToast(err.message ?? 'Error al guardar', false)
     }
-    showToast(editing ? 'Actualizado' : 'Creado')
-    setModal(false)
-    reload()
-    reloadAll()
   }
 
   async function del(id: string) {
     if (!confirm('¿Eliminar estudiante?')) return
-    await studentsService.delete(id)
-    showToast('Eliminado')
-    reload()
-    reloadAll()
+    try {
+      await studentsService.delete(id)
+      showToast('Eliminado')
+      reload()
+      reloadAll()
+    } catch (err: any) {
+      showToast(err.message ?? 'Error al eliminar', false)
+    }
   }
 
   async function handleExcelUpload(e: React.ChangeEvent<HTMLInputElement>) {

@@ -30,6 +30,8 @@ export function SolicitudesSection({ showToast, onCountChange }: SolicitudesSect
       await solicitudesService.process(id, status)
       showToast(status === 'approved' ? 'Solicitud aprobada ✓' : 'Solicitud rechazada', status === 'approved')
       load()
+    } catch (err: any) {
+      showToast(err.message ?? 'Error al procesar solicitud', false)
     } finally { setProcessing(null) }
   }
 

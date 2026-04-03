@@ -57,6 +57,8 @@ export function UsuariosSection({ courses, showToast }: UsuariosSectionProps) {
       await usersService.update(u.id, { isActive: !u.isActive })
       showToast(u.isActive ? 'Usuario desactivado' : 'Usuario activado', !u.isActive)
       load()
+    } catch (err: any) {
+      showToast(err.message ?? 'Error al actualizar usuario', false)
     } finally { setProcessing(null) }
   }
 
@@ -67,6 +69,8 @@ export function UsuariosSection({ courses, showToast }: UsuariosSectionProps) {
       await usersService.delete(u.id)
       showToast('Usuario eliminado')
       load()
+    } catch (err: any) {
+      showToast(err.message ?? 'Error al eliminar usuario', false)
     } finally { setProcessing(null) }
   }
 

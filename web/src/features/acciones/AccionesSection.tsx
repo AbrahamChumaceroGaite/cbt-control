@@ -37,22 +37,30 @@ export function AccionesSection({ actions, reload, showToast }: AccionesSectionP
 
   async function save() {
     if (!form.name) return
-    if (editing) {
-      await actionsService.update(editing.id, form)
-      showToast('Acción actualizada')
-    } else {
-      await actionsService.create(form)
-      showToast('Acción creada')
+    try {
+      if (editing) {
+        await actionsService.update(editing.id, form)
+        showToast('Acción actualizada')
+      } else {
+        await actionsService.create(form)
+        showToast('Acción creada')
+      }
+      setModal(false)
+      reload()
+    } catch (err: any) {
+      showToast(err.message ?? 'Error al guardar', false)
     }
-    setModal(false)
-    reload()
   }
 
   async function del(id: string) {
     if (!confirm('¿Eliminar acción permanentemente?')) return
-    await actionsService.delete(id)
-    showToast('Eliminada')
-    reload()
+    try {
+      await actionsService.delete(id)
+      showToast('Eliminada')
+      reload()
+    } catch (err: any) {
+      showToast(err.message ?? 'Error al eliminar', false)
+    }
   }
 
   const paginated = actions.slice(page * pageSize, (page + 1) * pageSize)

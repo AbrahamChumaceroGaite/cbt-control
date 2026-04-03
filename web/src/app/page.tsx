@@ -137,7 +137,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="relative z-10 pt-20 pb-6 px-6 mx-auto max-w-[1400px]">
+      <main className="relative pt-20 pb-6 px-6 mx-auto max-w-[1400px]">
         {tab === 'aula'        && <AulaSection        course={course} students={students} actions={actions} rewards={rewards} logs={logs} reload={() => loadCourse(currentCourse)} showToast={showToast} />}
         {tab === 'cursos'      && <CursosSection      courses={courses} reload={loadAll} showToast={showToast} />}
         {tab === 'estudiantes' && <EstudiantesSection students={students} currentCourse={currentCourse} reload={() => loadCourse(currentCourse)} reloadAll={loadAll} showToast={showToast} />}

@@ -25,22 +25,30 @@ export function CursosSection({ courses, reload, showToast }: CursosSectionProps
   const openEdit = (c: CourseResponse) => { setForm({ name: c.name, level: c.level, parallel: c.parallel }); setEditing(c); setModal(true) }
 
   async function save() {
-    if (editing) {
-      await coursesService.update(editing.id, form)
-      showToast('Curso actualizado')
-    } else {
-      await coursesService.create(form)
-      showToast('Curso creado')
+    try {
+      if (editing) {
+        await coursesService.update(editing.id, form)
+        showToast('Curso actualizado')
+      } else {
+        await coursesService.create(form)
+        showToast('Curso creado')
+      }
+      setModal(false)
+      reload()
+    } catch (err: any) {
+      showToast(err.message ?? 'Error al guardar', false)
     }
-    setModal(false)
-    reload()
   }
 
   async function del(id: string) {
     if (!confirm('¿Eliminar este curso y todos sus estudiantes?')) return
-    await coursesService.delete(id)
-    showToast('Curso eliminado')
-    reload()
+    try {
+      await coursesService.delete(id)
+      showToast('Curso eliminado')
+      reload()
+    } catch (err: any) {
+      showToast(err.message ?? 'Error al eliminar', false)
+    }
   }
 
   const paginated = courses.slice(page * pageSize, (page + 1) * pageSize)

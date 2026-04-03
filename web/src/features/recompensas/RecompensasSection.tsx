@@ -72,9 +72,13 @@ export function RecompensasSection({ rewards, reload, showToast }: RecompensasSe
 
   async function del(id: string) {
     if (!confirm('¿Eliminar recompensa permanentemente?')) return
-    await rewardsService.delete(id)
-    showToast('Eliminada')
-    reload()
+    try {
+      await rewardsService.delete(id)
+      showToast('Eliminada')
+      reload()
+    } catch (err: any) {
+      showToast(err.message ?? 'Error al eliminar', false)
+    }
   }
 
   const paginated = rewards.slice(page * pageSize, (page + 1) * pageSize)

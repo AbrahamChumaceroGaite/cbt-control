@@ -28,22 +28,30 @@ export function GruposSection({ groups, students, currentCourse, reload, showToa
 
   async function save() {
     if (!form.name) return
-    if (editing) {
-      await groupsService.update(editing.id, { ...form, courseId: currentCourse })
-      showToast('Grupo actualizado')
-    } else {
-      await groupsService.create({ ...form, courseId: currentCourse })
-      showToast('Grupo creado')
+    try {
+      if (editing) {
+        await groupsService.update(editing.id, { ...form, courseId: currentCourse })
+        showToast('Grupo actualizado')
+      } else {
+        await groupsService.create({ ...form, courseId: currentCourse })
+        showToast('Grupo creado')
+      }
+      setModal(false)
+      reload()
+    } catch (err: any) {
+      showToast(err.message ?? 'Error al guardar', false)
     }
-    setModal(false)
-    reload()
   }
 
   async function del(id: string) {
     if (!confirm('¿Eliminar grupo?')) return
-    await groupsService.delete(id)
-    showToast('Eliminado')
-    reload()
+    try {
+      await groupsService.delete(id)
+      showToast('Eliminado')
+      reload()
+    } catch (err: any) {
+      showToast(err.message ?? 'Error al eliminar', false)
+    }
   }
 
   function toggleMember(studentId: string) {

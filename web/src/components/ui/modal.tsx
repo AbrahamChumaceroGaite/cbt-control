@@ -10,7 +10,7 @@ export function Modal({ open, onClose, title, lg, children }: {
 }) {
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
+    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       <div className={cn(
         'relative w-full rounded-2xl border border-zinc-800 bg-zinc-900 shadow-2xl flex flex-col max-h-[90vh]',
