@@ -32,7 +32,9 @@ export async function middleware(request: NextRequest) {
     const allowed =
       pathname.startsWith('/portal') ||
       pathname.startsWith('/api/portal') ||
-      pathname.startsWith('/api/auth')
+      pathname.startsWith('/api/auth') ||
+      pathname.startsWith('/api/notifications') ||
+      pathname.startsWith('/api/push')
     if (!allowed) {
       return NextResponse.redirect(new URL('/portal', request.url))
     }
