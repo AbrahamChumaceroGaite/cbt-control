@@ -8,9 +8,10 @@ import { NotificationService }  from './application/notification.service'
 import { SubscribeHandler }     from './application/commands/subscribe.command'
 import { UnsubscribeHandler }   from './application/commands/unsubscribe.command'
 import { AuthModule }           from '../auth/auth.module'
+import { InboxModule }          from '../inbox/inbox.module'
 
 @Module({
-  imports:     [CqrsModule, AuthModule],
+  imports:     [CqrsModule, AuthModule, InboxModule],
   controllers: [PushController],
   providers:   [
     { provide: PushRepository, useClass: PushRepositoryImpl },

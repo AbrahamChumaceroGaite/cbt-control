@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Gift, ClipboardList, Home, LogOut } from 'lucide-react'
 import { portalService, type StudentData, type IndividualReward } from '@/services/portal.service'
 import { authService } from '@/services/auth.service'
-import { PushBell }    from '@/components/ui'
+import { NotificationBell } from '@/features/notifications/NotificationBell'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { PortalSkeleton }  from '@/features/portal/PortalSkeleton'
 import { PerfilTab }       from '@/features/portal/PerfilTab'
@@ -93,7 +93,7 @@ export default function PortalPage() {
                 <div className="text-xl font-black text-amber-400 leading-none">{student.coins}</div>
                 <div className="text-[10px] text-zinc-600 font-medium uppercase tracking-wider">coins</div>
               </div>
-              <PushBell />
+              <NotificationBell />
               <button onClick={logout}
                 className="w-8 h-8 rounded-xl bg-zinc-800 border border-zinc-700/50 flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700 transition-all">
                 <LogOut className="w-3.5 h-3.5" />

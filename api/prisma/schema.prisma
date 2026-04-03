@@ -159,6 +159,7 @@ model User {
 
   student           Student?           @relation(fields: [studentId], references: [id], onDelete: SetNull)
   pushSubscriptions PushSubscription[]
+  notifications     Notification[]
 }
 
 model PushSubscription {
@@ -167,6 +168,19 @@ model PushSubscription {
   endpoint  String   @unique
   p256dh    String
   auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  url       String   @default("/")
+  tag       String   @default("")
+  isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
