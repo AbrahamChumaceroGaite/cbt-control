@@ -1,11 +1,12 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Plus, UserCog, X } from 'lucide-react'
+import { Plus, Bell, BellOff } from 'lucide-react'
 import type { CourseResponse } from '@control-aula/shared'
 import { Modal, Button, Input, Label, Select, Tooltip } from '@/components/ui'
 import { usersService, type UserFull } from '@/services/users.service'
 import { SectionHeader } from '@/components/shared/SectionHeader'
 import { Pagination }    from '@/components/shared/Pagination'
+import { UserDrawer }    from './UserDrawer'
 
 interface Props {
   courses:   CourseResponse[]
@@ -14,14 +15,13 @@ interface Props {
 }
 
 export function UsuariosSection({ showToast }: Props) {
-  const [users,      setUsers]      = useState<UserFull[]>([])
-  const [modal,      setModal]      = useState(false)
-  const [editUser,   setEditUser]   = useState<UserFull | null>(null)
-  const [form,       setForm]       = useState({ code: '', password: '', role: 'student', fullName: '', isActive: true })
-  const [search,     setSearch]     = useState('')
-  const [page,       setPage]       = useState(0)
-  const [pageSize,   setPageSize]   = useState(10)
-  const [processing, setProcessing] = useState<string | null>(null)
+  const [users,    setUsers]    = useState<UserFull[]>([])
+  const [modal,    setModal]    = useState(false)
+  const [form,     setForm]     = useState({ code: '', password: '', role: 'student', fullName: '' })
+  const [search,   setSearch]   = useState('')
+  const [page,     setPage]     = useState(0)
+  const [pageSize, setPageSize] = useState(12)
+  const [selected, setSelected] = useState<UserFull | null>(null)
 
   async function load() {
     const data = await usersService.getAll().catch(() => [] as UserFull[])
@@ -30,192 +30,152 @@ export function UsuariosSection({ showToast }: Props) {
 
   useEffect(() => { load() }, [])
 
-  function openCreate() {
-    setEditUser(null)
-    setForm({ code: '', password: '', role: 'student', fullName: '', isActive: true })
-    setModal(true)
-  }
-
-  function openEdit(u: UserFull) {
-    setEditUser(u)
-    setForm({ code: u.code, password: '', role: u.role, fullName: u.fullName, isActive: u.isActive })
-    setModal(true)
-  }
-
-  async function save() {
+  async function create() {
     try {
-      let message: string
-      if (editUser) {
-        const body: { fullName: string; isActive: boolean; password?: string } = { fullName: form.fullName, isActive: form.isActive }
-        if (form.password) body.password = form.password
-        ;({ message } = await usersService.update(editUser.id, body))
-      } else {
-        ;({ message } = await usersService.create({ code: form.code, password: form.password, role: form.role, fullName: form.fullName }))
-      }
+      const { message } = await usersService.create({ code: form.code, password: form.password, role: form.role, fullName: form.fullName })
       showToast(message)
       setModal(false)
+      setForm({ code: '', password: '', role: 'student', fullName: '' })
       load()
     } catch (err: any) { showToast(err.message ?? 'Error de conexión', false) }
   }
 
-  async function toggleActive(u: UserFull) {
-    setProcessing(u.id)
-    try {
-      const { message } = await usersService.update(u.id, { isActive: !u.isActive })
-      showToast(message, !u.isActive)
-      load()
-    } catch (err: any) {
-      showToast(err.message ?? 'Error al actualizar usuario', false)
-    } finally { setProcessing(null) }
-  }
-
-  async function remove(u: UserFull) {
-    if (!confirm(`¿Eliminar usuario ${u.code}?`)) return
-    setProcessing(u.id)
-    try {
-      const { message } = await usersService.delete(u.id)
-      showToast(message)
-      load()
-    } catch (err: any) {
-      showToast(err.message ?? 'Error al eliminar usuario', false)
-    } finally { setProcessing(null) }
-  }
-
   const filtered  = users.filter(u =>
     !search ||
-    u.code.includes(search.toLowerCase()) ||
+    u.code.toLowerCase().includes(search.toLowerCase()) ||
     u.fullName.toLowerCase().includes(search.toLowerCase())
   )
   const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize)
 
   return (
-    <div className="space-y-4 animate-in fade-in duration-300">
-      <SectionHeader
-        title="Usuarios del Sistema"
-        subtitle="Gestiona las cuentas de acceso al panel."
-        search={search}
-        onSearch={v => { setSearch(v); setPage(0) }}
-        actions={
-          <Tooltip content="Nuevo usuario">
-            <Button size="sm" onClick={openCreate}><Plus className="w-4 h-4" /></Button>
-          </Tooltip>
-        }
-      />
+    <>
+      <div className="space-y-4 animate-in fade-in duration-300">
+        <SectionHeader
+          title="Usuarios del Sistema"
+          subtitle="Gestiona las cuentas de acceso al panel."
+          search={search}
+          onSearch={v => { setSearch(v); setPage(0) }}
+          actions={
+            <Tooltip content="Nuevo usuario">
+              <Button size="sm" onClick={() => setModal(true)}><Plus className="w-4 h-4" /></Button>
+            </Tooltip>
+          }
+        />
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-zinc-800 text-zinc-500 text-xs uppercase tracking-wide">
-              <th className="text-left px-4 py-3">Código</th>
-              <th className="text-left px-4 py-3">Nombre</th>
-              <th className="text-left px-4 py-3">Rol</th>
-              <th className="text-left px-4 py-3">Estudiante</th>
-              <th className="text-left px-4 py-3">Estado</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {paginated.map(u => (
-              <tr key={u.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
-                <td className="px-4 py-3 font-mono text-zinc-300">{u.code}</td>
-                <td className="px-4 py-3 text-zinc-200">{u.fullName || '—'}</td>
-                <td className="px-4 py-3">
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                    u.role === 'admin'
-                      ? 'bg-purple-900/50 text-purple-400'
-                      : 'bg-blue-900/50 text-blue-400'
-                  }`}>
-                    {u.role === 'admin' ? 'Admin' : 'Estudiante'}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-zinc-500 text-xs">
-                  {u.student ? `${u.student.name} (${u.student.course?.name ?? '—'})` : '—'}
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`text-xs font-medium ${u.isActive ? 'text-green-400' : 'text-zinc-600'}`}>
-                    {u.isActive ? 'Activo' : 'Inactivo'}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-1 justify-end">
-                    <Tooltip content="Editar usuario">
-                      <button onClick={() => openEdit(u)} className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-md transition-colors">
-                        <UserCog className="w-3.5 h-3.5" />
-                      </button>
-                    </Tooltip>
-                    <Tooltip content={u.isActive ? 'Desactivar' : 'Activar'}>
-                      <button onClick={() => toggleActive(u)} disabled={processing === u.id} className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-md transition-colors text-xs">
-                        {u.isActive ? '⏸' : '▶'}
-                      </button>
-                    </Tooltip>
-                    {u.role !== 'admin' && (
-                      <Tooltip content="Eliminar usuario">
-                        <button onClick={() => remove(u)} disabled={processing === u.id} className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-950/30 rounded-md transition-colors">
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </Tooltip>
-                    )}
+        {/* Card grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {paginated.map(u => {
+            const isAdmin   = u.role === 'admin'
+            const hasPush   = u.pushSubscriptionCount > 0
+            const aura      = isAdmin
+              ? 'border-purple-500/25 hover:border-purple-500/50 hover:shadow-purple-500/10'
+              : 'border-blue-500/20 hover:border-blue-500/40 hover:shadow-blue-500/8'
+            const avatarBg  = isAdmin
+              ? 'bg-purple-500/15 border-purple-500/30 text-purple-300'
+              : 'bg-blue-500/15 border-blue-500/30 text-blue-300'
+            const roleBadge = isAdmin
+              ? 'bg-purple-900/50 text-purple-300'
+              : 'bg-blue-900/50 text-blue-300'
+
+            return (
+              <button
+                key={u.id}
+                onClick={() => setSelected(u)}
+                className={`group relative text-left w-full bg-zinc-900/60 border rounded-xl p-4 hover:bg-zinc-900/90 hover:shadow-lg transition-all duration-200 ${aura}`}
+              >
+                <div className="flex items-start gap-3">
+                  {/* Avatar */}
+                  <div className={`w-10 h-10 rounded-xl border flex items-center justify-center text-base font-black flex-shrink-0 ${avatarBg}`}>
+                    {(u.fullName || u.code).charAt(0).toUpperCase()}
                   </div>
-                </td>
-              </tr>
-            ))}
-            {paginated.length === 0 && (
-              <tr>
-                <td colSpan={6} className="text-center py-8 text-zinc-600">Sin usuarios</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+
+                  {/* Info */}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-zinc-100 truncate leading-tight">
+                      {u.fullName || u.code}
+                    </p>
+                    <p className="text-[11px] text-zinc-500 font-mono truncate">{u.code}</p>
+                    <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${roleBadge}`}>
+                        {isAdmin ? 'Admin' : 'Estudiante'}
+                      </span>
+                      <span className={`text-[10px] font-medium ${u.isActive ? 'text-emerald-400' : 'text-zinc-600'}`}>
+                        {u.isActive ? '● Activo' : '● Inactivo'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Push indicator */}
+                <div className="absolute top-3 right-3">
+                  {hasPush
+                    ? <Bell className="w-3 h-3 text-emerald-400" />
+                    : <BellOff className="w-3 h-3 text-zinc-700" />
+                  }
+                </div>
+
+                {/* Student info */}
+                {u.student && (
+                  <p className="mt-2.5 text-[11px] text-zinc-600 truncate border-t border-zinc-800/50 pt-2">
+                    {u.student.name}{u.student.course ? ` · ${u.student.course.name}` : ''}
+                  </p>
+                )}
+              </button>
+            )
+          })}
+
+          {paginated.length === 0 && (
+            <div className="col-span-full text-center py-12 text-zinc-600 text-sm">
+              Sin usuarios
+            </div>
+          )}
+        </div>
+
+        <Pagination
+          page={page}
+          totalItems={filtered.length}
+          pageSize={pageSize}
+          onPageSizeChange={s => { setPageSize(s); setPage(0) }}
+          onChange={setPage}
+        />
       </div>
 
-      <Pagination
-        page={page}
-        totalItems={filtered.length}
-        pageSize={pageSize}
-        onPageSizeChange={s => { setPageSize(s); setPage(0) }}
-        onChange={setPage}
+      {/* Drawer */}
+      <UserDrawer
+        user={selected}
+        onClose={() => setSelected(null)}
+        onUpdated={() => { load(); setSelected(null) }}
+        showToast={showToast}
       />
 
-      {/* ── Modal ──────────────────────────────────────────────────────── */}
-      <Modal open={modal} onClose={() => setModal(false)} title={editUser ? 'Editar Usuario' : 'Nuevo Usuario'}>
+      {/* Create modal */}
+      <Modal open={modal} onClose={() => setModal(false)} title="Nuevo Usuario">
         <div className="space-y-4">
-          {!editUser && (
-            <>
-              <div className="space-y-1.5">
-                <Label>Código (login)</Label>
-                <Input value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value }))} placeholder="ej. s1a01 o admin" />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Rol</Label>
-                <Select value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))}>
-                  <option value="student">Estudiante</option>
-                  <option value="admin">Administrador</option>
-                </Select>
-              </div>
-            </>
-          )}
+          <div className="space-y-1.5">
+            <Label>Código (login)</Label>
+            <Input value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value }))} placeholder="ej. s1a01 o admin" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Rol</Label>
+            <Select value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))}>
+              <option value="student">Estudiante</option>
+              <option value="admin">Administrador</option>
+            </Select>
+          </div>
           <div className="space-y-1.5">
             <Label>Nombre Completo</Label>
             <Input value={form.fullName} onChange={e => setForm(p => ({ ...p, fullName: e.target.value }))} placeholder="Nombre para mostrar" />
           </div>
-          {(!editUser || form.role === 'admin') && (
-            <div className="space-y-1.5">
-              <Label>{editUser ? 'Nueva Contraseña (vacío = sin cambio)' : 'Contraseña'}</Label>
-              <Input type="password" value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} placeholder="••••••••" />
-            </div>
-          )}
-          {editUser && (
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={form.isActive} onChange={e => setForm(p => ({ ...p, isActive: e.target.checked }))} className="w-4 h-4 rounded border-zinc-700 bg-zinc-900" />
-              <span className="text-sm text-zinc-300">Cuenta activa</span>
-            </label>
-          )}
+          <div className="space-y-1.5">
+            <Label>Contraseña</Label>
+            <Input type="password" value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} placeholder="••••••••" />
+          </div>
         </div>
         <div className="flex gap-2 pt-4">
           <Button variant="outline" onClick={() => setModal(false)} className="flex-1">Cancelar</Button>
-          <Button onClick={save} className="flex-1">{editUser ? 'Guardar' : 'Crear Usuario'}</Button>
+          <Button onClick={create} className="flex-1">Crear Usuario</Button>
         </div>
       </Modal>
-    </div>
+    </>
   )
 }

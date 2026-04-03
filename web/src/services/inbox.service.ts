@@ -45,4 +45,7 @@ export const inboxService = {
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ action: 'delete-all' }),
     }),
+
+  adminGetUserInbox: (userId: string) =>
+    apiFetch<InboxResult>(`/api/notifications/admin/users/${userId}`),
 }

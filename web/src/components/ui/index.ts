@@ -11,4 +11,3 @@ export { EmptyState }                                                from './emp
 export { Modal }                                                     from './modal'
 export { Tooltip }                                                   from './tooltip'
 export { Toast }                                                     from './toast'
-export { PushBell }                                                  from './push-bell'

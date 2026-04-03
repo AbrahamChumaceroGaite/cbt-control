@@ -5,15 +5,14 @@ services:
       dockerfile: api/Dockerfile
     expose:
       - "4001"
+    env_file:
+      - ./api/.env          # loaded first — api-specific vars (VAPID keys, JWT_SECRET, etc.)
     environment:
+      # Production overrides — these win over env_file values
       - NODE_ENV=production
       - DATABASE_URL=file:/app/data/prod.db
-      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
       - PORT=4001
       - WEB_ORIGIN=${WEB_ORIGIN:-http://localhost:3001}
-      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY:-}
-      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-}
-      - VAPID_EMAIL=${VAPID_EMAIL:-mailto:admin@cbt.edu}
     volumes:
       - sqlite_data:/app/data
     restart: unless-stopped

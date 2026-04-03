@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { UserCog, Database, Shield } from 'lucide-react'
 import type { CourseResponse } from '@control-aula/shared'
 import { UsuariosSection } from '@/features/usuarios/UsuariosSection'

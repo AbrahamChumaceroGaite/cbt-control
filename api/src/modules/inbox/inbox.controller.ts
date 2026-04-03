@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, ForbiddenException, Get, HttpCode, Param, Patch, UseGuards } from '@nestjs/common'
 import { CommandBus, QueryBus } from '@nestjs/cqrs'
 import { JwtAuthGuard }        from '../../common/guards/jwt-auth.guard'
 import { CurrentUser }         from '../../common/decorators/current-user.decorator'
@@ -37,5 +37,12 @@ export class InboxController {
   @ResponseMessage('Notificación eliminada')
   deleteOne(@CurrentUser() user: SessionPayload, @Param('id') id: string) {
     return this.cb.execute(new BatchInboxCommand(user.userId, { action: 'delete-many', ids: [id] }))
+  }
+
+  /** Admin: view any user's notification inbox */
+  @Get('admin/users/:userId')
+  adminUserInbox(@CurrentUser() user: SessionPayload, @Param('userId') userId: string) {
+    if (user.role !== 'admin') throw new ForbiddenException()
+    return this.qb.execute(new GetInboxQuery(userId))
   }
 }

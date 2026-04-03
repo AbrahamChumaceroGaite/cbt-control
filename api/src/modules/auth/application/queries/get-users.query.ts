@@ -17,25 +17,22 @@ export class GetUsersHandler implements IQueryHandler<GetUsersQuery, UserDetailR
         fullName:  true,
         isActive:  true,
         createdAt: true,
-        student:   {
-          select: {
-            id:   true,
-            name: true,
-            course: { select: { name: true } },
-          },
-        },
+        student:   { select: { id: true, name: true, course: { select: { name: true } } } },
+        _count:    { select: { pushSubscriptions: true, notifications: true } },
       },
       orderBy: { code: 'asc' },
     })
 
     return users.map(u => ({
-      id:        u.id,
-      code:      u.code,
-      role:      u.role as 'admin' | 'student',
-      fullName:  u.fullName,
-      isActive:  u.isActive,
-      createdAt: u.createdAt.toISOString(),
-      student:   u.student ?? null,
+      id:                    u.id,
+      code:                  u.code,
+      role:                  u.role as 'admin' | 'student',
+      fullName:              u.fullName,
+      isActive:              u.isActive,
+      createdAt:             u.createdAt.toISOString(),
+      student:               u.student ?? null,
+      pushSubscriptionCount: u._count.pushSubscriptions,
+      notificationCount:     u._count.notifications,
     }))
   }
 }
