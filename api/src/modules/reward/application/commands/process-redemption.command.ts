@@ -3,6 +3,7 @@ import { BadRequestException, ConflictException, NotFoundException } from '@nest
 import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator'
 import { PrismaService }      from '../../../../infrastructure/prisma/prisma.service'
 import { NotificationService } from '../../../push/application/notification.service'
+import { SocketService }    from '../../../../infrastructure/socket/socket.service'
 
 export class ProcessRedemptionDto {
   @IsString() @IsNotEmpty() @IsIn(['approved', 'rejected']) status!: string
@@ -18,6 +19,7 @@ export class ProcessRedemptionHandler implements ICommandHandler<ProcessRedempti
   constructor(
     private readonly prisma:         PrismaService,
     private readonly notifications:  NotificationService,
+    private readonly realtime:       SocketService,
   ) {}
 
   async execute({ id, dto }: ProcessRedemptionCommand) {
@@ -52,13 +54,24 @@ export class ProcessRedemptionHandler implements ICommandHandler<ProcessRedempti
         where:   { id },
         data:    { status: dto.status, notes: dto.notes ?? '' },
         include: {
-          student: { select: { name: true, coins: true } },
+          student: { select: { name: true, coins: true, courseId: true } },
           reward:  { select: { name: true, icon: true } },
         },
       })
     })
 
-    // Fire-and-forget push notification
+    // Real-time: update student's solicitud status and coins instantly
+    this.realtime.solicitudUpdated(result.studentId, { id: result.id, status: result.status })
+
+    if (dto.status === 'approved') {
+      this.realtime.coinsUpdated({
+        courseId:     result.student.courseId,
+        studentId:    result.studentId,
+        studentCoins: result.student.coins,
+      })
+    }
+
+    // Fire-and-forget: push + inbox notification to the student
     this.notifications
       .notifyRequestProcessed(result.studentId, result.reward.name, dto.status === 'approved')
       .catch(() => {})

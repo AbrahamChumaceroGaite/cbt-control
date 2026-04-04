@@ -9,5 +9,5 @@ export interface StudentEntity {
   coins:     number
   createdAt: Date
   tramos:    StudentTramoEntity[]
-  course?:   { name: string }
+  course?:   { name: string; classCoins?: number }
 }

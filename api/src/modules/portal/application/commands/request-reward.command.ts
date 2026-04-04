@@ -21,8 +21,8 @@ export class RequestRewardHandler implements ICommandHandler<RequestRewardComman
   async execute({ studentId, dto }: RequestRewardCommand) {
     const result = await this.repo.requestReward(studentId, dto.rewardId)
 
-    // Fire-and-forget: notify all admins about the new pending request
-    this.notifications.notifyAdminsNewRequest(studentId, dto.rewardId).catch(() => {})
+    // Fire-and-forget: notify all admins (push + inbox + WS)
+    this.notifications.notifyAdminsNewRequest(studentId, dto.rewardId, result.id).catch(() => {})
 
     return result
   }

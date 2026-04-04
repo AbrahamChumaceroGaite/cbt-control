@@ -1,0 +1,62 @@
+import { Logger } from '@nestjs/common'
+import {
+  WebSocketGateway, WebSocketServer,
+  OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect,
+} from '@nestjs/websockets'
+import { JwtService }     from '@nestjs/jwt'
+import { Server, Socket } from 'socket.io'
+import { PrismaService }  from '../prisma/prisma.service'
+import { SocketService }  from './socket.service'
+import type { SessionPayload } from '../../modules/auth/domain/user.entity'
+
+@WebSocketGateway({
+  cors: { origin: process.env.WEB_ORIGIN ?? 'http://localhost:3001', credentials: true },
+})
+export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+  @WebSocketServer() private server!: Server
+  private readonly logger = new Logger(AppGateway.name)
+
+  constructor(
+    private readonly socket: SocketService,
+    private readonly jwt:    JwtService,
+    private readonly prisma: PrismaService,
+  ) {}
+
+  afterInit(server: Server): void {
+    this.socket.registerServer(server)
+  }
+
+  async handleConnection(client: Socket): Promise<void> {
+    const payload = this.#validate(client)
+    if (!payload) { client.disconnect(); return }
+
+    client.data['userId'] = payload.userId
+    client.data['role']   = payload.role
+
+    if (payload.role === 'admin') {
+      client.join('admin')
+      this.logger.debug(`admin:${payload.userId} connected`)
+    } else if (payload.role === 'student' && payload.studentId) {
+      client.join(`student:${payload.studentId}`)
+      const student = await this.prisma.student.findUnique({
+        where:  { id: payload.studentId },
+        select: { courseId: true },
+      })
+      if (student?.courseId) client.join(`course:${student.courseId}`)
+      this.logger.debug(`student:${payload.studentId} connected`)
+    } else {
+      client.disconnect()
+    }
+  }
+
+  handleDisconnect(client: Socket): void {
+    this.logger.debug(`disconnected:${client.data['userId']}`)
+  }
+
+  #validate(client: Socket): SessionPayload | null {
+    try {
+      const token = client.handshake.auth?.['token'] as string | undefined
+      return token ? this.jwt.verify<SessionPayload>(token) : null
+    } catch { return null }
+  }
+}

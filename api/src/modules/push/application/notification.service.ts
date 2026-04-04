@@ -3,6 +3,7 @@ import { PrismaService }      from '../../../infrastructure/prisma/prisma.servic
 import { PushRepository }     from '../domain/push.repository'
 import { PushSenderService }  from '../infrastructure/push-sender.service'
 import { InboxRepository }    from '../../inbox/domain/inbox.repository'
+import { SocketService }    from '../../../infrastructure/socket/socket.service'
 import type { NotificationPayload } from '../../inbox/domain/notification.entity'
 
 /**
@@ -16,10 +17,11 @@ export class NotificationService {
   private readonly logger = new Logger(NotificationService.name)
 
   constructor(
-    private readonly pushRepo: PushRepository,
-    private readonly sender:   PushSenderService,
-    private readonly prisma:   PrismaService,
-    private readonly inbox:    InboxRepository,
+    private readonly pushRepo:  PushRepository,
+    private readonly sender:    PushSenderService,
+    private readonly prisma:    PrismaService,
+    private readonly inbox:     InboxRepository,
+    private readonly realtime:  SocketService,
   ) {}
 
   /** Notify the student linked to studentId that coins were awarded/deducted. */
@@ -35,7 +37,10 @@ export class NotificationService {
         tag:   'coins',
       }
 
-      await this.inbox.create(user.id, payload)
+      const item = await this.inbox.create(user.id, payload)
+      this.realtime.notificationForStudent(studentId, {
+        id: item.id, title: payload.title, body: payload.body, createdAt: item.createdAt.toISOString(),
+      })
       await this.#push(user.id, payload)
     } catch (err: any) {
       this.logger.error(`notifyCoinsAwarded: ${err?.message}`)
@@ -57,7 +62,10 @@ export class NotificationService {
         tag: 'solicitud',
       }
 
-      await this.inbox.create(user.id, payload)
+      const item = await this.inbox.create(user.id, payload)
+      this.realtime.notificationForStudent(studentId, {
+        id: item.id, title: payload.title, body: payload.body, createdAt: item.createdAt.toISOString(),
+      })
       await this.#push(user.id, payload)
     } catch (err: any) {
       this.logger.error(`notifyRequestProcessed: ${err?.message}`)
@@ -65,7 +73,7 @@ export class NotificationService {
   }
 
   /** Notify all active admins that a student submitted a new redemption request. */
-  async notifyAdminsNewRequest(studentId: string, rewardId: string): Promise<void> {
+  async notifyAdminsNewRequest(studentId: string, rewardId: string, requestId = ''): Promise<void> {
     try {
       const [student, reward, adminUsers] = await Promise.all([
         this.prisma.student.findUnique({ where: { id: studentId }, select: { name: true } }),
@@ -82,7 +90,19 @@ export class NotificationService {
         tag:   'admin-request',
       }
 
-      await Promise.all(adminUsers.map(u => this.inbox.create(u.id, payload)))
+      const items = await Promise.all(adminUsers.map(u => this.inbox.create(u.id, payload)))
+
+      // Emit solicitud:new and notification:new to all connected admins
+      this.realtime.solicitudNew({
+        id:          requestId,
+        studentName: student?.name ?? 'Estudiante',
+        rewardName:  reward?.name  ?? 'un premio',
+      })
+      if (items[0]) {
+        this.realtime.notificationForAdmins({
+          id: items[0].id, title: payload.title, body: payload.body, createdAt: items[0].createdAt.toISOString(),
+        })
+      }
 
       if (this.sender.enabled) {
         const subs    = await this.pushRepo.findByRole('admin')

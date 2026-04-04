@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Res, UseGuards } from '@nestjs/common'
 import { CommandBus, QueryBus }   from '@nestjs/cqrs'
+import { JwtService }             from '@nestjs/jwt'
 import type { Response }          from 'express'
 import { JwtAuthGuard }           from '../../common/guards/jwt-auth.guard'
 import { ResponseMessage }        from '../../common/decorators/response-message.decorator'
@@ -23,7 +24,11 @@ class UpdateUserDto {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly qb: QueryBus, private readonly cb: CommandBus) {}
+  constructor(
+    private readonly qb:  QueryBus,
+    private readonly cb:  CommandBus,
+    private readonly jwt: JwtService,
+  ) {}
 
   @Post('login')
   @HttpCode(200)
@@ -45,6 +50,16 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   me(@CurrentUser() user: SessionPayload) {
     return user
+  }
+
+  /** Issues a short-lived token (60 s) for the WebSocket handshake.
+   *  The cookie is httpOnly so the client can't read it directly. */
+  @Get('ws-token')
+  @UseGuards(JwtAuthGuard)
+  @ResponseMessage('Token WS generado')
+  wsToken(@CurrentUser() user: SessionPayload) {
+    const token = this.jwt.sign(user, { expiresIn: '60s' })
+    return { token }
   }
 }
 

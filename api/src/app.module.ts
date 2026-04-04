@@ -14,13 +14,15 @@ import { AuthModule }   from './modules/auth/auth.module'
 import { PortalModule }  from './modules/portal/portal.module'
 import { BackupModule }  from './modules/backup/backup.module'
 import { PushModule }    from './modules/push/push.module'
-import { InboxModule }   from './modules/inbox/inbox.module'
+import { InboxModule }    from './modules/inbox/inbox.module'
+import { SocketModule }  from './infrastructure/socket/socket.module'
 
 @Module({
   controllers: [AppController],
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
+    SocketModule,
     PushModule,
     InboxModule,
     CourseModule,

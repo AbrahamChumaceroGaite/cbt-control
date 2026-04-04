@@ -12,6 +12,9 @@ import { solicitudesService } from '@/services/solicitudes.service'
 import { authService }       from '@/services/auth.service'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { NotificationBell }  from '@/features/notifications/NotificationBell'
+import { SocketProvider }    from '@/contexts/SocketContext'
+import { useSocketEvent }  from '@/hooks/useSocketEvent'
+import { WS }                from '@/socket/events'
 import { AulaSection }        from '@/features/aula/AulaSection'
 import { CursosSection }      from '@/features/cursos/CursosSection'
 import { EstudiantesSection } from '@/features/estudiantes/EstudiantesSection'
@@ -107,7 +110,17 @@ export default function App() {
 
   const course = courses.find(c => c.id === currentCourse)
 
+  // ── Real-time event listeners ──────────────────────────────────────────────
+  useSocketEvent(WS.COINS_UPDATED, ({ courseId }) => {
+    if (courseId === currentCourse) loadCourse(currentCourse)
+  }, [currentCourse, loadCourse])
+
+  useSocketEvent(WS.SOLICITUD_NEW, () => {
+    setPendingSolicitudes(n => n + 1)
+  })
+
   return (
+    <SocketProvider>
     <div className="min-h-screen bg-zinc-950 page-wrapper relative overflow-x-hidden">
       <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden z-0">
         <div className="blob blob-1" /><div className="blob blob-2" /><div className="blob blob-3" />
@@ -157,5 +170,6 @@ export default function App() {
         onTabChange={switchTab}
       />
     </div>
+    </SocketProvider>
   )
 }

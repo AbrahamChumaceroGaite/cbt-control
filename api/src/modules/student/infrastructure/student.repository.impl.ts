@@ -60,7 +60,10 @@ export class StudentRepositoryImpl extends StudentRepository {
         ...(data.email !== undefined && { email: data.email }),
         ...(data.coins !== undefined && { coins: data.coins }),
       },
-      include: { tramos: true },
+      include: {
+        tramos: true,
+        course: { select: { name: true, classCoins: true } },
+      },
     })
   }
 

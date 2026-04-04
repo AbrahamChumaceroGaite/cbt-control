@@ -8,4 +8,7 @@ export interface CoinLogEntity {
   createdAt: Date
   student?:  { name: string } | null
   action?:   { name: string; category: string } | null
+  // Populated by the repository after the transaction — used for real-time events
+  updatedClassCoins?:   number
+  updatedStudentCoins?: number
 }

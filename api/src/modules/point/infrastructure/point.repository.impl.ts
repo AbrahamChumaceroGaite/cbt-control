@@ -22,13 +22,26 @@ export class PointRepositoryImpl extends PointRepository {
     const affectStudent = data.studentId && (action ? action.affectsStudent : true)
 
     return this.prisma.$transaction(async (tx) => {
+      let updatedClassCoins:   number | undefined
+      let updatedStudentCoins: number | undefined
+
       if (affectClass) {
-        await tx.course.update({ where: { id: data.courseId }, data: { classCoins: { increment: data.coins } } })
+        const course = await tx.course.update({
+          where: { id: data.courseId },
+          data:  { classCoins: { increment: data.coins } },
+        })
+        updatedClassCoins = course.classCoins
       }
-      if (affectStudent) {
-        await tx.student.update({ where: { id: data.studentId }, data: { coins: { increment: data.coins } } })
+
+      if (affectStudent && data.studentId) {
+        const student = await tx.student.update({
+          where: { id: data.studentId },
+          data:  { coins: { increment: data.coins } },
+        })
+        updatedStudentCoins = student.coins
       }
-      return tx.coinLog.create({
+
+      const log = await tx.coinLog.create({
         data: {
           courseId:  data.courseId,
           studentId: data.studentId ?? null,
@@ -38,6 +51,8 @@ export class PointRepositoryImpl extends PointRepository {
         },
         include: { student: { select: { name: true } }, action: { select: { name: true, category: true } } },
       })
+
+      return { ...log, updatedClassCoins, updatedStudentCoins }
     })
   }
 }

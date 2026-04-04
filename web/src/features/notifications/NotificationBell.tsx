@@ -3,6 +3,8 @@ import { useEffect, useRef, useState }      from 'react'
 import { Bell, BellDot, Check, CheckCheck, Loader2, Trash2, X, AlertCircle } from 'lucide-react'
 import { useInbox }             from '@/hooks/useInbox'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
+import { useSocketEvent }     from '@/hooks/useSocketEvent'
+import { WS }                   from '@/socket/events'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -38,9 +40,16 @@ function PushPrompt({ onEnable, onDismiss }: { onEnable: () => void; onDismiss: 
 const DISMISSED_KEY = 'push_prompt_dismissed'
 
 export function NotificationBell() {
-  const { items, unreadCount, loading, error, markRead, markAllRead, deleteOne, deleteAll } = useInbox()
+  const { items, unreadCount, loading, error, refresh, markRead, markAllRead, deleteOne, deleteAll } = useInbox()
   const { state: pushState, requestAndSubscribe } = usePushNotifications()
   const [open,          setOpen]          = useState(false)
+
+  // Real-time: when a notification arrives, refresh the list (and prepend if panel is open)
+  useSocketEvent(WS.NOTIFICATION_NEW, (notif) => {
+    refresh()
+    // The list will re-render via refresh; nothing extra needed for badge
+    void notif
+  })
   const [promptVisible, setPromptVisible] = useState(false)
   const panelRef   = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
