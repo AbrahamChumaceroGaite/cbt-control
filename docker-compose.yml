@@ -32,6 +32,7 @@ services:
       - "${WEB_PORT:-3001}:3001"
     environment:
       - NODE_ENV=production
+      - API_URL=http://api:4001
     depends_on:
       api:
         condition: service_healthy
