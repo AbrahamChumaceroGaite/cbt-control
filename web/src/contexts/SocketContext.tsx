@@ -1,38 +1,76 @@
 'use client'
-import { createContext, useContext, useEffect, useState } from 'react'
-import { io, Socket } from 'socket.io-client'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import type { WsEvent, WsPayloads } from '@/socket/events'
 
-const SocketContext = createContext<Socket | null>(null)
+type Handler<E extends WsEvent> = (payload: WsPayloads[E]) => void
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyHandler = Handler<any>
 
-export function useSocket() {
-  return useContext(SocketContext)
+interface SseContextValue {
+  subscribe:   <E extends WsEvent>(event: E, handler: Handler<E>) => () => void
+}
+
+const SseContext = createContext<SseContextValue | null>(null)
+
+export function useSse() {
+  const ctx = useContext(SseContext)
+  if (!ctx) throw new Error('useSse must be used inside SseProvider')
+  return ctx
 }
 
 /**
- * Connects to the NestJS socket.io gateway via HTTP long-polling.
- *
- * The gateway path is /api/socket.io — this falls inside Next.js's rewrite
- * rule (/api/* → api:4001/api/*), so no extra proxy or nginx is needed.
- * The httpOnly session cookie is sent automatically on every polling request.
- *
- * WebSocket transport is intentionally disabled: WebSocket upgrades require
- * the intermediate proxy (Coolify/Traefik) to support them, which it may not.
- * Long-polling has the same real-time characteristics for this use case.
+ * Connects to /api/events (SSE) and fans out incoming messages to subscribers
+ * registered by event name. The route.ts handler proxies to NestJS; the
+ * httpOnly cookie is forwarded so authentication works automatically.
  */
 export function SocketProvider({ children }: { children: React.ReactNode }) {
-  const [socket, setSocket] = useState<Socket | null>(null)
+  // Map<eventName, Set<handler>>
+  const listenersRef = useRef<Map<string, Set<AnyHandler>>>(new Map())
+  const [, forceRender] = useState(0)
 
   useEffect(() => {
-    const s = io('', {
-      path:              '/api/socket.io',
-      transports:        ['polling'],   // no WebSocket — works through any HTTP proxy
-      withCredentials:   true,          // send the cbt_session cookie
-      reconnection:      true,
-      reconnectionDelay: 3000,
-    })
-    setSocket(s)
-    return () => { s.disconnect() }
+    let es: EventSource
+    let retryTimer: ReturnType<typeof setTimeout>
+
+    function connect() {
+      es = new EventSource('/api/events', { withCredentials: true })
+
+      es.onmessage = (e: MessageEvent<string>) => {
+        try {
+          const { event, data } = JSON.parse(e.data) as { event: string; data: unknown }
+          listenersRef.current.get(event)?.forEach(h => h(data))
+        } catch { /* ignore parse errors */ }
+      }
+
+      es.onerror = () => {
+        es.close()
+        retryTimer = setTimeout(connect, 4000)
+      }
+    }
+
+    connect()
+    // trigger re-render so context value is stable (avoids stale closure)
+    forceRender(n => n + 1)
+
+    return () => {
+      clearTimeout(retryTimer)
+      es?.close()
+    }
   }, [])
 
-  return <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>
+  const subscribe = <E extends WsEvent>(event: E, handler: Handler<E>): (() => void) => {
+    const map = listenersRef.current
+    if (!map.has(event)) map.set(event, new Set())
+    map.get(event)!.add(handler as AnyHandler)
+    return () => {
+      map.get(event)?.delete(handler as AnyHandler)
+      if (map.get(event)?.size === 0) map.delete(event)
+    }
+  }
+
+  return (
+    <SseContext.Provider value={{ subscribe }}>
+      {children}
+    </SseContext.Provider>
+  )
 }
