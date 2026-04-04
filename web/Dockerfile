@@ -15,6 +15,9 @@ COPY web    ./web
 RUN mkdir -p /app/web/public
 ARG API_URL=http://api:4001
 ENV API_URL=$API_URL
+# NEXT_PUBLIC_* se hornean en el bundle durante el build — debe venir como build arg
+ARG NEXT_PUBLIC_API_URL=http://localhost:4001
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build -w shared && npm run build -w web
 
