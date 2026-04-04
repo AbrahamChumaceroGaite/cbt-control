@@ -1,15 +1,4 @@
 services:
-  nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    ports:
-      - "${WEB_PORT:-3001}:80"
-    depends_on:
-      api:
-        condition: service_healthy
-    restart: unless-stopped
-
   api:
     build:
       context: .
@@ -23,7 +12,6 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=file:/app/data/prod.db
       - PORT=4001
-      - WEB_ORIGIN=${WEB_ORIGIN:-http://localhost:3001}
     volumes:
       - sqlite_data:/app/data
     restart: unless-stopped
@@ -40,8 +28,8 @@ services:
       dockerfile: web/Dockerfile
       args:
         - API_URL=http://api:4001
-    expose:
-      - "3001"
+    ports:
+      - "${WEB_PORT:-3001}:3001"
     environment:
       - NODE_ENV=production
     depends_on:

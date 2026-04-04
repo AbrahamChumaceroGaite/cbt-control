@@ -10,8 +10,9 @@ import { SocketService }  from './socket.service'
 import type { SessionPayload } from '../../modules/auth/domain/user.entity'
 
 @WebSocketGateway({
-  // Allow any origin with credentials — the API is internal (behind nginx).
-  // Real auth happens via JWT cookie validation in handleConnection.
+  // Path under /api/ so Next.js rewrites (/api/:path* → api:4001/api/:path*)
+  // forward socket.io polling requests to the API without needing a separate proxy.
+  path: '/api/socket.io',
   cors: {
     origin: (_: string, cb: (e: null, ok: boolean) => void) => cb(null, true),
     credentials: true,

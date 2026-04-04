@@ -9,22 +9,26 @@ export function useSocket() {
 }
 
 /**
- * Opens a socket.io connection using the httpOnly session cookie.
- * The browser sends the cookie automatically on the WebSocket upgrade
- * request and on XHR polling — no separate token fetch needed.
+ * Connects to the NestJS socket.io gateway via HTTP long-polling.
+ *
+ * The gateway path is /api/socket.io — this falls inside Next.js's rewrite
+ * rule (/api/* → api:4001/api/*), so no extra proxy or nginx is needed.
+ * The httpOnly session cookie is sent automatically on every polling request.
+ *
+ * WebSocket transport is intentionally disabled: WebSocket upgrades require
+ * the intermediate proxy (Coolify/Traefik) to support them, which it may not.
+ * Long-polling has the same real-time characteristics for this use case.
  */
 export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null)
 
   useEffect(() => {
-    // In dev: NEXT_PUBLIC_WS_URL = http://localhost:4001
-    // In prod (nginx proxies /socket.io/): leave empty → same origin
-    const url = process.env.NEXT_PUBLIC_WS_URL ?? ''
-    const s = io(url, {
-      withCredentials:   true,   // send the cbt_session cookie
+    const s = io('', {
+      path:              '/api/socket.io',
+      transports:        ['polling'],   // no WebSocket — works through any HTTP proxy
+      withCredentials:   true,          // send the cbt_session cookie
       reconnection:      true,
       reconnectionDelay: 3000,
-      transports:        ['websocket', 'polling'],
     })
     setSocket(s)
     return () => { s.disconnect() }
