@@ -28,25 +28,14 @@ services:
       dockerfile: web/Dockerfile
       args:
         - API_URL=http://api:4001
-    expose:
-      - "3001"
+    ports:
+      - "${WEB_PORT:-3001}:3001"
     environment:
       - NODE_ENV=production
       - API_URL=http://api:4001
     depends_on:
       api:
         condition: service_healthy
-    restart: unless-stopped
-
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "${NGINX_PORT:-80}:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - api
-      - web
     restart: unless-stopped
 
 volumes:
