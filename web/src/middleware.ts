@@ -45,5 +45,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.png$).*)'],
+  // /ws is handled at the Node.js server level (upgrade event) — never reaches middleware
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|ws|.*\\.png$).*)'],
 }
