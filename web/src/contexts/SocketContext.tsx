@@ -12,14 +12,12 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null)
 
   useEffect(() => {
-    // NEXT_PUBLIC_API_URL apunta al dominio público del API (configurado en Coolify).
-    // En desarrollo: http://localhost:4001
-    // En producción: https://api-control-cbt.prod.dtt.tja.ucb.edu.bo (o el dominio configurado)
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4001'
-
-    const s = io(apiUrl, {
+    // Same-origin: el browser conecta a su propio dominio.
+    // Next.js reescribe /socket.io/* → http://api:4001/socket.io/* internamente.
+    // polling evita el WebSocket upgrade que los proxies HTTP no manejan bien.
+    const s = io('', {
       path:            '/socket.io',
-      transports:      ['websocket', 'polling'],
+      transports:      ['polling'],
       withCredentials: true,
       reconnection:    true,
       reconnectionDelay: 3000,

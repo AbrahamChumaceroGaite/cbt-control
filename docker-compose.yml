@@ -29,7 +29,6 @@ services:
       dockerfile: web/Dockerfile
       args:
         - API_URL=http://api:4001
-        - NEXT_PUBLIC_API_URL=https://cbt-control-api.prod.dtt.tja.ucb.edu.bo
     ports:
       - "${WEB_PORT:-3001}:3001"
     environment:
