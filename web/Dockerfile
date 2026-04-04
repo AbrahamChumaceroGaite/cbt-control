@@ -8,7 +8,7 @@ COPY package*.json         ./
 COPY shared/package*.json  ./shared/
 COPY api/package*.json     ./api/
 COPY web/package*.json     ./web/
-RUN --mount=type=cache,target=/root/.npm \
+RUN --mount=type=cache,target=/root/.npm,id=npm-web-v2 \
     npm install
 COPY shared ./shared
 COPY web    ./web
