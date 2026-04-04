@@ -44,12 +44,7 @@ export function NotificationBell() {
   const { state: pushState, requestAndSubscribe } = usePushNotifications()
   const [open,          setOpen]          = useState(false)
 
-  // Real-time: when a notification arrives, refresh the list (and prepend if panel is open)
-  useSocketEvent(WS.NOTIFICATION_NEW, (notif) => {
-    refresh()
-    // The list will re-render via refresh; nothing extra needed for badge
-    void notif
-  })
+  useSocketEvent(WS.NOTIFICATION_NEW, () => { refresh() })
   const [promptVisible, setPromptVisible] = useState(false)
   const panelRef   = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)

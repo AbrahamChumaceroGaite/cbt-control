@@ -59,11 +59,9 @@ export default function PortalPage() {
     } finally { setRequesting(null) }
   }
 
-  // ── Real-time event listeners ──────────────────────────────────────────────
   useSocketEvent(WS.COINS_UPDATED, ({ studentId, studentCoins }) => {
-    if (studentId && studentCoins !== undefined) {
+    if (studentId && studentCoins !== undefined)
       setStudent(s => s ? { ...s, coins: studentCoins } : s)
-    }
   })
 
   useSocketEvent(WS.SOLICITUD_UPDATED, ({ id, status }) => {

@@ -1,6 +1,7 @@
 import 'reflect-metadata'
 import { NestFactory }           from '@nestjs/core'
 import { ValidationPipe }        from '@nestjs/common'
+import { IoAdapter }             from '@nestjs/platform-socket.io'
 import * as cookieParser         from 'cookie-parser'
 import * as express              from 'express'
 import { AppModule }             from './app.module'
@@ -16,6 +17,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }))
   app.useGlobalFilters(new GlobalExceptionFilter())
   app.enableCors({ origin: process.env.WEB_ORIGIN ?? 'http://localhost:3001', credentials: true })
+  app.useWebSocketAdapter(new IoAdapter(app))
 
   await app.listen(process.env.PORT ?? 4001)
   console.log(`API running on port ${process.env.PORT ?? 4001}`)

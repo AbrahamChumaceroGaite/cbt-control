@@ -109,7 +109,6 @@ export default function App() {
 
   const course = courses.find(c => c.id === currentCourse)
 
-  // ── Real-time event listeners ──────────────────────────────────────────────
   useSocketEvent(WS.COINS_UPDATED, ({ courseId }) => {
     if (courseId === currentCourse) loadCourse(currentCourse)
   }, [currentCourse, loadCourse])
