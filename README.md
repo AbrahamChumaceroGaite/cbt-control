@@ -48,7 +48,7 @@ Sistema de gamificación para el aula desarrollado con arquitectura **Clean Arch
 ### WebSockets (tiempo real)
 
 - Conexión socket.io establecida globalmente en `layout.tsx` vía `SocketProvider`.
-- Autenticación: el cliente obtiene un JWT de corta duración (60 s) en `GET /api/auth/ws-token` y lo envía en el handshake (`auth.token`). El gateway lo valida sin exponer la cookie.
+- Autenticación: el browser envía la cookie `cbt_session` automáticamente en el upgrade HTTP del WebSocket y en el polling XHR. El gateway lee la cookie directamente de los headers del handshake y verifica el JWT — sin endpoints extra ni tokens secundarios.
 - Rooms: `admin` para docentes, `student:{id}` + `course:{id}` para alumnos.
 - Eventos activos: `coins:updated` (actualiza contador de coins en tiempo real), `solicitud:new` (incrementa badge de solicitudes en el panel admin), `solicitud:updated` (actualiza estado en el portal del alumno), `notification:new` (actualiza el bell de notificaciones sin polling).
 
@@ -163,7 +163,7 @@ portal.types.ts       PortalStudentResponse
 | `reward` | `GET/PATCH/DELETE /api/solicitudes` | Gestión de canjes (SolicitudesController) |
 | `group` | `GET/POST/PUT/DELETE /api/grupos` | Grupos de alumnos por curso |
 | `point` | `POST /api/puntos` | Otorgar coins (transacción atómica) |
-| `auth` | `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `GET /api/auth/ws-token` | Autenticación JWT con cookie HttpOnly. `ws-token` emite un JWT de 60 s para el handshake de WebSocket. |
+| `auth` | `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me` | Autenticación JWT con cookie HttpOnly. El WebSocket lee la misma cookie del handshake, sin endpoints extra. |
 | `auth` | `GET/POST/DELETE /api/usuarios` | Gestión de usuarios del sistema (UserController) |
 | `portal` | `GET /api/portal/me`, `GET /api/portal/recompensas`, `POST /api/portal/solicitudes` | Portal del estudiante |
 | `push` | `POST /api/push/subscribe`, `DELETE /api/push/unsubscribe`, `POST /api/push/send` | Web Push VAPID |

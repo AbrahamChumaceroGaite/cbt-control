@@ -10,7 +10,12 @@ import { SocketService }  from './socket.service'
 import type { SessionPayload } from '../../modules/auth/domain/user.entity'
 
 @WebSocketGateway({
-  cors: { origin: process.env.WEB_ORIGIN ?? 'http://localhost:3001', credentials: true },
+  // Allow any origin with credentials — the API is internal (behind nginx).
+  // Real auth happens via JWT cookie validation in handleConnection.
+  cors: {
+    origin: (_: string, cb: (e: null, ok: boolean) => void) => cb(null, true),
+    credentials: true,
+  },
 })
 export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() private server!: Server
@@ -53,9 +58,13 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
     this.logger.debug(`disconnected:${client.data['userId']}`)
   }
 
+  /** Reads the httpOnly session cookie from the socket handshake headers.
+   *  The browser sends cookies automatically on WebSocket upgrade and XHR polling. */
   #validate(client: Socket): SessionPayload | null {
     try {
-      const token = client.handshake.auth?.['token'] as string | undefined
+      const cookie = client.handshake.headers.cookie ?? ''
+      const match  = cookie.match(/(?:^|;\s*)cbt_session=([^;]+)/)
+      const token  = match?.[1]
       return token ? this.jwt.verify<SessionPayload>(token) : null
     } catch { return null }
   }
