@@ -12,6 +12,7 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=file:/app/data/prod.db
       - PORT=4001
+      - WEB_ORIGIN=https://control-cbt.prod.dtt.tja.ucb.edu.bo
     volumes:
       - sqlite_data:/app/data
     restart: unless-stopped
@@ -28,7 +29,7 @@ services:
       dockerfile: web/Dockerfile
       args:
         - API_URL=http://api:4001
-        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:4001}
+        - NEXT_PUBLIC_API_URL=https://cbt-control-api.prod.dtt.tja.ucb.edu.bo
     ports:
       - "${WEB_PORT:-3001}:3001"
     environment:
