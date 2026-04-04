@@ -21,8 +21,6 @@ RUN npm run build -w shared && npm run build -w web
 # ── Runner ────────────────────────────────────────────────────────────────────
 FROM base AS runner
 WORKDIR /app
-ARG API_URL=http://api:4001
-ENV API_URL=$API_URL
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs && \

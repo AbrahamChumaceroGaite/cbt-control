@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith('/api/auth') ||
       pathname.startsWith('/api/notifications') ||
       pathname.startsWith('/api/push') ||
-      pathname.startsWith('/api/events')
+      pathname.startsWith('/socket.io')
     if (!allowed) {
       return NextResponse.redirect(new URL('/portal', request.url))
     }

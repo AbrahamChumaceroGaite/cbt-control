@@ -1,57 +1,27 @@
 'use client'
-import { createContext, useCallback, useContext, useEffect, useRef } from 'react'
-import type { WsEvent, WsPayloads } from '@/socket/events'
+import { createContext, useContext, useEffect, useState } from 'react'
+import { io, Socket } from 'socket.io-client'
 
-type Handler<E extends WsEvent> = (payload: WsPayloads[E]) => void
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyHandler = Handler<any>
+const SocketContext = createContext<Socket | null>(null)
 
-interface SseContextValue {
-  subscribe: <E extends WsEvent>(event: E, handler: Handler<E>) => () => void
-}
-
-const SseContext = createContext<SseContextValue | null>(null)
-
-export function useSse() {
-  const ctx = useContext(SseContext)
-  if (!ctx) throw new Error('useSse must be used inside SocketProvider')
-  return ctx
+export function useSocket() {
+  return useContext(SocketContext)
 }
 
 export function SocketProvider({ children }: { children: React.ReactNode }) {
-  const listenersRef = useRef<Map<string, Set<AnyHandler>>>(new Map())
+  const [socket, setSocket] = useState<Socket | null>(null)
 
   useEffect(() => {
-    let es: EventSource
-    let retryTimer: ReturnType<typeof setTimeout>
-
-    function connect() {
-      es = new EventSource('/api/events', { withCredentials: true })
-      es.onmessage = (e: MessageEvent<string>) => {
-        try {
-          const { event, data } = JSON.parse(e.data) as { event: string; data: unknown }
-          listenersRef.current.get(event)?.forEach(h => h(data))
-        } catch { /* ignore */ }
-      }
-      es.onerror = () => {
-        es.close()
-        retryTimer = setTimeout(connect, 4000)
-      }
-    }
-
-    connect()
-    return () => { clearTimeout(retryTimer); es?.close() }
+    const s = io('', {
+      path:              '/socket.io',   // fuera del prefijo /api → Express no lo intercepta
+      transports:        ['polling'],    // polling funciona a través del proxy HTTP de Next.js
+      withCredentials:   true,
+      reconnection:      true,
+      reconnectionDelay: 3000,
+    })
+    setSocket(s)
+    return () => { s.disconnect() }
   }, [])
 
-  const subscribe = useCallback(<E extends WsEvent>(event: E, handler: Handler<E>) => {
-    const map = listenersRef.current
-    if (!map.has(event)) map.set(event, new Set())
-    map.get(event)!.add(handler as AnyHandler)
-    return () => {
-      map.get(event)?.delete(handler as AnyHandler)
-      if (map.get(event)?.size === 0) map.delete(event)
-    }
-  }, [])
-
-  return <SseContext.Provider value={{ subscribe }}>{children}</SseContext.Provider>
+  return <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>
 }
