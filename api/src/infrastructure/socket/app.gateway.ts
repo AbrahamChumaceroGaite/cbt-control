@@ -13,10 +13,8 @@ import type { SessionPayload } from '../../modules/auth/domain/user.entity'
   // Path under /api/ so Next.js rewrites (/api/:path* → api:4001/api/:path*)
   // forward socket.io polling requests to the API without needing a separate proxy.
   path: '/api/socket.io',
-  cors: {
-    origin: (_: string, cb: (e: null, ok: boolean) => void) => cb(null, true),
-    credentials: true,
-  },
+  cors: { origin: '*', credentials: false },
+  transports: ['polling'],
 })
 export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() private server!: Server
