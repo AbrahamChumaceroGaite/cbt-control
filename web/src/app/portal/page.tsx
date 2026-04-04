@@ -8,7 +8,6 @@ import { NotificationBell } from '@/features/notifications/NotificationBell'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { FloatingNav }     from '@/components/shared/FloatingNav'
 import { PortalSkeleton }  from '@/features/portal/PortalSkeleton'
-import { SocketProvider }  from '@/contexts/SocketContext'
 import { useSocketEvent } from '@/hooks/useSocketEvent'
 import { WS }              from '@/socket/events'
 import { PerfilTab }       from '@/features/portal/PerfilTab'
@@ -60,9 +59,6 @@ export default function PortalPage() {
     } finally { setRequesting(null) }
   }
 
-  if (loading) return <PortalSkeleton />
-  if (!student) return null
-
   // ── Real-time event listeners ──────────────────────────────────────────────
   useSocketEvent(WS.COINS_UPDATED, ({ studentId, studentCoins }) => {
     if (studentId && studentCoins !== undefined) {
@@ -77,6 +73,9 @@ export default function PortalPage() {
     } : s)
   })
 
+  if (loading) return <PortalSkeleton />
+  if (!student) return null
+
   const solicitudesCount = student.redemptionRequests.length
 
   const TABS: { id: Tab; icon: React.ElementType; label: string; badge?: number }[] = [
@@ -86,7 +85,6 @@ export default function PortalPage() {
   ]
 
   return (
-    <SocketProvider>
     <div className="min-h-screen bg-zinc-950 text-zinc-100 pb-28 relative overflow-x-hidden">
       <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden z-0">
         <div className="blob blob-1" />
@@ -136,6 +134,5 @@ export default function PortalPage() {
         </div>
       )}
     </div>
-    </SocketProvider>
   )
 }
