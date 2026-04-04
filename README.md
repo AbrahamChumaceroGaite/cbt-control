@@ -341,10 +341,15 @@ PushSubscription ─── User
 
 ```
 docker-compose.yml
-├── api    → :4001  NestJS (multi-stage, standalone)
-├── web    → :3001  Next.js (multi-stage, standalone output)
-└── nginx  → :80   Reverse proxy: /api/* → api, /* → web
+├── nginx  → :WEB_PORT (default 3001)  Reverse proxy (único servicio expuesto)
+│     ├── /socket.io/* → api:4001      WebSocket + polling — cookie forwarding
+│     ├── /api/*       → api:4001      HTTP API
+│     └── /*           → web:3001      Next.js frontend
+├── api    → expose 4001  NestJS (solo red interna Docker)
+└── web    → expose 3001  Next.js (solo red interna Docker)
 ```
+
+El servidor externo (UCB / load balancer) apunta al puerto `WEB_PORT` (default 3001), que ahora llega a nginx. **Next.js ya no recibe tráfico de `/api/` ni `/socket.io/` directamente** — nginx los enruta antes.
 
 ### Persistencia
 
