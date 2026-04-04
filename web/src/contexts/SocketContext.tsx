@@ -1,57 +1,57 @@
 'use client'
 import { createContext, useCallback, useContext, useEffect, useRef } from 'react'
-import type { WsEvent, WsPayloads } from '@/socket/events'
 
-type Handler<E extends WsEvent> = (payload: WsPayloads[E]) => void
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyHandler = Handler<any>
+type Handler = (data: unknown) => void
 
-interface SseContextValue {
-  subscribe: <E extends WsEvent>(event: E, handler: Handler<E>) => () => void
+interface WsCtx {
+  on: (event: string, handler: Handler) => () => void
 }
 
-const SseContext = createContext<SseContextValue | null>(null)
+const Ctx = createContext<WsCtx | null>(null)
 
-export function useSse() {
-  const ctx = useContext(SseContext)
-  if (!ctx) throw new Error('useSse must be used inside SocketProvider')
+export function useSse(): WsCtx {
+  const ctx = useContext(Ctx)
+  if (!ctx) throw new Error('useSse outside SocketProvider')
   return ctx
 }
 
 export function SocketProvider({ children }: { children: React.ReactNode }) {
-  const listenersRef = useRef<Map<string, Set<AnyHandler>>>(new Map())
+  const listeners = useRef<Map<string, Set<Handler>>>(new Map())
 
   useEffect(() => {
-    let es: EventSource
+    let ws: WebSocket
     let retryTimer: ReturnType<typeof setTimeout>
+    let dead = false
 
     function connect() {
-      es = new EventSource('/api/events', { withCredentials: true })
-      es.onmessage = (e: MessageEvent<string>) => {
+      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:'
+      ws = new WebSocket(`${proto}//${location.host}/ws`)
+
+      ws.onmessage = ({ data }) => {
         try {
-          const { event, data } = JSON.parse(e.data) as { event: string; data: unknown }
-          listenersRef.current.get(event)?.forEach(h => h(data))
-        } catch { /* ignore */ }
+          const { event, data: payload } = JSON.parse(data)
+          listeners.current.get(event)?.forEach(h => h(payload))
+        } catch { /* ignore malformed frames */ }
       }
-      es.onerror = () => {
-        es.close()
-        retryTimer = setTimeout(connect, 4000)
+
+      ws.onclose = () => {
+        if (!dead) retryTimer = setTimeout(connect, 3000)
       }
     }
 
     connect()
-    return () => { clearTimeout(retryTimer); es?.close() }
+    return () => { dead = true; clearTimeout(retryTimer); ws?.close() }
   }, [])
 
-  const subscribe = useCallback(<E extends WsEvent>(event: E, handler: Handler<E>) => {
-    const map = listenersRef.current
+  const on = useCallback((event: string, handler: Handler) => {
+    const map = listeners.current
     if (!map.has(event)) map.set(event, new Set())
-    map.get(event)!.add(handler as AnyHandler)
+    map.get(event)!.add(handler)
     return () => {
-      map.get(event)?.delete(handler as AnyHandler)
+      map.get(event)?.delete(handler)
       if (map.get(event)?.size === 0) map.delete(event)
     }
   }, [])
 
-  return <SseContext.Provider value={{ subscribe }}>{children}</SseContext.Provider>
+  return <Ctx.Provider value={{ on }}>{children}</Ctx.Provider>
 }

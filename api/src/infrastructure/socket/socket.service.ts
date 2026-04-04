@@ -1,64 +1,62 @@
 import { Injectable } from '@nestjs/common'
-import { MessageEvent } from '@nestjs/common'
-import { Observable, Subject, finalize } from 'rxjs'
+import { WebSocket } from 'ws'
 import { WS, WsEvent, WsPayloads } from './socket.events'
 
 @Injectable()
 export class SocketService {
-  private readonly adminStreams   = new Map<string, Set<Subject<MessageEvent>>>()
-  private readonly studentStreams = new Map<string, Set<Subject<MessageEvent>>>()
+  private readonly admins   = new Map<string, Set<WebSocket>>()
+  private readonly students = new Map<string, Set<WebSocket>>()
+  private readonly meta     = new Map<WebSocket, { map: Map<string, Set<WebSocket>>; id: string }>()
 
-  subscribeAdmin(userId: string): Observable<MessageEvent> {
-    return this.addStream(this.adminStreams, userId)
+  register(role: 'admin' | 'student', id: string, client: WebSocket): void {
+    const map = role === 'admin' ? this.admins : this.students
+    if (!map.has(id)) map.set(id, new Set())
+    map.get(id)!.add(client)
+    this.meta.set(client, { map, id })
   }
 
-  subscribeStudent(studentId: string): Observable<MessageEvent> {
-    return this.addStream(this.studentStreams, studentId)
+  unregister(client: WebSocket): void {
+    const entry = this.meta.get(client)
+    if (!entry) return
+    const set = entry.map.get(entry.id)
+    if (set) {
+      set.delete(client)
+      if (set.size === 0) entry.map.delete(entry.id)
+    }
+    this.meta.delete(client)
   }
 
-  private addStream<K>(map: Map<K, Set<Subject<MessageEvent>>>, key: K): Observable<MessageEvent> {
-    const subject = new Subject<MessageEvent>()
-    if (!map.has(key)) map.set(key, new Set())
-    map.get(key)!.add(subject)
-    return subject.asObservable().pipe(
-      finalize(() => {
-        map.get(key)?.delete(subject)
-        if (map.get(key)?.size === 0) map.delete(key)
-      }),
-    )
+  private emit(client: WebSocket, event: WsEvent, data: unknown): void {
+    if (client.readyState === WebSocket.OPEN)
+      client.send(JSON.stringify({ event, data }))
   }
 
-  private msg(event: WsEvent, data: unknown): MessageEvent {
-    return { data: JSON.stringify({ event, data }) }
+  private toAll(map: Map<string, Set<WebSocket>>, event: WsEvent, data: unknown): void {
+    map.forEach(set => set.forEach(ws => this.emit(ws, event, data)))
   }
 
-  private toAdmins(event: WsEvent, data: unknown): void {
-    const m = this.msg(event, data)
-    this.adminStreams.forEach(set => set.forEach(s => s.next(m)))
-  }
-
-  private toStudent(studentId: string, event: WsEvent, data: unknown): void {
-    this.studentStreams.get(studentId)?.forEach(s => s.next(this.msg(event, data)))
+  private toOne(map: Map<string, Set<WebSocket>>, id: string, event: WsEvent, data: unknown): void {
+    map.get(id)?.forEach(ws => this.emit(ws, event, data))
   }
 
   coinsUpdated(payload: WsPayloads['coins:updated']): void {
-    this.toAdmins(WS.COINS_UPDATED, payload)
-    if (payload.studentId) this.toStudent(payload.studentId, WS.COINS_UPDATED, payload)
+    this.toAll(this.admins, WS.COINS_UPDATED, payload)
+    if (payload.studentId) this.toOne(this.students, payload.studentId, WS.COINS_UPDATED, payload)
   }
 
   solicitudNew(payload: WsPayloads['solicitud:new']): void {
-    this.toAdmins(WS.SOLICITUD_NEW, payload)
+    this.toAll(this.admins, WS.SOLICITUD_NEW, payload)
   }
 
   solicitudUpdated(studentId: string, payload: WsPayloads['solicitud:updated']): void {
-    this.toStudent(studentId, WS.SOLICITUD_UPDATED, payload)
+    this.toOne(this.students, studentId, WS.SOLICITUD_UPDATED, payload)
   }
 
   notificationForStudent(studentId: string, payload: WsPayloads['notification:new']): void {
-    this.toStudent(studentId, WS.NOTIFICATION_NEW, payload)
+    this.toOne(this.students, studentId, WS.NOTIFICATION_NEW, payload)
   }
 
   notificationForAdmins(payload: WsPayloads['notification:new']): void {
-    this.toAdmins(WS.NOTIFICATION_NEW, payload)
+    this.toAll(this.admins, WS.NOTIFICATION_NEW, payload)
   }
 }

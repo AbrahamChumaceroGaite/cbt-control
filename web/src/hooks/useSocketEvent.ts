@@ -7,10 +7,11 @@ export function useSocketEvent<E extends WsEvent>(
   handler: (payload: WsPayloads[E]) => void,
   deps:    DependencyList = [],
 ): void {
-  const { subscribe } = useSse()
+  const { on } = useSse()
 
-  useEffect(() => {
-    return subscribe(event, handler)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [event, ...deps])
+  useEffect(
+    () => on(event, handler as (d: unknown) => void),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [event, ...deps],
+  )
 }

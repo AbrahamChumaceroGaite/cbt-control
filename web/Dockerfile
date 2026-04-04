@@ -34,10 +34,11 @@ COPY --from=builder /app/shared              ./shared
 COPY --from=builder /app/web/public          ./web/public
 COPY --from=builder /app/web/next.config.js  ./web/next.config.js
 COPY --from=builder /app/web/package.json    ./web/package.json
+COPY web/server.js                           ./web/server.js
 RUN chown -R nextjs:nodejs /app/web
 USER nextjs
 WORKDIR /app/web
 EXPOSE 3001
 ENV PORT=3001
 ENV HOSTNAME="0.0.0.0"
-CMD ["/app/node_modules/.bin/next", "start", "-p", "3001"]
+CMD ["node", "server.js"]
