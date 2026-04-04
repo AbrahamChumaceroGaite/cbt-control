@@ -6,6 +6,7 @@ import { portalService, type StudentData, type IndividualReward } from '@/servic
 import { authService } from '@/services/auth.service'
 import { NotificationBell } from '@/features/notifications/NotificationBell'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
+import { FloatingNav }     from '@/components/shared/FloatingNav'
 import { PortalSkeleton }  from '@/features/portal/PortalSkeleton'
 import { PerfilTab }       from '@/features/portal/PerfilTab'
 import { RecompensasTab }  from '@/features/portal/RecompensasTab'
@@ -109,31 +110,7 @@ export default function PortalPage() {
         {tab === 'solicitudes' && <SolicitudesTab requests={student.redemptionRequests} />}
       </main>
 
-      <nav className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40">
-        <div className="flex items-center gap-1 bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/50 rounded-2xl px-2 py-2 shadow-2xl"
-          style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
-          {TABS.map(t => {
-            const Icon   = t.icon
-            const active = tab === t.id
-            return (
-              <button key={t.id} onClick={() => setTab(t.id)}
-                className={`relative flex flex-col items-center gap-1 px-5 py-2 rounded-xl text-[10px] font-semibold transition-all duration-200 ${
-                  active ? 'bg-zinc-700/80 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
-                }`}>
-                <div className="relative">
-                  <Icon size={18} strokeWidth={active ? 2.5 : 2} />
-                  {t.badge && t.badge > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-black text-[9px] font-black rounded-full w-3.5 h-3.5 flex items-center justify-center">
-                      {t.badge > 9 ? '9+' : t.badge}
-                    </span>
-                  )}
-                </div>
-                {t.label}
-              </button>
-            )
-          })}
-        </div>
-      </nav>
+      <FloatingNav tabs={TABS} active={tab} onTabChange={setTab} />
 
       {toast && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-zinc-800 border border-zinc-700 text-zinc-100 px-5 py-2.5 rounded-full text-sm font-medium shadow-xl animate-in fade-in slide-in-from-bottom-2">

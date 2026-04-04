@@ -4,25 +4,29 @@ import { Plus, Search, Users, User, X, ChevronRight, ChevronLeft, CheckCircle2 }
 import { ACTION_COLORS } from '@/lib/constants'
 import type { CourseResponse, StudentResponse, ActionResponse, RewardResponse, CoinLogResponse } from '@control-aula/shared'
 import { Modal, Button, Input } from '@/components/ui'
+import { CourseSelect } from '@/components/shared/CourseSelect'
 import { pointsService } from '@/services/points.service'
 import { RewardsTimeline } from './RewardsTimeline'
 import { StudentRanking }  from './StudentRanking'
 import { RecentHistory }   from './RecentHistory'
 
 interface Props {
-  course:    CourseResponse | undefined
-  students:  StudentResponse[]
-  actions:   ActionResponse[]
-  rewards:   RewardResponse[]
-  logs:      CoinLogResponse[]
-  reload:    () => void
-  showToast: (msg: string, ok?: boolean) => void
+  course:          CourseResponse | undefined
+  courses:         CourseResponse[]
+  currentCourse:   string
+  onCourseChange:  (id: string) => void
+  students:        StudentResponse[]
+  actions:         ActionResponse[]
+  rewards:         RewardResponse[]
+  logs:            CoinLogResponse[]
+  reload:          () => void
+  showToast:       (msg: string, ok?: boolean) => void
 }
 
 type AwardStep = 'recipients' | 'action' | 'confirm'
 type TargetMode = 'class' | 'students'
 
-export function AulaSection({ course, students, actions, rewards, logs, reload, showToast }: Props) {
+export function AulaSection({ course, courses, currentCourse, onCourseChange, students, actions, rewards, logs, reload, showToast }: Props) {
   const [awardModal,  setAwardModal]  = useState(false)
   const [claimModal,  setClaimModal]  = useState<{ reward: RewardResponse; student?: StudentResponse } | null>(null)
 
@@ -121,9 +125,12 @@ export function AulaSection({ course, students, actions, rewards, logs, reload, 
           <h2 className="text-2xl font-bold text-white tracking-tight">Clase Activa</h2>
           <p className="text-zinc-400 text-sm mt-1">Sigue el progreso de {course?.name || 'la clase'} en la línea de tiempo de recompensas.</p>
         </div>
-        <Button onClick={openAward} className="px-5 py-2.5 rounded-full shadow-lg shadow-blue-900/20">
-          <Plus className="w-4 h-4 mr-2" /> Otorgar Coins
-        </Button>
+        <div className="flex items-center gap-2">
+          <CourseSelect courses={courses} value={currentCourse} onChange={onCourseChange} />
+          <Button onClick={openAward} className="px-5 py-2.5 rounded-full shadow-lg shadow-blue-900/20">
+            <Plus className="w-4 h-4 mr-2" /> Otorgar Coins
+          </Button>
+        </div>
       </div>
 
       <RewardsTimeline timelineRewards={timelineRewards} currentCoins={currentCoins} nextReward={nextReward} logs={logs} onClaim={r => setClaimModal({ reward: r })} />

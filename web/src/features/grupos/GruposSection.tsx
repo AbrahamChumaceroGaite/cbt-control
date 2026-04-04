@@ -1,22 +1,25 @@
 'use client'
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
-import type { GroupResponse, StudentResponse } from '@control-aula/shared'
+import type { GroupResponse, StudentResponse, CourseResponse } from '@control-aula/shared'
 import { Modal, Button, Input, Label, Tooltip } from '@/components/ui'
-import { groupsService } from '@/services/groups.service'
-import { SectionHeader } from '@/components/shared/SectionHeader'
-import { CardActions }   from '@/components/shared/CardActions'
-import { Pagination }    from '@/components/shared/Pagination'
+import { groupsService }  from '@/services/groups.service'
+import { SectionHeader }  from '@/components/shared/SectionHeader'
+import { CourseSelect }   from '@/components/shared/CourseSelect'
+import { CardActions }    from '@/components/shared/CardActions'
+import { Pagination }     from '@/components/shared/Pagination'
 
 interface GruposSectionProps {
-  groups: GroupResponse[]
-  students: StudentResponse[]
-  currentCourse: string
-  reload: () => void
-  showToast: (msg: string, ok?: boolean) => void
+  groups:         GroupResponse[]
+  students:       StudentResponse[]
+  courses:        CourseResponse[]
+  currentCourse:  string
+  onCourseChange: (id: string) => void
+  reload:         () => void
+  showToast:      (msg: string, ok?: boolean) => void
 }
 
-export function GruposSection({ groups, students, currentCourse, reload, showToast }: GruposSectionProps) {
+export function GruposSection({ groups, students, courses, currentCourse, onCourseChange, reload, showToast }: GruposSectionProps) {
   const [modal, setModal]     = useState(false)
   const [editing, setEditing] = useState<GroupResponse | null>(null)
   const [form, setForm]       = useState({ name: '', studentIds: [] as string[] })
@@ -66,9 +69,12 @@ export function GruposSection({ groups, students, currentCourse, reload, showToa
     <div className="animate-in fade-in duration-500">
       <SectionHeader title="Grupos de Trabajo" subtitle="Gestiona los equipos en el curso seleccionado."
         actions={
-          <Tooltip content="Nuevo grupo">
-            <Button size="sm" onClick={openNew}><Plus className="w-4 h-4" /></Button>
-          </Tooltip>
+          <>
+            <CourseSelect courses={courses} value={currentCourse} onChange={onCourseChange} />
+            <Tooltip content="Nuevo grupo">
+              <Button size="sm" onClick={openNew}><Plus className="w-4 h-4" /></Button>
+            </Tooltip>
+          </>
         } />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

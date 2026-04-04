@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import { Home, BookType, Users, Network, Gift, Bell, Shield, LogOut } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { Toast } from '@/components/ui'
 import type { CourseResponse, StudentResponse, ActionResponse, RewardResponse, CoinLogResponse, GroupResponse } from '@control-aula/shared'
 import { coursesService }    from '@/services/courses.service'
@@ -20,7 +19,7 @@ import { GruposSection }      from '@/features/grupos/GruposSection'
 import { StoreSection }       from '@/features/tienda/StoreSection'
 import { SolicitudesSection } from '@/features/solicitudes/SolicitudesSection'
 import { AdminSection }       from '@/features/admin/AdminSection'
-import { CourseBar }          from '@/components/shared/CourseBar'
+import { FloatingNav }        from '@/components/shared/FloatingNav'
 
 type AppTab = 'aula' | 'cursos' | 'estudiantes' | 'grupos' | 'tienda' | 'solicitudes' | 'admin'
 
@@ -139,14 +138,11 @@ export default function App() {
       </header>
 
       <main className="relative pt-20 pb-6 px-6 mx-auto max-w-[1400px]">
-        {(['aula', 'estudiantes', 'grupos'] as AppTab[]).includes(tab) && (
-          <CourseBar courses={courses} current={currentCourse} onChange={setCurrentCourse} />
-        )}
-        {tab === 'aula'        && <AulaSection        course={course} students={students} actions={actions} rewards={rewards} logs={logs} reload={() => loadCourse(currentCourse)} showToast={showToast} />}
+        {tab === 'aula'        && <AulaSection        course={course} courses={courses} currentCourse={currentCourse} onCourseChange={setCurrentCourse} students={students} actions={actions} rewards={rewards} logs={logs} reload={() => loadCourse(currentCourse)} showToast={showToast} />}
         {tab === 'cursos'      && <CursosSection      courses={courses} reload={loadAll} showToast={showToast} />}
-        {tab === 'estudiantes' && <EstudiantesSection students={students} currentCourse={currentCourse} reload={() => loadCourse(currentCourse)} reloadAll={loadAll} showToast={showToast} />}
-        {tab === 'grupos'      && <GruposSection      groups={groups} students={students} currentCourse={currentCourse} reload={() => loadCourse(currentCourse)} showToast={showToast} />}
-        {tab === 'tienda'      && <StoreSection        actions={actions} rewards={rewards} reload={loadAll} showToast={showToast} />}
+        {tab === 'estudiantes' && <EstudiantesSection students={students} courses={courses} currentCourse={currentCourse} onCourseChange={setCurrentCourse} reload={() => loadCourse(currentCourse)} reloadAll={loadAll} showToast={showToast} />}
+        {tab === 'grupos'      && <GruposSection      groups={groups} students={students} courses={courses} currentCourse={currentCourse} onCourseChange={setCurrentCourse} reload={() => loadCourse(currentCourse)} showToast={showToast} />}
+        {tab === 'tienda'      && <StoreSection       actions={actions} rewards={rewards} reload={loadAll} showToast={showToast} />}
         {tab === 'solicitudes' && <SolicitudesSection showToast={showToast} onCountChange={setPendingSolicitudes} />}
         {tab === 'admin'       && <AdminSection       courses={courses} showToast={showToast} reloadAll={loadAll} />}
       </main>
@@ -155,24 +151,11 @@ export default function App() {
         Ing. Abraham CG &mdash; 2026 · All rights reserved
       </footer>
 
-      <nav className="floating-nav">
-        {TABS.map(t => {
-          const Icon = t.icon
-          return (
-            <button key={t.id} onClick={() => switchTab(t.id)} className={cn('nav-item', tab === t.id && 'active')}>
-              <div className="relative inline-flex">
-                <Icon className="nav-icon" strokeWidth={tab === t.id ? 2.5 : 2} />
-                {t.id === 'solicitudes' && pendingSolicitudes > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-black text-[9px] font-black rounded-full min-w-[14px] h-3.5 px-0.5 flex items-center justify-center leading-none">
-                    {pendingSolicitudes > 9 ? '9+' : pendingSolicitudes}
-                  </span>
-                )}
-              </div>
-              <span className="nav-label">{t.label}</span>
-            </button>
-          )
-        })}
-      </nav>
+      <FloatingNav
+        tabs={TABS.map(t => ({ ...t, badge: t.id === 'solicitudes' ? pendingSolicitudes : undefined }))}
+        active={tab}
+        onTabChange={switchTab}
+      />
     </div>
   )
 }

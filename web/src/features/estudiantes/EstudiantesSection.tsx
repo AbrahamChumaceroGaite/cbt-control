@@ -2,21 +2,24 @@
 import { useState, useRef } from 'react'
 import { Plus, Upload, Pencil, Trash2, Users, SlidersHorizontal, X, ChevronDown } from 'lucide-react'
 import * as XLSX from 'xlsx'
-import type { StudentResponse } from '@control-aula/shared'
+import type { StudentResponse, CourseResponse } from '@control-aula/shared'
 import { Modal, Button, Input, Label, Tooltip } from '@/components/ui'
 import { studentsService } from '@/services/students.service'
-import { SectionHeader } from '@/components/shared/SectionHeader'
-import { Pagination }    from '@/components/shared/Pagination'
+import { SectionHeader }  from '@/components/shared/SectionHeader'
+import { CourseSelect }   from '@/components/shared/CourseSelect'
+import { Pagination }     from '@/components/shared/Pagination'
 
 interface Props {
-  students:      StudentResponse[]
-  currentCourse: string
-  reload:        () => void
-  reloadAll:     () => void
-  showToast:     (msg: string, ok?: boolean) => void
+  students:       StudentResponse[]
+  courses:        CourseResponse[]
+  currentCourse:  string
+  onCourseChange: (id: string) => void
+  reload:         () => void
+  reloadAll:      () => void
+  showToast:      (msg: string, ok?: boolean) => void
 }
 
-export function EstudiantesSection({ students, currentCourse, reload, reloadAll, showToast }: Props) {
+export function EstudiantesSection({ students, courses, currentCourse, onCourseChange, reload, reloadAll, showToast }: Props) {
   const [modal,    setModal]    = useState(false)
   const [editing,  setEditing]  = useState<StudentResponse | null>(null)
   const [form,     setForm]     = useState({ name: '', code: '', email: '', coins: 0 })
@@ -176,6 +179,7 @@ export function EstudiantesSection({ students, currentCourse, reload, reloadAll,
         filters={FilterButton}
         actions={
           <>
+            <CourseSelect courses={courses} value={currentCourse} onChange={onCourseChange} />
             <Tooltip content="Importar desde Excel (.xlsx)">
               <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
                 <Upload className="w-4 h-4 mr-2" /> Importar
