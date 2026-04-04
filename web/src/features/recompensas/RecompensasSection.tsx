@@ -31,7 +31,7 @@ export function RecompensasSection({ rewards, reload, showToast }: Props) {
   const [form,     setForm]     = useState(EMPTY_FORM)
   const [search,   setSearch]   = useState('')
   const [page,     setPage]     = useState(0)
-  const [pageSize, setPageSize] = useState(12)
+  const [pageSize, setPageSize] = useState(5)
 
   // Filters
   const [showFilters, setShowFilters] = useState(false)

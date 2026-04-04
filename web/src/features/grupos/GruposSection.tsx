@@ -21,7 +21,7 @@ export function GruposSection({ groups, students, currentCourse, reload, showToa
   const [editing, setEditing] = useState<GroupResponse | null>(null)
   const [form, setForm]       = useState({ name: '', studentIds: [] as string[] })
   const [page, setPage]       = useState(0)
-  const [pageSize, setPageSize] = useState(12)
+  const [pageSize, setPageSize] = useState(5)
 
   const openNew  = () => { setForm({ name: '', studentIds: [] }); setEditing(null); setModal(true) }
   const openEdit = (g: GroupResponse) => { setForm({ name: g.name, studentIds: g.members.map(m => m.studentId) }); setEditing(g); setModal(true) }

@@ -34,7 +34,7 @@ export function AccionesSection({ actions, reload, showToast }: Props) {
   const [form,     setForm]     = useState({ name: '', coins: 2, category: 'blue', affectsClass: false, affectsStudent: true, isActive: true })
   const [search,   setSearch]   = useState('')
   const [page,     setPage]     = useState(0)
-  const [pageSize, setPageSize] = useState(12)
+  const [pageSize, setPageSize] = useState(5)
 
   // Filters
   const [showFilters, setShowFilters] = useState(false)

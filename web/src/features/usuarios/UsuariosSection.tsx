@@ -39,7 +39,7 @@ export function UsuariosSection({ showToast }: Props) {
   const [form,        setForm]        = useState({ code: '', password: '', role: 'student', fullName: '' })
   const [search,      setSearch]      = useState('')
   const [page,        setPage]        = useState(0)
-  const [pageSize,    setPageSize]    = useState(12)
+  const [pageSize,    setPageSize]    = useState(5)
   const [selected,    setSelected]    = useState<UserFull | null>(null)
   const [filters,     setFilters]     = useState<Filters>(DEFAULT_FILTERS)
   const [showFilters, setShowFilters] = useState(false)
@@ -197,9 +197,9 @@ export function UsuariosSection({ showToast }: Props) {
               ? 'bg-purple-500/15 border-purple-500/30 text-purple-300'
               : 'bg-blue-500/15 border-blue-500/30 text-blue-300'
             const roleBadge = isAdmin ? 'bg-purple-900/50 text-purple-300' : 'bg-blue-900/50 text-blue-300'
-            const avatarLetter = u.fullName
-              ? u.fullName.trim().charAt(0).toUpperCase()
-              : (u.code.replace(/\d/g, '').charAt(0) || u.code.charAt(0)).toUpperCase()
+            // Student name takes priority; fallback to user's own fullName, then code
+            const displayName  = u.student?.name || u.fullName || u.code
+            const avatarLetter = displayName.trim().charAt(0).toUpperCase()
 
             return (
               <button
@@ -212,8 +212,8 @@ export function UsuariosSection({ showToast }: Props) {
                     {avatarLetter}
                   </div>
                   <div className="min-w-0 flex-1 pr-5">
-                    <p className="text-sm font-semibold text-zinc-100 truncate leading-tight">{u.fullName || u.code}</p>
-                    {u.fullName && <p className="text-[11px] text-zinc-500 font-mono truncate">{u.code}</p>}
+                    <p className="text-sm font-semibold text-zinc-100 truncate leading-tight">{displayName}</p>
+                    <p className="text-[11px] text-zinc-500 font-mono truncate">{u.code}</p>
                     <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${roleBadge}`}>
                         {isAdmin ? 'Admin' : 'Estudiante'}

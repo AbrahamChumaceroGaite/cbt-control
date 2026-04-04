@@ -20,6 +20,7 @@ import { GruposSection }      from '@/features/grupos/GruposSection'
 import { StoreSection }       from '@/features/tienda/StoreSection'
 import { SolicitudesSection } from '@/features/solicitudes/SolicitudesSection'
 import { AdminSection }       from '@/features/admin/AdminSection'
+import { CourseBar }          from '@/components/shared/CourseBar'
 
 type AppTab = 'aula' | 'cursos' | 'estudiantes' | 'grupos' | 'tienda' | 'solicitudes' | 'admin'
 
@@ -126,15 +127,6 @@ export default function App() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {courses.length > 0 && (
-            <select
-              className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-zinc-700"
-              value={currentCourse}
-              onChange={e => setCurrentCourse(e.target.value)}
-            >
-              {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          )}
           <NotificationBell />
           <button
             onClick={logout}
@@ -147,6 +139,9 @@ export default function App() {
       </header>
 
       <main className="relative pt-20 pb-6 px-6 mx-auto max-w-[1400px]">
+        {(['aula', 'estudiantes', 'grupos'] as AppTab[]).includes(tab) && (
+          <CourseBar courses={courses} current={currentCourse} onChange={setCurrentCourse} />
+        )}
         {tab === 'aula'        && <AulaSection        course={course} students={students} actions={actions} rewards={rewards} logs={logs} reload={() => loadCourse(currentCourse)} showToast={showToast} />}
         {tab === 'cursos'      && <CursosSection      courses={courses} reload={loadAll} showToast={showToast} />}
         {tab === 'estudiantes' && <EstudiantesSection students={students} currentCourse={currentCourse} reload={() => loadCourse(currentCourse)} reloadAll={loadAll} showToast={showToast} />}

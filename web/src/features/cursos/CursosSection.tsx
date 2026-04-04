@@ -19,7 +19,7 @@ export function CursosSection({ courses, reload, showToast }: CursosSectionProps
   const [editing, setEditing] = useState<CourseResponse | null>(null)
   const [form, setForm]     = useState({ name: '', level: 'Secondary 2', parallel: 'A', classCoins: 0 })
   const [page, setPage]     = useState(0)
-  const [pageSize, setPageSize] = useState(12)
+  const [pageSize, setPageSize] = useState(5)
 
   const openNew  = () => { setForm({ name: '', level: 'Secondary 2', parallel: 'A', classCoins: 0 }); setEditing(null); setModal(true) }
   const openEdit = (c: CourseResponse) => { setForm({ name: c.name, level: c.level, parallel: c.parallel, classCoins: c.classCoins }); setEditing(c); setModal(true) }

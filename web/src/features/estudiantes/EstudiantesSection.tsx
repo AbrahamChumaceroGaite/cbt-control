@@ -22,7 +22,7 @@ export function EstudiantesSection({ students, currentCourse, reload, reloadAll,
   const [form,     setForm]     = useState({ name: '', code: '', email: '', coins: 0 })
   const [search,   setSearch]   = useState('')
   const [page,     setPage]     = useState(0)
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize, setPageSize] = useState(5)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Coin range filter

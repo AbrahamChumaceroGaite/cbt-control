@@ -105,10 +105,10 @@ export function UserDrawer({ user, onClose, onUpdated, showToast }: Props) {
               </button>
               <div className="flex items-center gap-4">
                 <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center text-xl font-black flex-shrink-0 ${avatarBg}`}>
-                  {(user.fullName || user.code).charAt(0).toUpperCase()}
+                  {(user.student?.name || user.fullName || user.code).trim().charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-bold text-zinc-100 truncate">{user.fullName || user.code}</h3>
+                  <h3 className="font-bold text-zinc-100 truncate">{user.student?.name || user.fullName || user.code}</h3>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${roleBadge}`}>
                       {isAdmin ? 'Admin' : 'Estudiante'}
