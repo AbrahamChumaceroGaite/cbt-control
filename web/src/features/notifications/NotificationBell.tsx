@@ -4,7 +4,7 @@ import { Bell, BellDot, Check, CheckCheck, Loader2, Trash2, X, AlertCircle } fro
 import { useInbox }             from '@/hooks/useInbox'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { useSocketEvent }     from '@/hooks/useSocketEvent'
-import { WS }                   from '@/socket/events'
+import { WS }                   from '@/ws/events'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

@@ -9,9 +9,9 @@ interface WsCtx {
 
 const Ctx = createContext<WsCtx | null>(null)
 
-export function useSse(): WsCtx {
+export function useWs(): WsCtx {
   const ctx = useContext(Ctx)
-  if (!ctx) throw new Error('useSse outside SocketProvider')
+  if (!ctx) throw new Error('useWs outside SocketProvider')
   return ctx
 }
 
