@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui'
+import { Button, Modal } from '@/components/ui'
 import { solicitudesService, type SolicitudFull } from '@/services/solicitudes.service'
 
 interface SolicitudesSectionProps {
@@ -10,9 +10,10 @@ interface SolicitudesSectionProps {
 }
 
 export function SolicitudesSection({ showToast, onCountChange }: SolicitudesSectionProps) {
-  const [items, setItems]       = useState<SolicitudFull[]>([])
-  const [filter, setFilter]     = useState<'pending' | 'all'>('pending')
+  const [items, setItems]           = useState<SolicitudFull[]>([])
+  const [filter, setFilter]         = useState<'pending' | 'all'>('pending')
   const [processing, setProcessing] = useState<string | null>(null)
+  const [confirmItem, setConfirmItem] = useState<SolicitudFull | null>(null)
 
   async function load() {
     const data = await solicitudesService.getAll().catch(() => [] as SolicitudFull[])
@@ -33,6 +34,12 @@ export function SolicitudesSection({ showToast, onCountChange }: SolicitudesSect
     } catch (err: any) {
       showToast(err.message ?? 'Error al procesar solicitud', false)
     } finally { setProcessing(null) }
+  }
+
+  async function confirmApprove() {
+    if (!confirmItem) return
+    await handle(confirmItem.id, 'approved')
+    setConfirmItem(null)
   }
 
   return (
@@ -75,7 +82,7 @@ export function SolicitudesSection({ showToast, onCountChange }: SolicitudesSect
               </div>
               {s.status === 'pending' && (
                 <div className="flex gap-2 shrink-0">
-                  <Button size="sm" onClick={() => handle(s.id, 'approved')} disabled={processing === s.id}>
+                  <Button size="sm" onClick={() => setConfirmItem(s)} disabled={processing === s.id}>
                     {processing === s.id ? '...' : 'Aprobar'}
                   </Button>
                   <Button size="sm" variant="destructive" onClick={() => handle(s.id, 'rejected')} disabled={processing === s.id}>
@@ -87,6 +94,32 @@ export function SolicitudesSection({ showToast, onCountChange }: SolicitudesSect
           ))}
         </div>
       )}
+
+      {/* ── Confirm approve modal ─────────────────────────────────────── */}
+      <Modal open={!!confirmItem} onClose={() => setConfirmItem(null)} title="Premio Individual">
+        <div className="text-center py-6 space-y-6">
+          <div className="w-24 h-24 rounded-full bg-amber-400 mx-auto flex items-center justify-center shadow-[0_0_30px_rgba(251,191,36,0.5)] border-4 border-amber-200 animate-pulse">
+            <span className="text-5xl">{confirmItem?.reward.icon}</span>
+          </div>
+          <div>
+            <h3 className="text-2xl font-black text-white">{confirmItem?.reward.name}</h3>
+            <p className="text-indigo-300 font-semibold mt-1">Para: {confirmItem?.student.name}</p>
+            <p className="text-zinc-400 mt-1">{confirmItem?.student.coins} coins personales</p>
+          </div>
+          {confirmItem?.reward.description && (
+            <p className="text-zinc-400 text-sm italic">{confirmItem.reward.description}</p>
+          )}
+          <div className="bg-emerald-900/20 text-emerald-400 border border-emerald-500/20 p-4 rounded-xl text-sm font-medium">
+            Se registrará que {confirmItem?.student.name.split(' ')[0]} canjeó este premio. Sus puntos individuales NO se descontarán.
+          </div>
+          <div className="flex gap-3 justify-center pt-4">
+            <Button variant="outline" className="px-6" onClick={() => setConfirmItem(null)}>Cancelar</Button>
+            <Button variant="amber" className="px-8" onClick={confirmApprove} disabled={!!processing}>
+              {processing ? 'Procesando…' : '¡Confirmar Canje!'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

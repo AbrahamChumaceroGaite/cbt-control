@@ -30,7 +30,7 @@ Sistema de gamificación para el aula desarrollado con arquitectura **Clean Arch
 | **Alumnos** | Tabla con búsqueda por nombre/código, filtro de rango de coins (doble slider), importación masiva desde Excel (.xlsx). |
 | **Grupos** | CRUD de equipos de trabajo dentro de un curso. Selector de curso en la barra de acciones. |
 | **Tienda** | Sección unificada con sub-tabs: **Acciones** (catálogo de comportamientos valorizados) y **Premios** (recompensas canjeables). |
-| **Solicitudes** | Gestión de canjes solicitados por los alumnos: aprobar o rechazar. Badge en la barra de navegación muestra el total de solicitudes. |
+| **Solicitudes** | Gestión de canjes solicitados por los alumnos. Aprobar abre el mismo modal de confirmación de canje (icono animado, descripción, aviso de que los coins no se descuentan). Rechazar actúa directamente. Badge en la barra de navegación muestra el total de solicitudes pendientes. |
 | **Admin** | Gestión de usuarios del sistema (roles admin/student), configuración de notificaciones push. |
 
 ### Portal del Estudiante
@@ -44,6 +44,13 @@ Sistema de gamificación para el aula desarrollado con arquitectura **Clean Arch
 - Suscripción Web Push (VAPID) desde el navegador del alumno.
 - El docente puede enviar notificaciones desde el panel de Admin.
 - Servicio Worker registrado automáticamente en el portal del estudiante.
+
+### WebSockets (tiempo real)
+
+- Conexión socket.io establecida globalmente en `layout.tsx` vía `SocketProvider`.
+- Autenticación: el cliente obtiene un JWT de corta duración (60 s) en `GET /api/auth/ws-token` y lo envía en el handshake (`auth.token`). El gateway lo valida sin exponer la cookie.
+- Rooms: `admin` para docentes, `student:{id}` + `course:{id}` para alumnos.
+- Eventos activos: `coins:updated` (actualiza contador de coins en tiempo real), `solicitud:new` (incrementa badge de solicitudes en el panel admin), `solicitud:updated` (actualiza estado en el portal del alumno), `notification:new` (actualiza el bell de notificaciones sin polling).
 
 ---
 
@@ -156,7 +163,7 @@ portal.types.ts       PortalStudentResponse
 | `reward` | `GET/PATCH/DELETE /api/solicitudes` | Gestión de canjes (SolicitudesController) |
 | `group` | `GET/POST/PUT/DELETE /api/grupos` | Grupos de alumnos por curso |
 | `point` | `POST /api/puntos` | Otorgar coins (transacción atómica) |
-| `auth` | `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me` | Autenticación JWT con cookie HttpOnly |
+| `auth` | `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `GET /api/auth/ws-token` | Autenticación JWT con cookie HttpOnly. `ws-token` emite un JWT de 60 s para el handshake de WebSocket. |
 | `auth` | `GET/POST/DELETE /api/usuarios` | Gestión de usuarios del sistema (UserController) |
 | `portal` | `GET /api/portal/me`, `GET /api/portal/recompensas`, `POST /api/portal/solicitudes` | Portal del estudiante |
 | `push` | `POST /api/push/subscribe`, `DELETE /api/push/unsubscribe`, `POST /api/push/send` | Web Push VAPID |
@@ -200,6 +207,15 @@ app/           páginas Next.js como orquestadores delgados de estado y layout
 | `CourseSelect` | Select de curso reutilizable, colocado estratégicamente en cada sección que lo necesita (Aula, Alumnos, Grupos). |
 | `Pagination` | Paginación con control de tamaño de página. Default: 5 items/página. |
 | `CardActions` | Botones de editar/eliminar para tarjetas de contenido. |
+| `Modal` | Modal reutilizable (`ui/modal.tsx`). Usado en el flujo de otorgar coins, canjear premios (Aula) y aprobar solicitudes (Solicitudes). |
+
+### Contextos y hooks de socket
+
+| Archivo | Descripción |
+|---------|-------------|
+| `contexts/SocketContext.tsx` | `SocketProvider` global (montado en `layout.tsx`). Obtiene el ws-token, conecta socket.io y expone el socket vía contexto. |
+| `hooks/useSocketEvent.ts` | Hook tipado `useSocketEvent(event, handler, deps?)`. Se suscribe/desuscribe limpiamente al montar/desmontar. |
+| `socket/events.ts` | Espejo frontend de los eventos WS: constantes `WS.*` y tipos `WsPayloads`. |
 
 ### Protección de rutas
 
