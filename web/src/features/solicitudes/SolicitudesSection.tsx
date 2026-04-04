@@ -106,9 +106,6 @@ export function SolicitudesSection({ showToast, onCountChange }: SolicitudesSect
             <p className="text-indigo-300 font-semibold mt-1">Para: {confirmItem?.student.name}</p>
             <p className="text-zinc-400 mt-1">{confirmItem?.student.coins} coins personales</p>
           </div>
-          {confirmItem?.reward.description && (
-            <p className="text-zinc-400 text-sm italic">{confirmItem.reward.description}</p>
-          )}
           <div className="bg-emerald-900/20 text-emerald-400 border border-emerald-500/20 p-4 rounded-xl text-sm font-medium">
             Se registrará que {confirmItem?.student.name.split(' ')[0]} canjeó este premio. Sus puntos individuales NO se descontarán.
           </div>
