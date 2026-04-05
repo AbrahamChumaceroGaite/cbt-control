@@ -29,7 +29,7 @@ const CAT_COLOR: Record<string, { dot: string; text: string; bg: string; border:
 }
 const fallbackCat = { dot: 'bg-zinc-500', text: 'text-zinc-400', bg: 'bg-zinc-700/30', border: 'border-zinc-700/40' }
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 5
 
 // ─── Image resize (canvas → base64) ─────────────────────────────────────────
 
@@ -87,7 +87,7 @@ function TrajectoryChart({ logs, currentCoins }: { logs: StudentData['coinLogs']
   const offset = currentCoins - (cumul.at(-1) ?? 0)
   const series = cumul.map(v => v + offset)
   const minV = Math.min(...series), maxV = Math.max(...series), rangeV = maxV - minV || 1
-  const H = 60, W = 100
+  const H = 64, W = 100
   const pt = (i: number, v: number) => ({ x: (i / (series.length - 1)) * W, y: H - ((v - minV) / rangeV) * (H - 6) - 3 })
   const segments = series.slice(0, -1).map((_, i) => {
     const a = pt(i, series[i]), b = pt(i + 1, series[i + 1])
@@ -96,6 +96,27 @@ function TrajectoryChart({ logs, currentCoins }: { logs: StudentData['coinLogs']
   const last  = pt(series.length - 1, series.at(-1)!)
   const trend = series.at(-1)! >= series[0]
   const diff  = series.at(-1)! - series[0]
+
+  // Build month tick marks: find where the month changes
+  const now     = new Date()
+  const months  = [now, new Date(now.getFullYear(), now.getMonth() - 1, 1)]
+  const ticks: { x: number; label: string }[] = []
+  months.forEach(m => {
+    const monthStart = new Date(m.getFullYear(), m.getMonth(), 1).getTime()
+    const monthEnd   = new Date(m.getFullYear(), m.getMonth() + 1, 0, 23, 59, 59).getTime()
+    // find first log index that falls within this month
+    const idx = ordered.findIndex(l => {
+      const t = new Date(l.createdAt).getTime()
+      return t >= monthStart && t <= monthEnd
+    })
+    if (idx !== -1) {
+      ticks.push({
+        x: (idx / (series.length - 1)) * 100,
+        label: m.toLocaleDateString('es-BO', { month: 'short' }),
+      })
+    }
+  })
+
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
@@ -107,18 +128,30 @@ function TrajectoryChart({ logs, currentCoins }: { logs: StudentData['coinLogs']
         </div>
         <span className="text-[10px] text-zinc-600">{ordered.length} eventos</span>
       </div>
+
+      {/* Chart */}
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full h-14">
+        {/* Month gridlines */}
+        {ticks.map((t, i) => (
+          <line key={i} x1={t.x} y1="0" x2={t.x} y2={H}
+            stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" strokeDasharray="2,3" />
+        ))}
         {segments.map((s, i) => (
           <path key={i} d={s.d} fill="none" stroke={s.rise ? '#4ade80' : '#f87171'}
             strokeWidth="2" strokeLinecap="round" opacity="0.9" />
         ))}
         <circle cx={last.x} cy={last.y} r="2.5" fill="#fbbf24" />
       </svg>
-      <div className="flex justify-between mt-1">
-        <span className="text-[10px] text-zinc-600">
-          {new Date(ordered[0].createdAt).toLocaleDateString('es-BO', { day: '2-digit', month: 'short' })}
-        </span>
-        <span className="text-[10px] text-zinc-600">Hoy</span>
+
+      {/* X-axis labels */}
+      <div className="relative h-4 mt-0.5">
+        {ticks.map((t, i) => (
+          <span key={i} className="absolute text-[10px] text-zinc-600 -translate-x-1/2 capitalize"
+            style={{ left: `${t.x}%` }}>
+            {t.label}
+          </span>
+        ))}
+        <span className="absolute right-0 text-[10px] text-zinc-600">Hoy</span>
       </div>
     </div>
   )
@@ -127,7 +160,7 @@ function TrajectoryChart({ logs, currentCoins }: { logs: StudentData['coinLogs']
 // ─── Rewards progress list ────────────────────────────────────────────────────
 
 function RewardsProgress({ coins, rewards }: { coins: number; rewards: IndividualReward[] }) {
-  const sorted = [...rewards].filter(r => r.isActive).sort((a, b) => a.coinsRequired - b.coinsRequired).slice(0, 5)
+  const sorted = [...rewards].filter(r => r.isActive).sort((a, b) => a.coinsRequired - b.coinsRequired)
   if (!sorted.length) return <p className="text-xs text-zinc-600 text-center py-4">Sin premios disponibles</p>
 
   // find the "next" unlockable
@@ -305,7 +338,7 @@ export function PerfilTab({ student, rewards, onStudentUpdate }: Props) {
             )}
           {/* Hover overlay */}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-          <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/40 backdrop-blur-sm text-white/0 group-hover:text-white/75 text-xs font-medium transition-all">
+          <div className="absolute bottom-4 left-4 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/40 backdrop-blur-sm text-white/0 group-hover:text-white/75 text-xs font-medium transition-all">
             <Camera className="w-3 h-3" />
             {uploading === 'banner' ? 'Subiendo…' : 'Cambiar portada'}
           </div>
