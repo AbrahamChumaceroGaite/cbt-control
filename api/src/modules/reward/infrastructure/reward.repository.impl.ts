@@ -15,7 +15,7 @@ export class RewardRepositoryImpl extends RewardRepository {
     return this.prisma.reward.findUnique({ where: { id } })
   }
 
-  create(data: { name: string; coinsRequired: number; description?: string; icon?: string; type?: string; isGlobal?: boolean }): Promise<RewardEntity> {
+  create(data: { name: string; coinsRequired: number; description?: string; icon?: string; type?: string; isGlobal?: boolean; discount?: number }): Promise<RewardEntity> {
     return this.prisma.reward.create({
       data: {
         name:          data.name,
@@ -24,14 +24,19 @@ export class RewardRepositoryImpl extends RewardRepository {
         icon:          data.icon        ?? '★',
         type:          data.type        ?? 'class',
         isGlobal:      data.isGlobal    ?? true,
+        discount:      data.discount    ?? 0,
       },
     })
   }
 
-  update(id: string, data: Partial<{ name: string; description: string; icon: string; coinsRequired: number; type: string; isGlobal: boolean; isActive: boolean }>): Promise<RewardEntity> {
+  update(id: string, data: Partial<{ name: string; description: string; icon: string; coinsRequired: number; discount: number; type: string; isGlobal: boolean; isActive: boolean }>): Promise<RewardEntity> {
     return this.prisma.reward.update({
       where: { id },
-      data:  { ...data, ...(data.coinsRequired !== undefined && { coinsRequired: Number(data.coinsRequired) }) },
+      data:  {
+        ...data,
+        ...(data.coinsRequired !== undefined && { coinsRequired: Number(data.coinsRequired) }),
+        ...(data.discount      !== undefined && { discount:      Number(data.discount) }),
+      },
     })
   }
 

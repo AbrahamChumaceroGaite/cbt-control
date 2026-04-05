@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Gift, ClipboardList, History } from 'lucide-react'
+import { Gift, ClipboardList, History, Landmark } from 'lucide-react'
 import { portalService, type StudentData, type IndividualReward } from '@/services/portal.service'
 import { authService } from '@/services/auth.service'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
@@ -11,10 +11,11 @@ import { PortalSkeleton }   from '@/features/portal/PortalSkeleton'
 import { PerfilTab }        from '@/features/portal/PerfilTab'
 import { RecompensasTab }   from '@/features/portal/RecompensasTab'
 import { SolicitudesTab }   from '@/features/portal/SolicitudesTab'
+import { BankTab }          from '@/features/portal/BankTab'
 import { useSocketEvent }   from '@/hooks/useSocketEvent'
 import { WS }               from '@/ws/events'
 
-type Tab = 'perfil' | 'recompensas' | 'solicitudes'
+type Tab = 'perfil' | 'recompensas' | 'solicitudes' | 'bank'
 
 export default function PortalPage() {
   const router = useRouter()
@@ -82,6 +83,7 @@ export default function PortalPage() {
     { id: 'perfil',      icon: History,      label: 'Inicio' },
     { id: 'recompensas', icon: Gift,          label: 'Premios' },
     { id: 'solicitudes', icon: ClipboardList, label: 'Solicitudes', badge: solicitudesCount },
+    { id: 'bank',        icon: Landmark,      label: 'Bank' },
   ]
 
   return (
@@ -117,6 +119,13 @@ export default function PortalPage() {
             student={student}
             requests={student.redemptionRequests}
             onLogout={() => setLogoutModalOpen(true)}
+          />
+        )}
+        {tab === 'bank' && (
+          <BankTab
+            student={student}
+            onLogout={() => setLogoutModalOpen(true)}
+            onCoinsUpdate={coins => setStudent(s => s ? { ...s, coins } : s)}
           />
         )}
       </main>

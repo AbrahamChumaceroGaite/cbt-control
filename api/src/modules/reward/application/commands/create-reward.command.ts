@@ -11,6 +11,7 @@ export class CreateRewardDto {
   @IsOptional() @IsString()   icon?:           string
   @IsOptional() @IsString()   type?:           string
   @IsOptional() @IsBoolean()  isGlobal?:       boolean
+  @IsOptional() @IsNumber()   discount?:       number
 }
 
 export class CreateRewardCommand {

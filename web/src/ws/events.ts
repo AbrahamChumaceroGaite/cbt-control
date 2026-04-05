@@ -1,10 +1,12 @@
 /** Mirror of api/src/infrastructure/socket/socket.events.ts — keep in sync. */
 
 export const WS = {
-  COINS_UPDATED:     'coins:updated',
-  SOLICITUD_NEW:     'solicitud:new',
-  SOLICITUD_UPDATED: 'solicitud:updated',
-  NOTIFICATION_NEW:  'notification:new',
+  COINS_UPDATED:       'coins:updated',
+  SOLICITUD_NEW:       'solicitud:new',
+  SOLICITUD_UPDATED:   'solicitud:updated',
+  NOTIFICATION_NEW:    'notification:new',
+  TRANSACTION_NEW:     'transaction:new',
+  TRANSACTION_UPDATED: 'transaction:updated',
 } as const
 
 export type WsEvent = typeof WS[keyof typeof WS]
@@ -30,5 +32,15 @@ export interface WsPayloads {
     title:     string
     body:      string
     createdAt: string
+  }
+  'transaction:new': {
+    id:              string
+    fromStudentName: string
+    toStudentName:   string
+    amount:          number
+  }
+  'transaction:updated': {
+    id:     string
+    status: string
   }
 }

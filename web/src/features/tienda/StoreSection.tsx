@@ -1,16 +1,18 @@
 'use client'
 import React, { useState } from 'react'
-import { Zap, Gift, ShoppingBag } from 'lucide-react'
+import { Zap, Gift, ShoppingBag, Landmark } from 'lucide-react'
 import type { ActionResponse, RewardResponse } from '@control-aula/shared'
-import { AccionesSection }    from '@/features/acciones/AccionesSection'
-import { RecompensasSection } from '@/features/recompensas/RecompensasSection'
-import { SectionHeader }      from '@/components/shared/SectionHeader'
+import { AccionesSection }      from '@/features/acciones/AccionesSection'
+import { RecompensasSection }   from '@/features/recompensas/RecompensasSection'
+import { TransaccionesSection } from '@/features/tienda/TransaccionesSection'
+import { SectionHeader }        from '@/components/shared/SectionHeader'
 
-type StoreTab = 'acciones' | 'premios'
+type StoreTab = 'acciones' | 'premios' | 'transacciones'
 
 const STORE_TABS: { id: StoreTab; label: string; icon: React.ElementType; desc: string }[] = [
-  { id: 'acciones', label: 'Acciones', icon: Zap,  desc: 'Comportamientos y puntajes' },
-  { id: 'premios',  label: 'Premios',  icon: Gift, desc: 'Recompensas canjeables'      },
+  { id: 'acciones',      label: 'Acciones',      icon: Zap,      desc: 'Comportamientos y puntajes' },
+  { id: 'premios',       label: 'Premios',       icon: Gift,     desc: 'Recompensas canjeables'      },
+  { id: 'transacciones', label: 'Transacciones', icon: Landmark, desc: 'Transferencias de coins'     },
 ]
 
 interface Props {
@@ -29,7 +31,7 @@ export function StoreSection({ actions, rewards, reload, showToast }: Props) {
         icon={ShoppingBag}
         iconClass="text-amber-400"
         title="Tienda"
-        subtitle="Configura acciones y premios del sistema gamificado"
+        subtitle="Configura acciones, premios y gestiona transferencias de coins"
       />
 
       {/* Sub-navigation */}
@@ -47,7 +49,7 @@ export function StoreSection({ actions, rewards, reload, showToast }: Props) {
                   : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60'
               }`}
             >
-              <Icon className={`w-4 h-4 ${active ? 'text-amber-400' : 'text-zinc-600 group-hover:text-zinc-400'}`} />
+              <Icon className={`w-4 h-4 ${active ? (t.id === 'transacciones' ? 'text-purple-400' : 'text-amber-400') : 'text-zinc-600 group-hover:text-zinc-400'}`} />
               <div className="text-left hidden sm:block">
                 <div className="leading-none">{t.label}</div>
                 <div className={`text-[10px] mt-0.5 leading-none font-normal ${active ? 'text-zinc-400' : 'text-zinc-600'}`}>{t.desc}</div>
@@ -62,6 +64,9 @@ export function StoreSection({ actions, rewards, reload, showToast }: Props) {
       )}
       {activeTab === 'premios' && (
         <RecompensasSection rewards={rewards} reload={reload} showToast={showToast} />
+      )}
+      {activeTab === 'transacciones' && (
+        <TransaccionesSection showToast={showToast} />
       )}
     </div>
   )

@@ -1,0 +1,12 @@
+import type { TransactionEntity } from './transaction.entity'
+import type { StudentSearchResult } from '@control-aula/shared'
+
+export abstract class BankRepository {
+  abstract create(data: { fromStudentId: string; toStudentId: string; amount: number; notes?: string }): Promise<TransactionEntity>
+  abstract findById(id: string): Promise<TransactionEntity | null>
+  abstract findByStudent(studentId: string): Promise<any[]>
+  abstract findAll(status?: string): Promise<any[]>
+  abstract update(id: string, data: { status: string; adminNotes?: string }): Promise<TransactionEntity>
+  abstract countWeekly(fromStudentId: string, since: Date): Promise<number>
+  abstract searchStudents(q: string, excludeId: string): Promise<StudentSearchResult[]>
+}

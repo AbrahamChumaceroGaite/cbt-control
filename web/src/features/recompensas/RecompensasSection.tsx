@@ -23,7 +23,7 @@ interface Props {
   showToast: (msg: string, ok?: boolean) => void
 }
 
-const EMPTY_FORM = { name: '', description: '', icon: '★', coinsRequired: 100, type: 'class' as RewardType, isGlobal: true, isActive: true }
+const EMPTY_FORM = { name: '', description: '', icon: '★', coinsRequired: 100, discount: 0, type: 'class' as RewardType, isGlobal: true, isActive: true }
 
 export function RecompensasSection({ rewards, reload, showToast }: Props) {
   const [modal,    setModal]    = useState(false)
@@ -48,6 +48,7 @@ export function RecompensasSection({ rewards, reload, showToast }: Props) {
     setForm({
       name: r.name, description: r.description, icon: r.icon,
       coinsRequired: r.coinsRequired,
+      discount: r.discount ?? 0,
       type: (r.type === 'individual' ? 'individual' : 'class') as RewardType,
       isGlobal: r.isGlobal, isActive: r.isActive,
     })
@@ -157,7 +158,12 @@ export function RecompensasSection({ rewards, reload, showToast }: Props) {
             <div>
               <div className="flex justify-between items-start mb-3">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center bg-amber-500/10 text-amber-500 border border-amber-500/20 text-xl">{r.icon}</div>
-                <span className="text-xs font-bold px-2 py-1 rounded bg-zinc-800 text-zinc-300">{r.coinsRequired} coins</span>
+                <div className="flex flex-col items-end gap-1">
+                  {(r.discount ?? 0) > 0 && (
+                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-rose-900/40 text-rose-400 border border-rose-500/20">-{r.discount}%</span>
+                  )}
+                  <span className="text-xs font-bold px-2 py-1 rounded bg-zinc-800 text-zinc-300">{r.coinsRequired} coins</span>
+                </div>
               </div>
               <h3 className="text-lg font-semibold text-white mb-1">{r.name}</h3>
               <p className="text-sm text-zinc-400 line-clamp-2">{r.description || 'Sin descripción'}</p>
@@ -189,6 +195,24 @@ export function RecompensasSection({ rewards, reload, showToast }: Props) {
               <Select value={form.icon} onChange={e => setForm(p => ({ ...p, icon: e.target.value }))}>
                 {ICONS.map(i => <option key={i} value={i}>{i}</option>)}
               </Select>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Descuento (%) — 0 = sin descuento</Label>
+            <div className="flex items-center gap-3">
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                value={form.discount}
+                onChange={e => setForm(p => ({ ...p, discount: Math.min(100, Math.max(0, parseInt(e.target.value) || 0)) }))}
+                className="w-24"
+              />
+              {form.discount > 0 && (
+                <span className="text-xs text-rose-400 font-bold">
+                  Precio final: {Math.max(1, Math.round(form.coinsRequired * (1 - form.discount / 100)))} coins
+                </span>
+              )}
             </div>
           </div>
           <div className="space-y-1.5">

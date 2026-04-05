@@ -5,4 +5,5 @@ export type { ActionResponse, ActionInput }                from './types/action.
 export type { RewardResponse, RedemptionResponse, RedemptionFullResponse, RewardInput } from './types/reward.types'
 export type { GroupResponse, GroupMember, GroupInput }     from './types/group.types'
 export type { PortalStudentResponse }                      from './types/portal.types'
+export type { CoinTransactionResponse, WeeklyBankStatus, StudentSearchResult, CreateTransactionInput, ProcessTransactionInput } from './types/bank.types'
 export type { UserResponse, UserRole, UserDetailResponse, UserCreateInput, SessionPayload } from './types/user.types'

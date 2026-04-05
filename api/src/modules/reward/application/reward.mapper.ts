@@ -9,6 +9,7 @@ export class RewardMapper {
       description:   entity.description,
       icon:          entity.icon,
       coinsRequired: entity.coinsRequired,
+      discount:      entity.discount,
       type:          entity.type,
       isGlobal:      entity.isGlobal,
       isActive:      entity.isActive,

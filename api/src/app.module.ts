@@ -15,6 +15,7 @@ import { AuthModule }   from './modules/auth/auth.module'
 import { PortalModule }  from './modules/portal/portal.module'
 import { BackupModule }  from './modules/backup/backup.module'
 import { ResetModule }   from './modules/reset/reset.module'
+import { BankModule }    from './modules/bank/bank.module'
 import { PushModule }    from './modules/push/push.module'
 import { InboxModule }    from './modules/inbox/inbox.module'
 import { SocketModule }  from './infrastructure/socket/socket.module'
@@ -38,6 +39,7 @@ import { SocketModule }  from './infrastructure/socket/socket.module'
     PortalModule,
     BackupModule,
     ResetModule,
+    BankModule,
   ],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },

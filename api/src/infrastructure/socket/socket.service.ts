@@ -59,4 +59,13 @@ export class SocketService {
   notificationForAdmins(payload: WsPayloads['notification:new']): void {
     this.toAll(this.admins, WS.NOTIFICATION_NEW, payload)
   }
+
+  transactionNew(payload: WsPayloads['transaction:new']): void {
+    this.toAll(this.admins, WS.TRANSACTION_NEW, payload)
+  }
+
+  transactionUpdated(fromStudentId: string, toStudentId: string, payload: WsPayloads['transaction:updated']): void {
+    this.toOne(this.students, fromStudentId, WS.TRANSACTION_UPDATED, payload)
+    this.toOne(this.students, toStudentId,   WS.TRANSACTION_UPDATED, payload)
+  }
 }

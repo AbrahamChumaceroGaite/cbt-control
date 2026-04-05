@@ -35,13 +35,15 @@ model Student {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  course               Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  coinLogs             CoinLog[]
-  tramos               StudentTramo[]
+  course                Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  coinLogs              CoinLog[]
+  tramos                StudentTramo[]
   individualRedemptions StudentRedemption[]
-  groupMemberships     GroupMember[]
-  user                 User?
-  redemptionRequests   RedemptionRequest[]
+  groupMemberships      GroupMember[]
+  user                  User?
+  redemptionRequests    RedemptionRequest[]
+  transactionsSent      CoinTransaction[]   @relation("TransactionsSent")
+  transactionsReceived  CoinTransaction[]   @relation("TransactionsReceived")
 }
 
 model StudentTramo {
@@ -56,16 +58,18 @@ model StudentTramo {
 }
 
 model Reward {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   name           String
-  description    String   @default("")
-  icon           String   @default("★")
+  description    String    @default("")
+  icon           String    @default("★")
   coinsRequired  Int
-  type           String   @default("class") // "class" | "individual"
-  isGlobal       Boolean  @default(true)
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  discount       Int       @default(0)   // 0-100 percentage off
+  discountEndsAt DateTime?               // null = no expiry (manually set)
+  type           String    @default("class") // "class" | "individual"
+  isGlobal       Boolean   @default(true)
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   redemptions           Redemption[]
   individualRedemptions StudentRedemption[]
@@ -199,4 +203,22 @@ model RedemptionRequest {
 
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   reward  Reward  @relation(fields: [rewardId], references: [id])
+}
+
+// ── Bank ──────────────────────────────────────────────────────────────────────
+
+model CoinTransaction {
+  id            String   @id @default(cuid())
+  fromStudentId String
+  toStudentId   String
+  amount        Int      // coins being sent (before tax)
+  tax           Int      @default(1)
+  status        String   @default("pending") // "pending" | "approved" | "rejected"
+  notes         String   @default("")        // message from sender
+  adminNotes    String   @default("")        // admin decision note
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  fromStudent Student @relation("TransactionsSent",     fields: [fromStudentId], references: [id], onDelete: Cascade)
+  toStudent   Student @relation("TransactionsReceived", fields: [toStudentId],   references: [id], onDelete: Cascade)
 }

@@ -114,6 +114,79 @@ export class NotificationService {
     }
   }
 
+  /** Notify all active admins that a student created a new coin transaction. */
+  async notifyAdminsNewTransaction(fromStudentId: string, toStudentId: string, amount: number, transactionId: string): Promise<void> {
+    try {
+      const [from, to, adminUsers] = await Promise.all([
+        this.prisma.student.findUnique({ where: { id: fromStudentId }, select: { name: true } }),
+        this.prisma.student.findUnique({ where: { id: toStudentId   }, select: { name: true } }),
+        this.prisma.user.findMany({ where: { role: 'admin', isActive: true }, select: { id: true } }),
+      ])
+      if (!adminUsers.length) return
+
+      const payload: NotificationPayload = {
+        title: 'Nueva transacción de coins',
+        body:  `${from?.name ?? 'Alumno'} quiere enviar ${amount} coins a ${to?.name ?? 'otro alumno'}`,
+        url:   '/?tab=transacciones',
+        tag:   'transaction',
+      }
+
+      const items = await Promise.all(adminUsers.map(u => this.inbox.create(u.id, payload)))
+      this.realtime.transactionNew({ id: transactionId, fromStudentName: from?.name ?? '', toStudentName: to?.name ?? '', amount })
+      if (items[0]) {
+        this.realtime.notificationForAdmins({ id: items[0].id, title: payload.title, body: payload.body, createdAt: items[0].createdAt.toISOString() })
+      }
+      if (this.sender.enabled) {
+        const subs    = await this.pushRepo.findByRole('admin')
+        const expired = await this.sender.sendMany(subs, payload)
+        if (expired.length) await this.pushRepo.removeExpired(expired)
+      }
+    } catch (err: any) {
+      this.logger.error(`notifyAdminsNewTransaction: ${err?.message}`)
+    }
+  }
+
+  /** Notify sender and recipient that their transaction was approved or rejected. */
+  async notifyTransactionProcessed(fromStudentId: string, toStudentId: string, amount: number, approved: boolean): Promise<void> {
+    try {
+      const [fromUser, toUser, from, to] = await Promise.all([
+        this.prisma.user.findFirst({ where: { studentId: fromStudentId }, select: { id: true } }),
+        this.prisma.user.findFirst({ where: { studentId: toStudentId   }, select: { id: true } }),
+        this.prisma.student.findUnique({ where: { id: fromStudentId }, select: { name: true } }),
+        this.prisma.student.findUnique({ where: { id: toStudentId   }, select: { name: true } }),
+      ])
+
+      const senderPayload: NotificationPayload = {
+        title: approved ? '¡Transacción aprobada!' : 'Transacción rechazada',
+        body:  approved
+          ? `Enviaste ${amount} coins a ${to?.name ?? 'otro alumno'} exitosamente`
+          : `Tu transacción a ${to?.name ?? 'otro alumno'} fue rechazada — coins reembolsados`,
+        url: '/portal?tab=bank',
+        tag: 'transaction',
+      }
+
+      if (fromUser) {
+        const item = await this.inbox.create(fromUser.id, senderPayload)
+        this.realtime.notificationForStudent(fromStudentId, { id: item.id, title: senderPayload.title, body: senderPayload.body, createdAt: item.createdAt.toISOString() })
+        await this.#push(fromUser.id, senderPayload)
+      }
+
+      if (approved && toUser) {
+        const recipientPayload: NotificationPayload = {
+          title: '¡Recibiste coins!',
+          body:  `${from?.name ?? 'Un alumno'} te envió ${amount} coins`,
+          url:   '/portal?tab=bank',
+          tag:   'transaction',
+        }
+        const item = await this.inbox.create(toUser.id, recipientPayload)
+        this.realtime.notificationForStudent(toStudentId, { id: item.id, title: recipientPayload.title, body: recipientPayload.body, createdAt: item.createdAt.toISOString() })
+        await this.#push(toUser.id, recipientPayload)
+      }
+    } catch (err: any) {
+      this.logger.error(`notifyTransactionProcessed: ${err?.message}`)
+    }
+  }
+
   /** Internal: send push to a single user's subscribed devices. */
   async #push(userId: string, payload: NotificationPayload): Promise<void> {
     if (!this.sender.enabled) return

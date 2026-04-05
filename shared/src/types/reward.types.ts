@@ -4,6 +4,7 @@ export type RewardResponse = {
   description:   string
   icon:          string
   coinsRequired: number
+  discount:      number  // 0-100 percentage off
   type:          string
   isGlobal:      boolean
   isActive:      boolean
@@ -17,6 +18,7 @@ export type RewardInput = {
   type?:          string
   isGlobal?:      boolean
   isActive?:      boolean
+  discount?:      number
 }
 
 export type RedemptionResponse = {
