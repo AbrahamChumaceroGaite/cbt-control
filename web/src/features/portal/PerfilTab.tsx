@@ -3,9 +3,10 @@ import { useRef, useState, useMemo } from 'react'
 import {
   Camera, ChevronLeft, ChevronRight, CalendarDays, X,
   Lock, Coins, BookOpen, Users, Trophy, TrendingUp,
-  TrendingDown, Star, Zap,
+  TrendingDown, Star, Zap, LogOut,
 } from 'lucide-react'
 import { portalService, type StudentData, type IndividualReward } from '@/services/portal.service'
+import { NotificationBell } from '@/features/notifications/NotificationBell'
 
 // ─── Static tramo data ────────────────────────────────────────────────────────
 
@@ -270,9 +271,10 @@ interface Props {
   student: StudentData
   rewards: IndividualReward[]
   onStudentUpdate: (partial: Partial<StudentData>) => void
+  onLogout: () => void
 }
 
-export function PerfilTab({ student, rewards, onStudentUpdate }: Props) {
+export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props) {
   const avatarRef = useRef<HTMLInputElement>(null)
   const bannerRef = useRef<HTMLInputElement>(null)
   const [uploading,   setUploading]   = useState<'avatar' | 'banner' | null>(null)
@@ -327,7 +329,7 @@ export function PerfilTab({ student, rewards, onStudentUpdate }: Props) {
       <section className="relative w-full h-[420px] sm:h-[480px] overflow-hidden">
 
         {/* Banner / background */}
-        <div className="absolute inset-0 cursor-pointer group" onClick={() => bannerRef.current?.click()}>
+        <div className="absolute inset-0">
           {student.bannerUrl
             ? <img src={student.bannerUrl} alt="" className="w-full h-full object-cover" />
             : (
@@ -336,14 +338,29 @@ export function PerfilTab({ student, rewards, onStudentUpdate }: Props) {
                 <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(0deg, #fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
               </div>
             )}
-          {/* Hover overlay */}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-          <div className="absolute bottom-4 left-4 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/40 backdrop-blur-sm text-white/0 group-hover:text-white/75 text-xs font-medium transition-all">
-            <Camera className="w-3 h-3" />
-            {uploading === 'banner' ? 'Subiendo…' : 'Cambiar portada'}
-          </div>
         </div>
+
+        {/* Banner edit button — always visible, bottom-left */}
+        <button
+          onClick={() => bannerRef.current?.click()}
+          disabled={uploading === 'banner'}
+          className="absolute bottom-4 left-4 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white/75 text-xs font-medium hover:bg-black/70 hover:text-white transition-all"
+        >
+          <Camera className="w-3 h-3" />
+          {uploading === 'banner' ? 'Subiendo…' : 'Cambiar portada'}
+        </button>
         <input ref={bannerRef} type="file" accept="image/*" className="hidden" onChange={uploadBanner} />
+
+        {/* Top-right: notification + logout */}
+        <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+          <NotificationBell />
+          <button
+            onClick={onLogout}
+            className="w-8 h-8 rounded-xl bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-black/60 transition-all"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+          </button>
+        </div>
 
         {/* Gradient fade bottom */}
         <div className="absolute bottom-0 left-0 right-0 h-56 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent pointer-events-none" />

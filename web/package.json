@@ -6,7 +6,7 @@
     "dev": "node server.js",
     "build": "next build",
     "start": "node server.js",
-    "prebuild": "rimraf .next"
+    "prebuild": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\""
   },
   "dependencies": {
     "@control-aula/shared": "*",

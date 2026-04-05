@@ -1,30 +1,31 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Gift, ClipboardList, History, LogOut } from 'lucide-react'
+import { Gift, ClipboardList, History } from 'lucide-react'
 import { portalService, type StudentData, type IndividualReward } from '@/services/portal.service'
 import { authService } from '@/services/auth.service'
-import { NotificationBell }   from '@/features/notifications/NotificationBell'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
-import { FloatingNav }         from '@/components/shared/FloatingNav'
-import { PortalSkeleton }      from '@/features/portal/PortalSkeleton'
-import { PerfilTab }           from '@/features/portal/PerfilTab'
-import { RecompensasTab }      from '@/features/portal/RecompensasTab'
-import { SolicitudesTab }      from '@/features/portal/SolicitudesTab'
-import { useSocketEvent }      from '@/hooks/useSocketEvent'
-import { WS }                  from '@/ws/events'
+import { FloatingNav }      from '@/components/shared/FloatingNav'
+import { LogoutModal }      from '@/components/shared/LogoutModal'
+import { PortalSkeleton }   from '@/features/portal/PortalSkeleton'
+import { PerfilTab }        from '@/features/portal/PerfilTab'
+import { RecompensasTab }   from '@/features/portal/RecompensasTab'
+import { SolicitudesTab }   from '@/features/portal/SolicitudesTab'
+import { useSocketEvent }   from '@/hooks/useSocketEvent'
+import { WS }               from '@/ws/events'
 
 type Tab = 'perfil' | 'recompensas' | 'solicitudes'
 
 export default function PortalPage() {
   const router = useRouter()
-  const [student,    setStudent]    = useState<StudentData | null>(null)
-  const [rewards,    setRewards]    = useState<IndividualReward[]>([])
-  const [tab,        setTab]        = useState<Tab>('perfil')
-  const [loading,    setLoading]    = useState(true)
-  const [requesting, setRequesting] = useState<string | null>(null)
-  const [toast,      setToast]      = useState('')
-  const { unsubscribeForLogout }    = usePushNotifications()
+  const [student,         setStudent]         = useState<StudentData | null>(null)
+  const [rewards,         setRewards]         = useState<IndividualReward[]>([])
+  const [tab,             setTab]             = useState<Tab>('perfil')
+  const [loading,         setLoading]         = useState(true)
+  const [requesting,      setRequesting]      = useState<string | null>(null)
+  const [toast,           setToast]           = useState('')
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false)
+  const { unsubscribeForLogout } = usePushNotifications()
 
   useEffect(() => {
     Promise.all([
@@ -42,6 +43,7 @@ export default function PortalPage() {
   }
 
   async function logout() {
+    setLogoutModalOpen(false)
     await unsubscribeForLogout()
     await authService.logout()
     router.push('/login')
@@ -77,9 +79,9 @@ export default function PortalPage() {
   const solicitudesCount = student.redemptionRequests.filter(r => r.status === 'pending').length
 
   const TABS: { id: Tab; icon: React.ElementType; label: string; badge?: number }[] = [
-    { id: 'perfil',      icon: History,       label: 'Inicio' },
-    { id: 'recompensas', icon: Gift,           label: 'Premios' },
-    { id: 'solicitudes', icon: ClipboardList,  label: 'Solicitudes', badge: solicitudesCount },
+    { id: 'perfil',      icon: History,      label: 'Inicio' },
+    { id: 'recompensas', icon: Gift,          label: 'Premios' },
+    { id: 'solicitudes', icon: ClipboardList, label: 'Solicitudes', badge: solicitudesCount },
   ]
 
   return (
@@ -91,17 +93,6 @@ export default function PortalPage() {
         <div className="blob blob-3" />
       </div>
 
-      {/* Fixed top-right: notification + logout — always visible over all tabs */}
-      <div className="fixed top-3 right-3 z-50 flex items-center gap-1.5">
-        <NotificationBell />
-        <button
-          onClick={logout}
-          className="w-8 h-8 rounded-xl bg-zinc-900/80 backdrop-blur-sm border border-zinc-800/60 flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-all"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-        </button>
-      </div>
-
       {/* Tab content */}
       <main className="relative z-10">
         {tab === 'perfil' && (
@@ -109,21 +100,34 @@ export default function PortalPage() {
             student={student}
             rewards={rewards}
             onStudentUpdate={partial => setStudent(s => s ? { ...s, ...partial } : s)}
+            onLogout={() => setLogoutModalOpen(true)}
           />
         )}
         {tab === 'recompensas' && (
-          <div className="pt-14 px-4 pb-28 max-w-2xl mx-auto">
-            <RecompensasTab student={student} rewards={rewards} requesting={requesting} onRequest={requestReward} />
-          </div>
+          <RecompensasTab
+            student={student}
+            rewards={rewards}
+            requesting={requesting}
+            onRequest={requestReward}
+            onLogout={() => setLogoutModalOpen(true)}
+          />
         )}
         {tab === 'solicitudes' && (
-          <div className="pt-14 px-4 pb-28 max-w-2xl mx-auto">
-            <SolicitudesTab requests={student.redemptionRequests} />
-          </div>
+          <SolicitudesTab
+            student={student}
+            requests={student.redemptionRequests}
+            onLogout={() => setLogoutModalOpen(true)}
+          />
         )}
       </main>
 
       <FloatingNav tabs={TABS} active={tab} onTabChange={setTab} />
+
+      <LogoutModal
+        open={logoutModalOpen}
+        onConfirm={logout}
+        onCancel={() => setLogoutModalOpen(false)}
+      />
 
       {toast && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-zinc-800 border border-zinc-700 text-zinc-100 px-5 py-2.5 rounded-full text-sm font-medium shadow-xl animate-in fade-in slide-in-from-bottom-2">
