@@ -172,3 +172,17 @@ input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius:
 
 /* ── Number input spinner ────────────────────────────────────────────────────── */
 input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
+
+
+/* ── Login animated gradient text ───────────────────────────────────────────── */
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50% }
+  50%       { background-position: 100% 50% }
+}
+.animate-gradient-text {
+  background-size: 300% 300%;
+  animation: gradient-shift 5s ease infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
