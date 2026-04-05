@@ -63,10 +63,13 @@ function PushPrompt({ onEnable, onDismiss }: { onEnable: () => void; onDismiss: 
 
 const DISMISSED_KEY = 'push_prompt_dismissed'
 
+const INBOX_PAGE = 10
+
 export function NotificationBell() {
   const { items, unreadCount, loading, error, refresh, markRead, markAllRead, deleteOne, deleteAll } = useInbox()
   const { state: pushState, requestAndSubscribe } = usePushNotifications()
   const [open,          setOpen]          = useState(false)
+  const [visibleCount,  setVisibleCount]  = useState(INBOX_PAGE)
 
   useSocketEvent(WS.NOTIFICATION_NEW, () => { refresh() })
   const [promptVisible, setPromptVisible] = useState(false)
@@ -85,6 +88,7 @@ export function NotificationBell() {
   }, [pushState, open])
 
   useEffect(() => {
+    if (open) setVisibleCount(INBOX_PAGE) // reset on open
     if (!open) return
     const handler = (e: MouseEvent) => {
       if (!panelRef.current?.contains(e.target as Node) &&
@@ -187,38 +191,48 @@ export function NotificationBell() {
                 <span className="text-xs text-zinc-600">Sin notificaciones</span>
               </div>
             ) : (
-              <ul>
-                {items.map(n => {
-                  const sev = inferSeverity(n.title, n.body)
-                  return (
-                    <li
-                      key={n.id}
-                      className={`group flex gap-3 px-4 py-3 border-b border-zinc-800/40 last:border-0 hover:bg-zinc-900/60 transition-colors ${!n.isRead ? `bg-zinc-900/25 ${SEVERITY_BG[sev]}` : ''}`}
-                    >
-                      <div className="flex-shrink-0 mt-1.5">
-                        <div className={`w-1.5 h-1.5 rounded-full ${!n.isRead ? `${SEVERITY_DOT[sev]} animate-pulse` : 'bg-zinc-800'}`} />
-                      </div>
-                      <div className="flex-1 min-w-0 cursor-pointer" onClick={() => !n.isRead && markRead(n.id)}>
-                        <div className="flex items-start justify-between gap-2">
-                          <p className={`text-xs font-semibold leading-tight ${n.isRead ? 'text-zinc-400' : 'text-zinc-100'}`}>{n.title}</p>
-                          <span className="text-[10px] text-zinc-600 flex-shrink-0">{timeAgo(n.createdAt)}</span>
+              <>
+                <ul>
+                  {items.slice(0, visibleCount).map(n => {
+                    const sev = inferSeverity(n.title, n.body)
+                    return (
+                      <li
+                        key={n.id}
+                        className={`group flex gap-3 px-4 py-3 border-b border-zinc-800/40 last:border-0 hover:bg-zinc-900/60 transition-colors ${!n.isRead ? `bg-zinc-900/25 ${SEVERITY_BG[sev]}` : ''}`}
+                      >
+                        <div className="flex-shrink-0 mt-1.5">
+                          <div className={`w-1.5 h-1.5 rounded-full ${!n.isRead ? `${SEVERITY_DOT[sev]} animate-pulse` : 'bg-zinc-800'}`} />
                         </div>
-                        <p className="text-[11px] text-zinc-500 mt-0.5 line-clamp-2">{n.body}</p>
-                      </div>
-                      <div className="flex-shrink-0 flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {!n.isRead && (
-                          <button onClick={() => markRead(n.id)} title="Leída" className="p-1 text-zinc-600 hover:text-zinc-200 hover:bg-zinc-800 rounded transition-colors">
-                            <Check className="w-3 h-3" />
+                        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => !n.isRead && markRead(n.id)}>
+                          <div className="flex items-start justify-between gap-2">
+                            <p className={`text-xs font-semibold leading-tight ${n.isRead ? 'text-zinc-400' : 'text-zinc-100'}`}>{n.title}</p>
+                            <span className="text-[10px] text-zinc-600 flex-shrink-0">{timeAgo(n.createdAt)}</span>
+                          </div>
+                          <p className="text-[11px] text-zinc-500 mt-0.5 line-clamp-2">{n.body}</p>
+                        </div>
+                        <div className="flex-shrink-0 flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {!n.isRead && (
+                            <button onClick={() => markRead(n.id)} title="Leída" className="p-1 text-zinc-600 hover:text-zinc-200 hover:bg-zinc-800 rounded transition-colors">
+                              <Check className="w-3 h-3" />
+                            </button>
+                          )}
+                          <button onClick={() => deleteOne(n.id)} title="Eliminar" className="p-1 text-zinc-600 hover:text-red-400 hover:bg-red-950/20 rounded transition-colors">
+                            <X className="w-3 h-3" />
                           </button>
-                        )}
-                        <button onClick={() => deleteOne(n.id)} title="Eliminar" className="p-1 text-zinc-600 hover:text-red-400 hover:bg-red-950/20 rounded transition-colors">
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </li>
-                  )
-                })}
-              </ul>
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+                {visibleCount < items.length && (
+                  <button
+                    onClick={() => setVisibleCount(c => c + INBOX_PAGE)}
+                    className="w-full py-2.5 text-xs text-zinc-500 hover:text-amber-400 hover:bg-zinc-900/40 transition-colors border-t border-zinc-800/40"
+                  >
+                    Cargar más ({items.length - visibleCount} restantes)
+                  </button>
+                )}
+              </>
             )}
           </div>
 

@@ -77,50 +77,57 @@ function Sparkline({ values, color }: { values: number[]; color: string }) {
   )
 }
 
-// ─── Coin trajectory chart ────────────────────────────────────────────────────
+// ─── Coin trajectory chart with axes ─────────────────────────────────────────
 
 function TrajectoryChart({ logs, currentCoins }: { logs: StudentData['coinLogs']; currentCoins: number }) {
   const ordered = [...logs].reverse()
   if (ordered.length < 3) return (
     <p className="text-xs text-zinc-600 text-center py-4">Sin suficientes datos</p>
   )
+
   const cumul  = ordered.map(l => l.coins).reduce<number[]>((a, d) => { a.push((a.at(-1) ?? 0) + d); return a }, [])
   const offset = currentCoins - (cumul.at(-1) ?? 0)
   const series = cumul.map(v => v + offset)
+
   const minV = Math.min(...series), maxV = Math.max(...series), rangeV = maxV - minV || 1
-  const H = 64, W = 100
-  const pt = (i: number, v: number) => ({ x: (i / (series.length - 1)) * W, y: H - ((v - minV) / rangeV) * (H - 6) - 3 })
-  const segments = series.slice(0, -1).map((_, i) => {
-    const a = pt(i, series[i]), b = pt(i + 1, series[i + 1])
-    return { d: `M ${a.x},${a.y} L ${b.x},${b.y}`, rise: series[i + 1] >= series[i] }
-  })
-  const last  = pt(series.length - 1, series.at(-1)!)
   const trend = series.at(-1)! >= series[0]
   const diff  = series.at(-1)! - series[0]
 
-  // Build month tick marks: find where the month changes
-  const now     = new Date()
-  const months  = [now, new Date(now.getFullYear(), now.getMonth() - 1, 1)]
-  const ticks: { x: number; label: string }[] = []
-  months.forEach(m => {
-    const monthStart = new Date(m.getFullYear(), m.getMonth(), 1).getTime()
-    const monthEnd   = new Date(m.getFullYear(), m.getMonth() + 1, 0, 23, 59, 59).getTime()
-    // find first log index that falls within this month
-    const idx = ordered.findIndex(l => {
-      const t = new Date(l.createdAt).getTime()
-      return t >= monthStart && t <= monthEnd
-    })
-    if (idx !== -1) {
-      ticks.push({
-        x: (idx / (series.length - 1)) * 100,
-        label: m.toLocaleDateString('es-BO', { month: 'short' }),
-      })
+  // SVG layout: leave margin for Y labels left and X labels bottom
+  const ML = 36, MR = 4, MT = 4, MB = 16
+  const CW = 200, CH = 72
+  const W  = CW + ML + MR, H = CH + MT + MB
+
+  const px = (i: number) => ML + (i / (series.length - 1)) * CW
+  const py = (v: number) => MT + CH - ((v - minV) / rangeV) * CH
+
+  const segments = series.slice(0, -1).map((_, i) => ({
+    d:    `M ${px(i).toFixed(1)},${py(series[i]).toFixed(1)} L ${px(i+1).toFixed(1)},${py(series[i+1]).toFixed(1)}`,
+    rise: series[i+1] >= series[i],
+  }))
+
+  // Y axis labels (3 ticks: min, mid, max)
+  const yTicks = [minV, Math.round((minV + maxV) / 2), maxV]
+
+  // X axis ticks: first entry, month boundaries, last entry
+  const xTicks: { i: number; label: string }[] = [
+    { i: 0, label: new Date(ordered[0].createdAt).toLocaleDateString('es-BO', { day: '2-digit', month: 'short' }) },
+  ]
+  // Find month change points
+  let lastMonth = new Date(ordered[0].createdAt).getMonth()
+  ordered.forEach((l, i) => {
+    if (i === 0) return
+    const m = new Date(l.createdAt).getMonth()
+    if (m !== lastMonth) {
+      xTicks.push({ i, label: new Date(l.createdAt).toLocaleDateString('es-BO', { day: '2-digit', month: 'short' }) })
+      lastMonth = m
     }
   })
+  xTicks.push({ i: series.length - 1, label: 'Hoy' })
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           {trend ? <TrendingUp className="w-3.5 h-3.5 text-green-400" /> : <TrendingDown className="w-3.5 h-3.5 text-red-400" />}
           <span className={`text-xs font-bold ${trend ? 'text-green-400' : 'text-red-400'}`}>
@@ -130,30 +137,46 @@ function TrajectoryChart({ logs, currentCoins }: { logs: StudentData['coinLogs']
         <span className="text-[10px] text-zinc-600">{ordered.length} eventos</span>
       </div>
 
-      {/* Chart */}
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full h-14">
-        {/* Month gridlines */}
-        {ticks.map((t, i) => (
-          <line key={i} x1={t.x} y1="0" x2={t.x} y2={H}
-            stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" strokeDasharray="2,3" />
-        ))}
-        {segments.map((s, i) => (
-          <path key={i} d={s.d} fill="none" stroke={s.rise ? '#4ade80' : '#f87171'}
-            strokeWidth="2" strokeLinecap="round" opacity="0.9" />
-        ))}
-        <circle cx={last.x} cy={last.y} r="2.5" fill="#fbbf24" />
-      </svg>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: `${H * 1.4}px` }}>
+        {/* Y gridlines + labels */}
+        {yTicks.map((v, i) => {
+          const y = py(v)
+          return (
+            <g key={i}>
+              <line x1={ML} y1={y} x2={ML + CW} y2={y}
+                stroke="rgba(255,255,255,0.05)" strokeWidth="0.7" strokeDasharray="3,4" />
+              <text x={ML - 3} y={y + 3.5} textAnchor="end"
+                fontSize="7" fill="rgba(161,161,170,0.7)">{v}</text>
+            </g>
+          )
+        })}
 
-      {/* X-axis labels */}
-      <div className="relative h-4 mt-0.5">
-        {ticks.map((t, i) => (
-          <span key={i} className="absolute text-[10px] text-zinc-600 -translate-x-1/2 capitalize"
-            style={{ left: `${t.x}%` }}>
-            {t.label}
-          </span>
+        {/* Segments */}
+        {segments.map((s, i) => (
+          <path key={i} d={s.d} fill="none"
+            stroke={s.rise ? '#4ade80' : '#f87171'} strokeWidth="1.8"
+            strokeLinecap="round" opacity="0.9" />
         ))}
-        <span className="absolute right-0 text-[10px] text-zinc-600">Hoy</span>
-      </div>
+
+        {/* End dot */}
+        <circle cx={px(series.length - 1)} cy={py(series.at(-1)!)} r="2.5" fill="#fbbf24" />
+
+        {/* X axis */}
+        <line x1={ML} y1={MT + CH} x2={ML + CW} y2={MT + CH}
+          stroke="rgba(255,255,255,0.06)" strokeWidth="0.7" />
+        {xTicks.map((t, i) => {
+          const x = px(t.i)
+          const anchor = t.i === 0 ? 'start' : t.i === series.length - 1 ? 'end' : 'middle'
+          return (
+            <g key={i}>
+              <line x1={x} y1={MT + CH} x2={x} y2={MT + CH + 3}
+                stroke="rgba(255,255,255,0.1)" strokeWidth="0.7" />
+              <text x={x} y={MT + CH + 11} textAnchor={anchor}
+                fontSize="7" fill="rgba(161,161,170,0.6)">{t.label}</text>
+            </g>
+          )
+        })}
+      </svg>
     </div>
   )
 }
@@ -161,7 +184,7 @@ function TrajectoryChart({ logs, currentCoins }: { logs: StudentData['coinLogs']
 // ─── Rewards progress list ────────────────────────────────────────────────────
 
 function RewardsProgress({ coins, rewards }: { coins: number; rewards: IndividualReward[] }) {
-  const sorted = [...rewards].filter(r => r.isActive).sort((a, b) => a.coinsRequired - b.coinsRequired)
+  const sorted = [...rewards].sort((a, b) => a.coinsRequired - b.coinsRequired)
   if (!sorted.length) return <p className="text-xs text-zinc-600 text-center py-4">Sin premios disponibles</p>
 
   // find the "next" unlockable

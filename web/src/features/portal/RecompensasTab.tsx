@@ -24,10 +24,8 @@ interface Props {
 export function RecompensasTab({ student, rewards, requesting, onRequest, onLogout }: Props) {
   const [page, setPage] = useState(0)
 
-  // Only show active rewards that haven't been fully redeemed
-  const available = rewards
-    .filter(r => r.isActive)
-    .sort((a, b) => a.coinsRequired - b.coinsRequired)
+  // API already returns only active individual rewards — just sort
+  const available = [...rewards].sort((a, b) => a.coinsRequired - b.coinsRequired)
 
   const totalPages = Math.ceil(available.length / PAGE_SIZE)
   const paged      = available.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)

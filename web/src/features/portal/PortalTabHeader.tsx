@@ -11,7 +11,7 @@ interface Props {
 export function PortalTabHeader({ student, onLogout }: Props) {
   const initials = student.name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
   return (
-    <header className="flex items-center justify-between px-4 py-3 bg-zinc-950/95 backdrop-blur-md border-b border-zinc-800/40 sticky top-0 z-30">
+    <header className="flex items-center justify-between px-4 py-3 sticky top-0 z-30">
       {/* Left: avatar + name */}
       <div className="flex items-center gap-2.5">
         <div className="w-8 h-8 rounded-full overflow-hidden border border-amber-500/20 bg-zinc-800 flex-shrink-0">
