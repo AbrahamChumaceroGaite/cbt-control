@@ -16,6 +16,13 @@ export const portalService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rewardId }),
     }),
+
+  updateProfile: (data: { avatarUrl?: string; bannerUrl?: string }) =>
+    apiFetchFull<null>('/api/portal/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
 }
 
 export type { PortalStudentResponse as StudentData, RedemptionResponse as RedemptionReq }

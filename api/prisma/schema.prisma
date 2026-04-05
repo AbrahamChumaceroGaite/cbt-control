@@ -153,6 +153,8 @@ model User {
   role         String   @default("student") // "admin" | "student"
   studentId    String?  @unique
   fullName     String   @default("")
+  avatarUrl    String?
+  bannerUrl    String?
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

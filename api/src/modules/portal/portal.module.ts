@@ -6,10 +6,16 @@ import { PortalRepositoryImpl }  from './infrastructure/portal.repository.impl'
 import { GetPortalStudentHandler }     from './application/queries/get-portal-student.query'
 import { GetIndividualRewardsHandler } from './application/queries/get-individual-rewards.query'
 import { RequestRewardHandler }        from './application/commands/request-reward.command'
+import { UpdateProfileHandler }        from './application/commands/update-profile.command'
 import { AuthModule }            from '../auth/auth.module'
 import { PushModule }            from '../push/push.module'
 
-const handlers = [GetPortalStudentHandler, GetIndividualRewardsHandler, RequestRewardHandler]
+const handlers = [
+  GetPortalStudentHandler,
+  GetIndividualRewardsHandler,
+  RequestRewardHandler,
+  UpdateProfileHandler,
+]
 
 @Module({
   imports:     [CqrsModule, AuthModule, PushModule],

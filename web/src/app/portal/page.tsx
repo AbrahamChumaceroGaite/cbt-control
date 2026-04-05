@@ -1,18 +1,19 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Gift, ClipboardList, Home, LogOut } from 'lucide-react'
+import { Gift, ClipboardList, History, LogOut } from 'lucide-react'
 import { portalService, type StudentData, type IndividualReward } from '@/services/portal.service'
 import { authService } from '@/services/auth.service'
-import { NotificationBell } from '@/features/notifications/NotificationBell'
+import { NotificationBell }   from '@/features/notifications/NotificationBell'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
-import { FloatingNav }     from '@/components/shared/FloatingNav'
-import { PortalSkeleton }  from '@/features/portal/PortalSkeleton'
-import { useSocketEvent } from '@/hooks/useSocketEvent'
-import { WS }              from '@/ws/events'
-import { PerfilTab }       from '@/features/portal/PerfilTab'
-import { RecompensasTab }  from '@/features/portal/RecompensasTab'
-import { SolicitudesTab }  from '@/features/portal/SolicitudesTab'
+import { FloatingNav }         from '@/components/shared/FloatingNav'
+import { PortalSkeleton }      from '@/features/portal/PortalSkeleton'
+import { ProfileHeader }       from '@/features/portal/ProfileHeader'
+import { PerfilTab }           from '@/features/portal/PerfilTab'
+import { RecompensasTab }      from '@/features/portal/RecompensasTab'
+import { SolicitudesTab }      from '@/features/portal/SolicitudesTab'
+import { useSocketEvent }      from '@/hooks/useSocketEvent'
+import { WS }                  from '@/ws/events'
 
 type Tab = 'perfil' | 'recompensas' | 'solicitudes'
 
@@ -34,7 +35,7 @@ export default function PortalPage() {
       setStudent(me)
       setRewards(Array.isArray(rews) ? rews : [])
     }).finally(() => setLoading(false))
-  }, [router])
+  }, [])
 
   function showToast(msg: string) {
     setToast(msg)
@@ -74,51 +75,44 @@ export default function PortalPage() {
   if (loading) return <PortalSkeleton />
   if (!student) return null
 
-  const solicitudesCount = student.redemptionRequests.length
+  const solicitudesCount = student.redemptionRequests.filter(r => r.status === 'pending').length
 
   const TABS: { id: Tab; icon: React.ElementType; label: string; badge?: number }[] = [
-    { id: 'perfil',      icon: Home,          label: 'Perfil' },
-    { id: 'recompensas', icon: Gift,          label: 'Premios' },
-    { id: 'solicitudes', icon: ClipboardList, label: 'Mis Solicitudes', badge: solicitudesCount },
+    { id: 'perfil',      icon: History,       label: 'Inicio' },
+    { id: 'recompensas', icon: Gift,           label: 'Premios' },
+    { id: 'solicitudes', icon: ClipboardList,  label: 'Solicitudes', badge: solicitudesCount },
   ]
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 pb-28 relative overflow-x-hidden">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 relative overflow-x-hidden">
+      {/* Background blobs */}
       <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden z-0">
         <div className="blob blob-1" />
         <div className="blob blob-2" />
         <div className="blob blob-3" />
       </div>
 
-      <header className="sticky top-0 z-30 px-5 pt-5 pb-3">
-        <div className="max-w-xl mx-auto">
-          <div className="flex items-center justify-between bg-zinc-900/90 backdrop-blur-md border border-zinc-800/60 rounded-2xl px-5 py-3 shadow-xl"
-            style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)' }}>
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                <span className="text-amber-400 text-sm font-black">{student.name.charAt(0)}</span>
-              </div>
-              <div>
-                <div className="font-bold text-sm text-zinc-100 leading-none">{student.name.split(' ').slice(0, 2).join(' ')}</div>
-                <div className="text-[11px] text-zinc-500 mt-0.5">{student.course.level} · {student.course.name}</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <div className="text-xl font-black text-amber-400 leading-none">{student.coins}</div>
-                <div className="text-[10px] text-zinc-600 font-medium uppercase tracking-wider">coins</div>
-              </div>
-              <NotificationBell />
-              <button onClick={logout}
-                className="w-8 h-8 rounded-xl bg-zinc-800 border border-zinc-700/50 flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700 transition-all">
-                <LogOut className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Top-right actions */}
+      <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+        <NotificationBell />
+        <button
+          onClick={logout}
+          className="w-8 h-8 rounded-xl bg-zinc-900/80 backdrop-blur-sm border border-zinc-800/60 flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-all"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+        </button>
+      </div>
 
-      <main className="max-w-xl mx-auto px-4 pt-4">
+      {/* Profile header — full width, no padding container */}
+      <div className="relative z-10">
+        <ProfileHeader
+          student={student}
+          onStudentUpdate={partial => setStudent(s => s ? { ...s, ...partial } : s)}
+        />
+      </div>
+
+      {/* Tab content */}
+      <main className="relative z-10 px-4 pt-4 pb-28 max-w-2xl mx-auto">
         {tab === 'perfil'      && <PerfilTab      student={student} />}
         {tab === 'recompensas' && <RecompensasTab student={student} rewards={rewards} requesting={requesting} onRequest={requestReward} />}
         {tab === 'solicitudes' && <SolicitudesTab requests={student.redemptionRequests} />}

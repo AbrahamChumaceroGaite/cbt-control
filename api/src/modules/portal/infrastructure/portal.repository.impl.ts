@@ -16,7 +16,7 @@ export class PortalRepositoryImpl extends PortalRepository {
         coinLogs:            {
           include: { action: { select: { name: true, category: true } } },
           orderBy: { createdAt: 'desc' },
-          take: 30,
+          take: 100,
         },
         groupMemberships:    { include: { group: { select: { id: true, name: true } } } },
         redemptionRequests:  {
@@ -24,6 +24,7 @@ export class PortalRepositoryImpl extends PortalRepository {
           orderBy: { createdAt: 'desc' },
         },
         individualRedemptions: { select: { rewardId: true } },
+        user:                { select: { avatarUrl: true, bannerUrl: true } },
       },
     })
     if (!student) return null
@@ -32,6 +33,9 @@ export class PortalRepositoryImpl extends PortalRepository {
       id:                    student.id,
       name:                  student.name,
       coins:                 student.coins,
+      avatarUrl:             student.user?.avatarUrl ?? undefined,
+      bannerUrl:             student.user?.bannerUrl ?? undefined,
+      tramos:                student.tramos.map(t => ({ tramo: t.tramo, awardedAt: t.awardedAt.toISOString() })),
       course:                student.course,
       coinLogs:              student.coinLogs.map(l => ({
         id: l.id, coins: l.coins, reason: l.reason, createdAt: l.createdAt.toISOString(),
@@ -66,5 +70,12 @@ export class PortalRepositoryImpl extends PortalRepository {
     if (existing) throw new ConflictException('Ya tienes una solicitud pendiente para esta recompensa')
 
     return this.prisma.redemptionRequest.create({ data: { studentId, rewardId } })
+  }
+
+  async updateProfile(userId: string, data: { avatarUrl?: string; bannerUrl?: string }): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data:  { avatarUrl: data.avatarUrl, bannerUrl: data.bannerUrl },
+    })
   }
 }

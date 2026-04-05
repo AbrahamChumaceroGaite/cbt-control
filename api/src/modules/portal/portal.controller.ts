@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post, UseGuards, UnauthorizedException } from '@nestjs/common'
+import { Body, Controller, Get, HttpCode, Post, Put, UseGuards, UnauthorizedException } from '@nestjs/common'
 import { CommandBus, QueryBus }        from '@nestjs/cqrs'
 import { JwtAuthGuard }                from '../../common/guards/jwt-auth.guard'
 import { ResponseMessage }             from '../../common/decorators/response-message.decorator'
@@ -7,6 +7,7 @@ import type { SessionPayload }         from '../auth/domain/user.entity'
 import { GetPortalStudentQuery }       from './application/queries/get-portal-student.query'
 import { GetIndividualRewardsQuery }   from './application/queries/get-individual-rewards.query'
 import { RequestRewardCommand, RequestRewardDto } from './application/commands/request-reward.command'
+import { UpdateProfileCommand, UpdateProfileDto } from './application/commands/update-profile.command'
 
 @Controller('portal')
 @UseGuards(JwtAuthGuard)
@@ -31,5 +32,12 @@ export class PortalController {
   request(@CurrentUser() user: SessionPayload, @Body() dto: RequestRewardDto) {
     if (!user.studentId) throw new UnauthorizedException('No es estudiante')
     return this.cb.execute(new RequestRewardCommand(user.studentId, dto))
+  }
+
+  @Put('profile')
+  @HttpCode(200)
+  @ResponseMessage('Perfil actualizado')
+  updateProfile(@CurrentUser() user: SessionPayload, @Body() dto: UpdateProfileDto) {
+    return this.cb.execute(new UpdateProfileCommand(user.userId, dto))
   }
 }

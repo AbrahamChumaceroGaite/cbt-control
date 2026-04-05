@@ -90,7 +90,7 @@
     border-color: rgba(255, 255, 255, 0.1);
   }
   .nav-item {
-    @apply flex items-center justify-center gap-2 px-4 h-10 rounded-full transition-all duration-300 ease-out cursor-pointer;
+    @apply flex items-center justify-center gap-1.5 px-3 h-9 rounded-full transition-all duration-300 ease-out cursor-pointer;
     color: var(--p-text-muted-color);
   }
   .nav-item:hover { background-color: rgba(255,255,255,0.06); color: var(--p-text-color-white); }
