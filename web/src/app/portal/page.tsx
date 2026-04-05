@@ -50,6 +50,13 @@ export default function PortalPage() {
     router.push('/login')
   }
 
+  async function reloadStudent() {
+    try {
+      const me = await portalService.getMe()
+      setStudent(me)
+    } catch {}
+  }
+
   async function requestReward(rewardId: string) {
     setRequesting(rewardId)
     try {
@@ -119,6 +126,8 @@ export default function PortalPage() {
             student={student}
             requests={student.redemptionRequests}
             onLogout={() => setLogoutModalOpen(true)}
+            onReload={reloadStudent}
+            showToast={showToast}
           />
         )}
         {tab === 'bank' && (

@@ -13,6 +13,7 @@ import { GetMyTransactionsHandler } from './application/queries/get-my-transacti
 import { GetAllTransactionsHandler } from './application/queries/get-all-transactions.query'
 import { GetWeeklyStatusHandler } from './application/queries/get-weekly-status.query'
 import { SearchStudentsHandler } from './application/queries/search-students.query'
+import { GetCoursesHandler } from './application/queries/get-courses.query'
 
 const HANDLERS = [
   CreateTransactionHandler,
@@ -21,6 +22,7 @@ const HANDLERS = [
   GetAllTransactionsHandler,
   GetWeeklyStatusHandler,
   SearchStudentsHandler,
+  GetCoursesHandler,
 ]
 
 @Module({

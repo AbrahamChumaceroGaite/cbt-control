@@ -1,7 +1,8 @@
 'use client'
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, ClipboardList, Search, CalendarDays, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ClipboardList, Search, CalendarDays, X, Loader2 } from 'lucide-react'
 import { PortalTabHeader } from '@/features/portal/PortalTabHeader'
+import { portalService } from '@/services/portal.service'
 import type { StudentData, RedemptionReq } from '@/services/portal.service'
 
 const PAGE_SIZE = 5
@@ -62,13 +63,30 @@ interface Props {
   student: StudentData
   requests: RedemptionReq[]
   onLogout: () => void
+  onReload: () => void
+  showToast: (msg: string, ok?: boolean) => void
 }
 
-export function SolicitudesTab({ student, requests, onLogout }: Props) {
-  const [page,       setPage]       = useState(0)
-  const [search,     setSearch]     = useState('')
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
-  const [dateFilter, setDateFilter] = useState<DateFilter | null>(null)
+export function SolicitudesTab({ student, requests, onLogout, onReload, showToast }: Props) {
+  const [page,          setPage]          = useState(0)
+  const [search,        setSearch]        = useState('')
+  const [statusFilter,  setStatusFilter]  = useState<StatusFilter>('all')
+  const [dateFilter,    setDateFilter]    = useState<DateFilter | null>(null)
+  const [cancelling,    setCancelling]    = useState<string | null>(null)
+
+  async function cancelRequest(id: string) {
+    if (!confirm('¿Cancelar esta solicitud pendiente?')) return
+    setCancelling(id)
+    try {
+      await portalService.cancelRedemption(id)
+      showToast('Solicitud cancelada')
+      onReload()
+    } catch (err: any) {
+      showToast(err.message ?? 'Error al cancelar', false)
+    } finally {
+      setCancelling(null)
+    }
+  }
 
   const filtered = useMemo(() => {
     let r = [...requests].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -186,8 +204,22 @@ export function SolicitudesTab({ student, requests, onLogout }: Props) {
                       </p>
                       {req.notes && <p className="text-[11px] text-zinc-500 mt-1 italic line-clamp-1">"{req.notes}"</p>}
                     </div>
-                    <div className={`flex-shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-bold border ${s.bg} ${s.text} ${s.border}`}>
-                      {s.label}
+                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                      <div className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border ${s.bg} ${s.text} ${s.border}`}>
+                        {s.label}
+                      </div>
+                      {req.status === 'pending' && (
+                        <button
+                          onClick={() => cancelRequest(req.id)}
+                          disabled={cancelling === req.id}
+                          className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold text-zinc-600 hover:text-red-400 hover:bg-red-950/30 border border-transparent hover:border-red-900/40 transition-colors disabled:opacity-50"
+                        >
+                          {cancelling === req.id
+                            ? <Loader2 className="w-3 h-3 animate-spin" />
+                            : <X className="w-3 h-3" />}
+                          Cancelar
+                        </button>
+                      )}
                     </div>
                   </div>
                 )

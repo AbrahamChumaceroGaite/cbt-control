@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, ConflictException, NotFoundException } from '@nestjs/common'
+import { Injectable, BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../../../infrastructure/prisma/prisma.service'
 import { PortalRepository } from '../domain/portal.repository'
 import type { PortalStudentResponse } from '@control-aula/shared'
@@ -77,5 +77,13 @@ export class PortalRepositoryImpl extends PortalRepository {
       where: { id: userId },
       data:  { avatarUrl: data.avatarUrl, bannerUrl: data.bannerUrl },
     })
+  }
+
+  async cancelRedemption(studentId: string, requestId: string): Promise<void> {
+    const req = await this.prisma.redemptionRequest.findUnique({ where: { id: requestId } })
+    if (!req)                       throw new NotFoundException('Solicitud no encontrada')
+    if (req.studentId !== studentId) throw new ForbiddenException('No es tu solicitud')
+    if (req.status !== 'pending')    throw new BadRequestException('Solo se pueden cancelar solicitudes pendientes')
+    await this.prisma.redemptionRequest.delete({ where: { id: requestId } })
   }
 }

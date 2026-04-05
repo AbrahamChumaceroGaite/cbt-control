@@ -32,8 +32,17 @@ export const portalService = {
   getMyTransactions: () =>
     apiFetch<CoinTransactionResponse[]>('/api/bank/transactions'),
 
-  searchStudents: (q: string) =>
-    apiFetch<StudentSearchResult[]>(`/api/bank/search?q=${encodeURIComponent(q)}`),
+  cancelRedemption: (id: string) =>
+    apiFetchFull<null>(`/api/portal/solicitudes/${id}`, { method: 'DELETE' }),
+
+  getCourses: () =>
+    apiFetch<{ id: string; name: string }[]>('/api/bank/courses'),
+
+  searchStudents: (q: string, courseId?: string) => {
+    const params = new URLSearchParams({ q })
+    if (courseId) params.set('courseId', courseId)
+    return apiFetch<StudentSearchResult[]>(`/api/bank/search?${params}`)
+  },
 
   createTransaction: (data: CreateTransactionInput) =>
     apiFetchFull<CoinTransactionResponse>('/api/bank/transactions', {

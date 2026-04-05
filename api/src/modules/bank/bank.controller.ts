@@ -7,6 +7,7 @@ import { CreateTransactionCommand, CreateTransactionDto } from './application/co
 import { GetMyTransactionsQuery } from './application/queries/get-my-transactions.query'
 import { GetWeeklyStatusQuery } from './application/queries/get-weekly-status.query'
 import { SearchStudentsQuery } from './application/queries/search-students.query'
+import { GetCoursesQuery } from './application/queries/get-courses.query'
 
 @Controller('bank')
 @UseGuards(JwtAuthGuard)
@@ -31,9 +32,19 @@ export class BankController {
     return this.queries.execute(new GetMyTransactionsQuery(this.requireStudent(user)))
   }
 
+  @Get('courses')
+  getCourses(@CurrentUser() user: SessionPayload) {
+    this.requireStudent(user)
+    return this.queries.execute(new GetCoursesQuery())
+  }
+
   @Get('search')
-  searchStudents(@Query('q') q: string, @CurrentUser() user: SessionPayload) {
-    return this.queries.execute(new SearchStudentsQuery(q ?? '', this.requireStudent(user)))
+  searchStudents(
+    @Query('q') q: string,
+    @Query('courseId') courseId: string | undefined,
+    @CurrentUser() user: SessionPayload,
+  ) {
+    return this.queries.execute(new SearchStudentsQuery(q ?? '', this.requireStudent(user), courseId))
   }
 
   @Post('transactions')

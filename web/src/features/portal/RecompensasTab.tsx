@@ -1,6 +1,6 @@
 'use client'
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { ChevronLeft, ChevronRight, ShoppingCart, CheckCircle2, Search, SlidersHorizontal, Zap, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ShoppingCart, CheckCircle2, Search, SlidersHorizontal, Zap, X, AlertTriangle } from 'lucide-react'
 import { PortalTabHeader } from '@/features/portal/PortalTabHeader'
 import type { StudentData, IndividualReward } from '@/services/portal.service'
 
@@ -55,11 +55,11 @@ function getDeals(rewards: IndividualReward[]): Deal[] {
 
 // ─── Discount Carousel (AdCard style) ────────────────────────────────────────
 
-function DiscountCarousel({ deals, coins, requesting, onRequest, redemptionRequests }: {
+function DiscountCarousel({ deals, coins, requesting, onAskConfirm, redemptionRequests }: {
   deals: Deal[]
   coins: number
   requesting: string | null
-  onRequest: (id: string) => void
+  onAskConfirm: (reward: Deal, salePrice: number) => void
   redemptionRequests: StudentData['redemptionRequests']
 }) {
   const [idx, setIdx] = useState(0)
@@ -164,7 +164,7 @@ function DiscountCarousel({ deals, coins, requesting, onRequest, redemptionReque
               </div>
             ) : (
               <button
-                onClick={() => canAfford && !requesting && onRequest(deal.id)}
+                onClick={() => canAfford && !requesting && onAskConfirm(deal, deal.salePrice)}
                 disabled={!canAfford || !!requesting}
                 className="px-6 py-2.5 rounded-xl text-sm font-black transition-all active:scale-95 flex-shrink-0 shadow-lg"
                 style={canAfford ? {
@@ -272,6 +272,90 @@ function PricePopover({ maxPrice, value, onChange, onClear }: {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+// ─── Confirm modal ────────────────────────────────────────────────────────────
+
+function ConfirmModal({
+  reward,
+  salePrice,
+  onConfirm,
+  onCancel,
+  requesting,
+}: {
+  reward: IndividualReward & { discount?: number }
+  salePrice: number
+  onConfirm: () => void
+  onCancel: () => void
+  requesting: boolean
+}) {
+  const savings = reward.coinsRequired - salePrice
+  return (
+    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative z-10 w-full max-w-sm rounded-2xl bg-zinc-900 border border-zinc-800 p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
+        {/* Icon + warning */}
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-2xl flex-shrink-0">
+            {reward.icon}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-zinc-100 text-sm truncate">{reward.name}</h3>
+            <p className="text-[11px] text-zinc-500 mt-0.5">Confirma tu solicitud de canje</p>
+          </div>
+        </div>
+
+        {/* Price breakdown */}
+        <div className="rounded-xl bg-zinc-800/60 border border-zinc-700/50 p-3 space-y-1.5 text-xs">
+          {savings > 0 ? (
+            <>
+              <div className="flex justify-between text-zinc-500">
+                <span>Precio original</span>
+                <span className="line-through">{reward.coinsRequired} coins</span>
+              </div>
+              <div className="flex justify-between text-rose-400 font-bold">
+                <span>Descuento -{reward.discount}%</span>
+                <span>-{savings} coins</span>
+              </div>
+              <div className="h-px bg-zinc-700/60" />
+              <div className="flex justify-between font-black text-amber-400">
+                <span>Total a pagar</span>
+                <span>{salePrice} coins</span>
+              </div>
+            </>
+          ) : (
+            <div className="flex justify-between font-black text-amber-400">
+              <span>Costo</span>
+              <span>{salePrice} coins</span>
+            </div>
+          )}
+        </div>
+
+        <p className="text-[11px] text-zinc-500 flex items-start gap-1.5">
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+          La solicitud será revisada por el administrador antes de ser aprobada.
+        </p>
+
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={onCancel}
+            className="flex-1 h-10 rounded-xl border border-zinc-700 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={requesting}
+            className="flex-1 h-10 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-900 text-xs font-black transition-colors disabled:opacity-60"
+          >
+            {requesting ? 'Enviando…' : 'Confirmar solicitud'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 interface Props {
   student: StudentData
   rewards: IndividualReward[]
@@ -284,6 +368,17 @@ export function RecompensasTab({ student, rewards, requesting, onRequest, onLogo
   const [page, setPage]           = useState(0)
   const [search, setSearch]       = useState('')
   const [maxCoins, setMaxCoins]   = useState<number | null>(null)
+  const [confirmReward, setConfirmReward] = useState<(IndividualReward & { salePrice: number }) | null>(null)
+
+  function askConfirm(reward: IndividualReward, salePrice: number) {
+    setConfirmReward({ ...reward, salePrice })
+  }
+
+  function doRequest() {
+    if (!confirmReward) return
+    onRequest(confirmReward.id)
+    setConfirmReward(null)
+  }
 
   const sorted = useMemo(
     () => [...rewards].sort((a, b) => a.coinsRequired - b.coinsRequired),
@@ -313,6 +408,17 @@ export function RecompensasTab({ student, rewards, requesting, onRequest, onLogo
     <div className="min-h-screen pb-28">
       <PortalTabHeader student={student} onLogout={onLogout} />
 
+      {/* Confirmation modal */}
+      {confirmReward && (
+        <ConfirmModal
+          reward={confirmReward}
+          salePrice={confirmReward.salePrice}
+          onConfirm={doRequest}
+          onCancel={() => setConfirmReward(null)}
+          requesting={requesting === confirmReward.id}
+        />
+      )}
+
       <main className="max-w-2xl mx-auto px-4 pt-6">
 
         {/* Balance hero */}
@@ -333,7 +439,7 @@ export function RecompensasTab({ student, rewards, requesting, onRequest, onLogo
             deals={deals}
             coins={student.coins}
             requesting={requesting}
-            onRequest={onRequest}
+            onAskConfirm={askConfirm}
             redemptionRequests={student.redemptionRequests}
           />
         )}
@@ -419,7 +525,7 @@ export function RecompensasTab({ student, rewards, requesting, onRequest, onLogo
                         </button>
                       ) : (
                         <button
-                          onClick={() => canAfford && !requesting && onRequest(r.id)}
+                          onClick={() => canAfford && !requesting && askConfirm(r, r.coinsRequired)}
                           disabled={!canAfford || !!requesting}
                           className={`${isFeatured ? 'mt-2' : ''} w-full py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${
                             canAfford ? 'bg-amber-400 text-zinc-900 hover:bg-amber-300' : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'

@@ -30,12 +30,15 @@ export class BankRepositoryImpl extends BankRepository {
     })
   }
 
-  findAll(status?: string): Promise<any[]> {
+  findAll(status?: string, studentId?: string): Promise<any[]> {
+    const where: any = {}
+    if (status)    where.status = status
+    if (studentId) where.OR = [{ fromStudentId: studentId }, { toStudentId: studentId }]
     return this.prisma.coinTransaction.findMany({
-      where:   status ? { status } : undefined,
+      where:   Object.keys(where).length ? where : undefined,
       include: INCLUDE_FULL,
       orderBy: { createdAt: 'desc' },
-      take: 100,
+      take: 200,
     })
   }
 
@@ -53,13 +56,13 @@ export class BankRepositoryImpl extends BankRepository {
     })
   }
 
-  async searchStudents(q: string, excludeId: string): Promise<StudentSearchResult[]> {
+  async searchStudents(q: string, excludeId: string, courseId?: string): Promise<StudentSearchResult[]> {
     if (q.trim().length < 2) return []
-    // SQLite has no case-insensitive mode — use contains (case-sensitive) as fallback
     const results = await this.prisma.student.findMany({
       where: {
-        id:   { not: excludeId },
-        name: { contains: q },
+        id:       { not: excludeId },
+        name:     { contains: q },
+        ...(courseId ? { courseId } : {}),
       },
       include: {
         user:   { select: { avatarUrl: true } },
@@ -73,5 +76,12 @@ export class BankRepositoryImpl extends BankRepository {
       courseName: s.course.name,
       avatarUrl:  s.user?.avatarUrl ?? undefined,
     }))
+  }
+
+  async getCourses(): Promise<{ id: string; name: string }[]> {
+    return this.prisma.course.findMany({
+      select:  { id: true, name: true },
+      orderBy: [{ level: 'asc' }, { parallel: 'asc' }],
+    })
   }
 }

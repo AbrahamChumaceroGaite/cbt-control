@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post, Put, UseGuards, UnauthorizedException } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, UseGuards, UnauthorizedException } from '@nestjs/common'
 import { CommandBus, QueryBus }        from '@nestjs/cqrs'
 import { JwtAuthGuard }                from '../../common/guards/jwt-auth.guard'
 import { ResponseMessage }             from '../../common/decorators/response-message.decorator'
@@ -8,6 +8,7 @@ import { GetPortalStudentQuery }       from './application/queries/get-portal-st
 import { GetIndividualRewardsQuery }   from './application/queries/get-individual-rewards.query'
 import { RequestRewardCommand, RequestRewardDto } from './application/commands/request-reward.command'
 import { UpdateProfileCommand, UpdateProfileDto } from './application/commands/update-profile.command'
+import { CancelRedemptionCommand } from './application/commands/cancel-redemption.command'
 
 @Controller('portal')
 @UseGuards(JwtAuthGuard)
@@ -32,6 +33,14 @@ export class PortalController {
   request(@CurrentUser() user: SessionPayload, @Body() dto: RequestRewardDto) {
     if (!user.studentId) throw new UnauthorizedException('No es estudiante')
     return this.cb.execute(new RequestRewardCommand(user.studentId, dto))
+  }
+
+  @Delete('solicitudes/:id')
+  @HttpCode(200)
+  @ResponseMessage('Solicitud cancelada')
+  cancelRedemption(@CurrentUser() user: SessionPayload, @Param('id') id: string) {
+    if (!user.studentId) throw new UnauthorizedException('No es estudiante')
+    return this.cb.execute(new CancelRedemptionCommand(user.studentId, id))
   }
 
   @Put('profile')

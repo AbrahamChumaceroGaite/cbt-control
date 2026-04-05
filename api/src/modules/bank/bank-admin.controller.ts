@@ -19,9 +19,13 @@ export class BankAdminController {
   }
 
   @Get('transactions')
-  getAllTransactions(@Query('status') status: string | undefined, @CurrentUser() user: SessionPayload) {
+  getAllTransactions(
+    @Query('status') status: string | undefined,
+    @Query('studentId') studentId: string | undefined,
+    @CurrentUser() user: SessionPayload,
+  ) {
     this.requireAdmin(user)
-    return this.queries.execute(new GetAllTransactionsQuery(status))
+    return this.queries.execute(new GetAllTransactionsQuery(status, studentId))
   }
 
   @Patch('transactions/:id')

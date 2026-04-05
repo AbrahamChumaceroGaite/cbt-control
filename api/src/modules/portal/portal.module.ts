@@ -7,6 +7,7 @@ import { GetPortalStudentHandler }     from './application/queries/get-portal-st
 import { GetIndividualRewardsHandler } from './application/queries/get-individual-rewards.query'
 import { RequestRewardHandler }        from './application/commands/request-reward.command'
 import { UpdateProfileHandler }        from './application/commands/update-profile.command'
+import { CancelRedemptionHandler }     from './application/commands/cancel-redemption.command'
 import { AuthModule }            from '../auth/auth.module'
 import { PushModule }            from '../push/push.module'
 
@@ -15,6 +16,7 @@ const handlers = [
   GetIndividualRewardsHandler,
   RequestRewardHandler,
   UpdateProfileHandler,
+  CancelRedemptionHandler,
 ]
 
 @Module({
