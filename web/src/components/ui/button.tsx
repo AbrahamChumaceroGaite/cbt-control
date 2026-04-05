@@ -1,12 +1,14 @@
 import * as React from 'react'
+import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'default' | 'ghost' | 'outline' | 'destructive' | 'secondary' | 'amber'
   size?: 'sm' | 'md' | 'lg' | 'icon'
+  loading?: boolean
 }
 
-export function Button({ className, variant = 'default', size = 'md', ...props }: ButtonProps) {
+export function Button({ className, variant = 'default', size = 'sm', loading, children, disabled, ...props }: ButtonProps) {
   return (
     <button
       className={cn(
@@ -19,10 +21,14 @@ export function Button({ className, variant = 'default', size = 'md', ...props }
           secondary:   'bg-zinc-800 text-zinc-300 hover:bg-zinc-700',
           amber:       'bg-amber-500 text-zinc-900 hover:bg-amber-400 font-semibold',
         }[variant],
-        { sm: 'h-8 px-3 text-xs gap-1.5', md: 'h-9 px-4 text-sm gap-2', lg: 'h-11 px-6 text-base gap-2', icon: 'h-9 w-9' }[size],
+        { sm: 'h-8 px-3 text-xs gap-1.5', md: 'h-9 px-4 text-sm gap-2', lg: 'h-11 px-6 text-base gap-2', icon: 'h-8 w-8' }[size],
         className
       )}
+      disabled={disabled || loading}
       {...props}
-    />
+    >
+      {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+      {children}
+    </button>
   )
 }

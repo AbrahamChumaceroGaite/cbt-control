@@ -95,9 +95,8 @@
   }
   .nav-item:hover { background-color: rgba(255,255,255,0.06); color: var(--p-text-color-white); }
   .nav-item.active {
-    color: #fff;
-    background-color: rgba(255, 255, 255, 0.12);
-    box-shadow: inset 0 1px 1px rgba(255,255,255,0.1);
+    color: #fbbf24;
+    background: radial-gradient(ellipse at 50% 120%, rgba(251, 191, 36, 0.22) 0%, transparent 70%);
   }
   .nav-icon  { @apply w-[18px] h-[18px]; }
   .nav-label { @apply text-xs flex mt-px font-semibold tracking-wide; }
@@ -173,6 +172,15 @@ input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius:
 /* ── Number input spinner ────────────────────────────────────────────────────── */
 input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
 
+
+/* ── Bell wiggle ─────────────────────────────────────────────────────────────── */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  20%       { transform: rotate(-15deg); }
+  40%       { transform: rotate(15deg); }
+  60%       { transform: rotate(-10deg); }
+  80%       { transform: rotate(10deg); }
+}
 
 /* ── Login animated gradient text ───────────────────────────────────────────── */
 @keyframes gradient-shift {

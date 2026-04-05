@@ -17,7 +17,31 @@ function timeAgo(iso: string): string {
   return `${Math.floor(h / 24)}d`
 }
 
-// ── Permission prompt (shown once when permission is 'default') ───────────────
+type Severity = 'positive' | 'negative' | 'info' | 'default'
+
+function inferSeverity(title: string, body: string): Severity {
+  const t = (title + ' ' + body).toLowerCase()
+  if (/penali|resta|sanción|error|elimina|baja|pierde/.test(t)) return 'negative'
+  if (/recompensa|premio|ganó|ganaste|felicit|logro|suma|añad/.test(t)) return 'positive'
+  if (/grupo|integrante|se unió|nuevo|registr|creó/.test(t)) return 'info'
+  return 'default'
+}
+
+const SEVERITY_DOT: Record<Severity, string> = {
+  positive: 'bg-emerald-400',
+  negative: 'bg-red-400',
+  info:     'bg-blue-400',
+  default:  'bg-amber-400',
+}
+
+const SEVERITY_BG: Record<Severity, string> = {
+  positive: 'border-l-2 border-l-emerald-500/40',
+  negative: 'border-l-2 border-l-red-500/40',
+  info:     'border-l-2 border-l-blue-500/40',
+  default:  'border-l-2 border-l-amber-500/40',
+}
+
+// ── Permission prompt ─────────────────────────────────────────────────────────
 
 function PushPrompt({ onEnable, onDismiss }: { onEnable: () => void; onDismiss: () => void }) {
   return (
@@ -49,7 +73,6 @@ export function NotificationBell() {
   const panelRef   = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
 
-  // Show prompt only when: permission is default AND not previously dismissed
   useEffect(() => {
     if (typeof window === 'undefined') return
     const dismissed = localStorage.getItem(DISMISSED_KEY)
@@ -61,7 +84,6 @@ export function NotificationBell() {
     )
   }, [pushState, open])
 
-  // Close on outside click
   useEffect(() => {
     if (!open) return
     const handler = (e: MouseEvent) => {
@@ -76,7 +98,7 @@ export function NotificationBell() {
 
   async function handleEnable() {
     const ok = await requestAndSubscribe()
-    if (ok || !ok) setPromptVisible(false) // hide regardless of outcome
+    if (ok || !ok) setPromptVisible(false)
     localStorage.setItem(DISMISSED_KEY, '1')
   }
 
@@ -96,9 +118,9 @@ export function NotificationBell() {
           open ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800'
         }`}
       >
-        <Bell className="w-4 h-4" />
+        <Bell className={`w-4 h-4 ${unreadCount > 0 ? 'animate-[wiggle_0.6s_ease-in-out_1]' : ''}`} />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-0.5 bg-amber-500 text-black text-[9px] font-black rounded-full flex items-center justify-center">
+          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-0.5 bg-amber-500 text-black text-[9px] font-black rounded-full flex items-center justify-center animate-pulse">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -135,14 +157,22 @@ export function NotificationBell() {
             </div>
           </div>
 
-          {/* Push prompt (contextual — not a persistent button) */}
+          {/* Push prompt */}
           {promptVisible && <PushPrompt onEnable={handleEnable} onDismiss={handleDismiss} />}
 
           {/* List */}
           <div className="overflow-y-auto flex-1">
             {loading ? (
-              <div className="flex items-center justify-center py-10 text-zinc-700">
-                <Loader2 className="w-5 h-5 animate-spin" />
+              <div className="p-3 space-y-2">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex gap-3 px-1 py-1">
+                    <div className="w-1.5 h-1.5 mt-2 rounded-full bg-zinc-800 animate-pulse flex-shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3 w-3/4 rounded bg-zinc-800 animate-pulse" />
+                      <div className="h-2.5 w-full rounded bg-zinc-800 animate-pulse" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : error ? (
               <div className="flex flex-col items-center gap-2 py-10 text-zinc-600 px-4 text-center">
@@ -151,40 +181,48 @@ export function NotificationBell() {
               </div>
             ) : items.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-10 text-zinc-700">
-                <Bell className="w-7 h-7 opacity-30" />
-                <span className="text-xs">Sin notificaciones</span>
+                <div className="w-10 h-10 rounded-xl bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center">
+                  <Bell className="w-5 h-5 opacity-40" />
+                </div>
+                <span className="text-xs text-zinc-600">Sin notificaciones</span>
               </div>
             ) : (
               <ul>
-                {items.map(n => (
-                  <li key={n.id} className={`group flex gap-3 px-4 py-3 border-b border-zinc-800/40 last:border-0 hover:bg-zinc-900/60 transition-colors ${!n.isRead ? 'bg-zinc-900/25' : ''}`}>
-                    <div className="flex-shrink-0 mt-1.5">
-                      <div className={`w-1.5 h-1.5 rounded-full ${!n.isRead ? 'bg-amber-400' : 'bg-zinc-800'}`} />
-                    </div>
-                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => !n.isRead && markRead(n.id)}>
-                      <div className="flex items-start justify-between gap-2">
-                        <p className={`text-xs font-semibold leading-tight ${n.isRead ? 'text-zinc-400' : 'text-zinc-100'}`}>{n.title}</p>
-                        <span className="text-[10px] text-zinc-600 flex-shrink-0">{timeAgo(n.createdAt)}</span>
+                {items.map(n => {
+                  const sev = inferSeverity(n.title, n.body)
+                  return (
+                    <li
+                      key={n.id}
+                      className={`group flex gap-3 px-4 py-3 border-b border-zinc-800/40 last:border-0 hover:bg-zinc-900/60 transition-colors ${!n.isRead ? `bg-zinc-900/25 ${SEVERITY_BG[sev]}` : ''}`}
+                    >
+                      <div className="flex-shrink-0 mt-1.5">
+                        <div className={`w-1.5 h-1.5 rounded-full ${!n.isRead ? `${SEVERITY_DOT[sev]} animate-pulse` : 'bg-zinc-800'}`} />
                       </div>
-                      <p className="text-[11px] text-zinc-500 mt-0.5 line-clamp-2">{n.body}</p>
-                    </div>
-                    <div className="flex-shrink-0 flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {!n.isRead && (
-                        <button onClick={() => markRead(n.id)} title="Leída" className="p-1 text-zinc-600 hover:text-zinc-200 hover:bg-zinc-800 rounded transition-colors">
-                          <Check className="w-3 h-3" />
+                      <div className="flex-1 min-w-0 cursor-pointer" onClick={() => !n.isRead && markRead(n.id)}>
+                        <div className="flex items-start justify-between gap-2">
+                          <p className={`text-xs font-semibold leading-tight ${n.isRead ? 'text-zinc-400' : 'text-zinc-100'}`}>{n.title}</p>
+                          <span className="text-[10px] text-zinc-600 flex-shrink-0">{timeAgo(n.createdAt)}</span>
+                        </div>
+                        <p className="text-[11px] text-zinc-500 mt-0.5 line-clamp-2">{n.body}</p>
+                      </div>
+                      <div className="flex-shrink-0 flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {!n.isRead && (
+                          <button onClick={() => markRead(n.id)} title="Leída" className="p-1 text-zinc-600 hover:text-zinc-200 hover:bg-zinc-800 rounded transition-colors">
+                            <Check className="w-3 h-3" />
+                          </button>
+                        )}
+                        <button onClick={() => deleteOne(n.id)} title="Eliminar" className="p-1 text-zinc-600 hover:text-red-400 hover:bg-red-950/20 rounded transition-colors">
+                          <X className="w-3 h-3" />
                         </button>
-                      )}
-                      <button onClick={() => deleteOne(n.id)} title="Eliminar" className="p-1 text-zinc-600 hover:text-red-400 hover:bg-red-950/20 rounded transition-colors">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </li>
-                ))}
+                      </div>
+                    </li>
+                  )
+                })}
               </ul>
             )}
           </div>
 
-          {/* Footer: push status (only when subscribed, no button) */}
+          {/* Footer */}
           {pushState === 'subscribed' && (
             <div className="flex items-center gap-1.5 px-4 py-2.5 border-t border-zinc-800/50 flex-shrink-0">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />

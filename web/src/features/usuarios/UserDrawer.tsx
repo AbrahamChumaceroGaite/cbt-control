@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { X, UserCog, Bell, BellDot, Shield, GraduationCap, Calendar, Hash, CheckCircle, XCircle, Loader2, Trash2 } from 'lucide-react'
+import { X, UserCog, Bell, BellDot, Shield, GraduationCap, Calendar, Hash, CheckCircle, XCircle, Trash2 } from 'lucide-react'
 import { Button, Input, Label, Modal } from '@/components/ui'
 import { inboxService, type NotificationItem } from '@/services/inbox.service'
 import { usersService, type UserFull } from '@/services/users.service'
@@ -193,13 +193,20 @@ export function UserDrawer({ user, onClose, onUpdated, showToast }: Props) {
               {section === 'notificaciones' && (
                 <div>
                   {loadingNotifs ? (
-                    <div className="flex items-center justify-center py-10">
-                      <Loader2 className="w-5 h-5 animate-spin text-zinc-600" />
+                    <div className="p-3 space-y-2">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="space-y-1.5">
+                          <div className="h-3 w-3/4 rounded bg-zinc-800 animate-pulse" />
+                          <div className="h-2.5 w-full rounded bg-zinc-800 animate-pulse" />
+                        </div>
+                      ))}
                     </div>
                   ) : notifications.length === 0 ? (
                     <div className="flex flex-col items-center gap-2 py-10 text-zinc-700">
-                      <Bell className="w-7 h-7 opacity-30" />
-                      <span className="text-xs">Sin notificaciones</span>
+                      <div className="w-10 h-10 rounded-xl bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center">
+                        <Bell className="w-5 h-5 opacity-40" />
+                      </div>
+                      <span className="text-xs text-zinc-600">Sin notificaciones</span>
                     </div>
                   ) : (
                     <ul>

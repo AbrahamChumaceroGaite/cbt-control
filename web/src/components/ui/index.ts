@@ -11,3 +11,5 @@ export { EmptyState }                                                from './emp
 export { Modal }                                                     from './modal'
 export { Tooltip }                                                   from './tooltip'
 export { Toast }                                                     from './toast'
+export { Skeleton }                                                  from './skeleton'
+export { Checkbox }                                                  from './checkbox'
