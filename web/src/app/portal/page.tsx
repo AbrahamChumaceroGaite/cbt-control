@@ -8,7 +8,6 @@ import { NotificationBell }   from '@/features/notifications/NotificationBell'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { FloatingNav }         from '@/components/shared/FloatingNav'
 import { PortalSkeleton }      from '@/features/portal/PortalSkeleton'
-import { ProfileHeader }       from '@/features/portal/ProfileHeader'
 import { PerfilTab }           from '@/features/portal/PerfilTab'
 import { RecompensasTab }      from '@/features/portal/RecompensasTab'
 import { SolicitudesTab }      from '@/features/portal/SolicitudesTab'
@@ -92,8 +91,8 @@ export default function PortalPage() {
         <div className="blob blob-3" />
       </div>
 
-      {/* Top-right actions */}
-      <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+      {/* Fixed top-right: notification + logout — always visible over all tabs */}
+      <div className="fixed top-3 right-3 z-50 flex items-center gap-1.5">
         <NotificationBell />
         <button
           onClick={logout}
@@ -103,19 +102,25 @@ export default function PortalPage() {
         </button>
       </div>
 
-      {/* Profile header — full width, no padding container */}
-      <div className="relative z-10">
-        <ProfileHeader
-          student={student}
-          onStudentUpdate={partial => setStudent(s => s ? { ...s, ...partial } : s)}
-        />
-      </div>
-
       {/* Tab content */}
-      <main className="relative z-10 px-4 pt-4 pb-28 max-w-2xl mx-auto">
-        {tab === 'perfil'      && <PerfilTab      student={student} />}
-        {tab === 'recompensas' && <RecompensasTab student={student} rewards={rewards} requesting={requesting} onRequest={requestReward} />}
-        {tab === 'solicitudes' && <SolicitudesTab requests={student.redemptionRequests} />}
+      <main className="relative z-10">
+        {tab === 'perfil' && (
+          <PerfilTab
+            student={student}
+            rewards={rewards}
+            onStudentUpdate={partial => setStudent(s => s ? { ...s, ...partial } : s)}
+          />
+        )}
+        {tab === 'recompensas' && (
+          <div className="pt-14 px-4 pb-28 max-w-2xl mx-auto">
+            <RecompensasTab student={student} rewards={rewards} requesting={requesting} onRequest={requestReward} />
+          </div>
+        )}
+        {tab === 'solicitudes' && (
+          <div className="pt-14 px-4 pb-28 max-w-2xl mx-auto">
+            <SolicitudesTab requests={student.redemptionRequests} />
+          </div>
+        )}
       </main>
 
       <FloatingNav tabs={TABS} active={tab} onTabChange={setTab} />
