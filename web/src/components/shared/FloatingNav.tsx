@@ -29,7 +29,7 @@ export function FloatingNav<T extends string>({ tabs, active, onTabChange }: Pro
                 </span>
               )}
             </div>
-            <span className="nav-label">{t.label}</span>
+            {active === t.id && <span className="nav-label">{t.label}</span>}
           </button>
         )
       })}
