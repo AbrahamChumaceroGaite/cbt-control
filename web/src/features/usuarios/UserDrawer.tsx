@@ -1,7 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { X, UserCog, Bell, BellDot, Shield, GraduationCap, Calendar, Hash, CheckCircle, XCircle, Trash2, ArrowRight, Landmark } from 'lucide-react'
+import { X, UserCog, Bell, BellDot, GraduationCap, Calendar, Hash, CheckCircle, XCircle, Trash2, ArrowRight, Landmark } from 'lucide-react'
 import { Button, Input, Label, Modal } from '@/components/ui'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { inboxService, type NotificationItem } from '@/services/inbox.service'
 import { usersService, type UserFull } from '@/services/users.service'
 import { apiFetch } from '@/lib/api'
@@ -35,11 +36,12 @@ export function UserDrawer({ user, onClose, onUpdated, showToast }: Props) {
   const [section,      setSection]      = useState<Section>('perfil')
   const [editModal,    setEditModal]    = useState(false)
   const [form,         setForm]         = useState({ fullName: '', password: '', isActive: true })
-  const [notifications, setNotifs]     = useState<NotificationItem[]>([])
-  const [loadingNotifs, setLoadingN]   = useState(false)
-  const [transactions,  setTxs]        = useState<CoinTransactionResponse[]>([])
-  const [loadingTxs,    setLoadingTxs] = useState(false)
-  const [saving,        setSaving]      = useState(false)
+  const [notifications,  setNotifs]      = useState<NotificationItem[]>([])
+  const [loadingNotifs,  setLoadingN]    = useState(false)
+  const [transactions,   setTxs]         = useState<CoinTransactionResponse[]>([])
+  const [loadingTxs,     setLoadingTxs]  = useState(false)
+  const [saving,         setSaving]       = useState(false)
+  const [confirmDelete,  setConfirmDelete] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -88,11 +90,12 @@ export function UserDrawer({ user, onClose, onUpdated, showToast }: Props) {
     } catch (err: any) { showToast(err.message ?? 'Error', false) }
   }
 
-  async function remove() {
-    if (!user || !confirm(`¿Eliminar usuario "${user.code}"?`)) return
+  async function doRemove() {
+    if (!user) return
     try {
       const { message } = await usersService.delete(user.id)
       showToast(message)
+      setConfirmDelete(false)
       onClose()
       onUpdated()
     } catch (err: any) { showToast(err.message ?? 'Error', false) }
@@ -311,7 +314,7 @@ export function UserDrawer({ user, onClose, onUpdated, showToast }: Props) {
                 </Button>
               </div>
               {!isAdmin && (
-                <Button size="sm" variant="destructive" onClick={remove} className="w-full">
+                <Button size="sm" variant="destructive" onClick={() => setConfirmDelete(true)} className="w-full">
                   <Trash2 className="w-3.5 h-3.5 mr-1.5" />Eliminar usuario
                 </Button>
               )}
@@ -339,6 +342,16 @@ export function UserDrawer({ user, onClose, onUpdated, showToast }: Props) {
           <Button onClick={save} disabled={saving} className="flex-1">{saving ? 'Guardando…' : 'Guardar cambios'}</Button>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onConfirm={doRemove}
+        onCancel={() => setConfirmDelete(false)}
+        title="Eliminar usuario"
+        message={`¿Eliminar el usuario "${user?.code ?? ''}"? Esta operación no se puede deshacer.`}
+        confirmText="Eliminar"
+        variant="red"
+      />
     </>
   )
 }

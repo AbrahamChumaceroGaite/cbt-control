@@ -8,6 +8,7 @@ import { SectionHeader }  from '@/components/shared/SectionHeader'
 import { CourseSelect }   from '@/components/shared/CourseSelect'
 import { CardActions }    from '@/components/shared/CardActions'
 import { Pagination }     from '@/components/shared/Pagination'
+import { ConfirmDialog }  from '@/components/shared/ConfirmDialog'
 
 interface GruposSectionProps {
   groups:         GroupResponse[]
@@ -20,9 +21,10 @@ interface GruposSectionProps {
 }
 
 export function GruposSection({ groups, students, courses, currentCourse, onCourseChange, reload, showToast }: GruposSectionProps) {
-  const [modal, setModal]     = useState(false)
-  const [editing, setEditing] = useState<GroupResponse | null>(null)
-  const [form, setForm]       = useState({ name: '', studentIds: [] as string[] })
+  const [modal,          setModal]          = useState(false)
+  const [editing,        setEditing]        = useState<GroupResponse | null>(null)
+  const [form,           setForm]           = useState({ name: '', studentIds: [] as string[] })
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [page, setPage]       = useState(0)
   const [pageSize, setPageSize] = useState(5)
 
@@ -43,15 +45,13 @@ export function GruposSection({ groups, students, courses, currentCourse, onCour
     }
   }
 
-  async function del(id: string) {
-    if (!confirm('¿Eliminar grupo?')) return
+  async function doDelete() {
+    if (!confirmDeleteId) return
     try {
-      const { message } = await groupsService.delete(id)
-      showToast(message)
-      reload()
-    } catch (err: any) {
-      showToast(err.message ?? 'Error al eliminar', false)
-    }
+      const { message } = await groupsService.delete(confirmDeleteId)
+      showToast(message); reload()
+    } catch (err: any) { showToast(err.message ?? 'Error al eliminar', false) }
+    finally { setConfirmDeleteId(null) }
   }
 
   function toggleMember(studentId: string) {
@@ -92,7 +92,7 @@ export function GruposSection({ groups, students, courses, currentCourse, onCour
                 {g.members.length === 0 && <div className="text-zinc-500 text-sm italic">Sin miembros</div>}
               </div>
             </div>
-            <CardActions onEdit={() => openEdit(g)} onDelete={() => del(g.id)} />
+            <CardActions onEdit={() => openEdit(g)} onDelete={() => setConfirmDeleteId(g.id)} />
           </div>
         ))}
         {groups.length === 0 && <div className="col-span-full text-center py-12 text-zinc-500">No hay grupos creados en este curso.</div>}
@@ -128,6 +128,15 @@ export function GruposSection({ groups, students, courses, currentCourse, onCour
           </div>
         </div>
       </Modal>
+      <ConfirmDialog
+        open={!!confirmDeleteId}
+        onConfirm={doDelete}
+        onCancel={() => setConfirmDeleteId(null)}
+        title="Eliminar grupo"
+        message="¿Eliminar este grupo? Los estudiantes no serán eliminados."
+        confirmText="Eliminar"
+        variant="red"
+      />
     </div>
   )
 }

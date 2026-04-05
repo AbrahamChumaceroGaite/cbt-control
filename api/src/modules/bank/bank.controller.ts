@@ -33,8 +33,7 @@ export class BankController {
   }
 
   @Get('courses')
-  getCourses(@CurrentUser() user: SessionPayload) {
-    this.requireStudent(user)
+  getCourses() {
     return this.queries.execute(new GetCoursesQuery())
   }
 

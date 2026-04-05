@@ -5,10 +5,11 @@ import { cn } from '@/lib/utils'
 import { ACTION_COLORS } from '@/lib/constants'
 import type { ActionResponse } from '@control-aula/shared'
 import { Modal, Button, Input, Label, Select, Tooltip } from '@/components/ui'
-import { actionsService } from '@/services/actions.service'
-import { SectionHeader } from '@/components/shared/SectionHeader'
-import { CardActions }   from '@/components/shared/CardActions'
-import { Pagination }    from '@/components/shared/Pagination'
+import { actionsService }  from '@/services/actions.service'
+import { SectionHeader }   from '@/components/shared/SectionHeader'
+import { CardActions }     from '@/components/shared/CardActions'
+import { Pagination }      from '@/components/shared/Pagination'
+import { ConfirmDialog }   from '@/components/shared/ConfirmDialog'
 
 const CATEGORIES = [
   { value: 'green',  label: 'Verde — positivo'    },
@@ -37,10 +38,11 @@ export function AccionesSection({ actions, reload, showToast }: Props) {
   const [pageSize, setPageSize] = useState(5)
 
   // Filters
-  const [showFilters, setShowFilters] = useState(false)
-  const [category, setCategory] = useState('all')
-  const [status,   setStatus]   = useState<StatusFilter>('all')
-  const [scope,    setScope]    = useState<ScopeFilter>('all')
+  const [showFilters,    setShowFilters]    = useState(false)
+  const [category,       setCategory]       = useState('all')
+  const [status,         setStatus]         = useState<StatusFilter>('all')
+  const [scope,          setScope]          = useState<ScopeFilter>('all')
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const filterRef = useRef<HTMLDivElement>(null)
 
   const openNew  = () => { setForm({ name: '', coins: 2, category: 'blue', affectsClass: false, affectsStudent: true, isActive: true }); setEditing(null); setModal(true) }
@@ -58,13 +60,14 @@ export function AccionesSection({ actions, reload, showToast }: Props) {
     } catch (err: any) { showToast(err.message ?? 'Error al guardar', false) }
   }
 
-  async function del(id: string) {
-    if (!confirm('¿Eliminar acción permanentemente?')) return
+  async function doDelete() {
+    if (!confirmDeleteId) return
     try {
-      const { message } = await actionsService.delete(id)
+      const { message } = await actionsService.delete(confirmDeleteId)
       showToast(message)
       reload()
     } catch (err: any) { showToast(err.message ?? 'Error al eliminar', false) }
+    finally { setConfirmDeleteId(null) }
   }
 
   const filtersActive = category !== 'all' || status !== 'all' || scope !== 'all'
@@ -174,7 +177,7 @@ export function AccionesSection({ actions, reload, showToast }: Props) {
                   {a.affectsStudent && <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">Estudiante</span>}
                 </div>
               </div>
-              <CardActions onEdit={() => openEdit(a)} onDelete={() => del(a.id)} />
+              <CardActions onEdit={() => openEdit(a)} onDelete={() => setConfirmDeleteId(a.id)} />
             </div>
           )
         })}
@@ -224,6 +227,16 @@ export function AccionesSection({ actions, reload, showToast }: Props) {
           </div>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        open={!!confirmDeleteId}
+        onConfirm={doDelete}
+        onCancel={() => setConfirmDeleteId(null)}
+        title="Eliminar acción"
+        message="¿Eliminar esta acción permanentemente? Esta operación no se puede deshacer."
+        confirmText="Eliminar"
+        variant="red"
+      />
     </div>
   )
 }

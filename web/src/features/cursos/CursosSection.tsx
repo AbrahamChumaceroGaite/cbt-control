@@ -3,10 +3,12 @@ import { useState } from 'react'
 import { Plus, Users, BookType } from 'lucide-react'
 import type { CourseResponse } from '@control-aula/shared'
 import { Modal, Button, Input, Label, Tooltip } from '@/components/ui'
-import { coursesService } from '@/services/courses.service'
-import { SectionHeader } from '@/components/shared/SectionHeader'
-import { CardActions }   from '@/components/shared/CardActions'
-import { Pagination }    from '@/components/shared/Pagination'
+import { coursesService }  from '@/services/courses.service'
+import { SectionHeader }   from '@/components/shared/SectionHeader'
+import { CardActions }     from '@/components/shared/CardActions'
+import { Pagination }      from '@/components/shared/Pagination'
+import { ConfirmDialog }   from '@/components/shared/ConfirmDialog'
+
 
 interface CursosSectionProps {
   courses: CourseResponse[]
@@ -18,6 +20,7 @@ export function CursosSection({ courses, reload, showToast }: CursosSectionProps
   const [modal, setModal]   = useState(false)
   const [editing, setEditing] = useState<CourseResponse | null>(null)
   const [form, setForm]     = useState({ name: '', level: 'Secondary 2', parallel: 'A', classCoins: 0 })
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [page, setPage]     = useState(0)
   const [pageSize, setPageSize] = useState(5)
 
@@ -37,14 +40,16 @@ export function CursosSection({ courses, reload, showToast }: CursosSectionProps
     }
   }
 
-  async function del(id: string) {
-    if (!confirm('¿Eliminar este curso y todos sus estudiantes?')) return
+  async function doDelete() {
+    if (!confirmDeleteId) return
     try {
-      const { message } = await coursesService.delete(id)
+      const { message } = await coursesService.delete(confirmDeleteId)
       showToast(message)
       reload()
     } catch (err: any) {
       showToast(err.message ?? 'Error al eliminar', false)
+    } finally {
+      setConfirmDeleteId(null)
     }
   }
 
@@ -75,7 +80,7 @@ export function CursosSection({ courses, reload, showToast }: CursosSectionProps
               <div className="text-xs text-zinc-500 font-medium mb-1 uppercase tracking-wider">{c.level} — Par. {c.parallel}</div>
               <div className="mt-4 text-sm text-zinc-400 flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {c.studentCount ?? 0} estudiantes</div>
             </div>
-            <CardActions onEdit={() => openEdit(c)} onDelete={() => del(c.id)} />
+            <CardActions onEdit={() => openEdit(c)} onDelete={() => setConfirmDeleteId(c.id)} />
           </div>
         ))}
         {courses.length === 0 && <div className="col-span-full text-center py-12 text-zinc-500">No hay cursos creados.</div>}
@@ -103,6 +108,15 @@ export function CursosSection({ courses, reload, showToast }: CursosSectionProps
           <Button onClick={save} className="flex-1">{editing ? 'Guardar' : 'Crear Curso'}</Button>
         </div>
       </Modal>
+      <ConfirmDialog
+        open={!!confirmDeleteId}
+        onConfirm={doDelete}
+        onCancel={() => setConfirmDeleteId(null)}
+        title="Eliminar curso"
+        message="¿Eliminar este curso y todos sus estudiantes? Esta operación no se puede deshacer."
+        confirmText="Eliminar"
+        variant="red"
+      />
     </div>
   )
 }

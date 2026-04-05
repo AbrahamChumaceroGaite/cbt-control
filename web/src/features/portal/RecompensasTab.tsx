@@ -1,7 +1,9 @@
 'use client'
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { ChevronLeft, ChevronRight, ShoppingCart, CheckCircle2, Search, SlidersHorizontal, Zap, X, AlertTriangle } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ShoppingCart, CheckCircle2, SlidersHorizontal, Zap, X } from 'lucide-react'
 import { PortalTabHeader } from '@/features/portal/PortalTabHeader'
+import { ConfirmDialog }   from '@/components/shared/ConfirmDialog'
+import { SearchInput }     from '@/components/ui'
 import type { StudentData, IndividualReward } from '@/services/portal.service'
 
 const PAGE_SIZE = 6
@@ -272,88 +274,6 @@ function PricePopover({ maxPrice, value, onChange, onClear }: {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-// ─── Confirm modal ────────────────────────────────────────────────────────────
-
-function ConfirmModal({
-  reward,
-  salePrice,
-  onConfirm,
-  onCancel,
-  requesting,
-}: {
-  reward: IndividualReward & { discount?: number }
-  salePrice: number
-  onConfirm: () => void
-  onCancel: () => void
-  requesting: boolean
-}) {
-  const savings = reward.coinsRequired - salePrice
-  return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative z-10 w-full max-w-sm rounded-2xl bg-zinc-900 border border-zinc-800 p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
-        {/* Icon + warning */}
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-2xl flex-shrink-0">
-            {reward.icon}
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-zinc-100 text-sm truncate">{reward.name}</h3>
-            <p className="text-[11px] text-zinc-500 mt-0.5">Confirma tu solicitud de canje</p>
-          </div>
-        </div>
-
-        {/* Price breakdown */}
-        <div className="rounded-xl bg-zinc-800/60 border border-zinc-700/50 p-3 space-y-1.5 text-xs">
-          {savings > 0 ? (
-            <>
-              <div className="flex justify-between text-zinc-500">
-                <span>Precio original</span>
-                <span className="line-through">{reward.coinsRequired} coins</span>
-              </div>
-              <div className="flex justify-between text-rose-400 font-bold">
-                <span>Descuento -{reward.discount}%</span>
-                <span>-{savings} coins</span>
-              </div>
-              <div className="h-px bg-zinc-700/60" />
-              <div className="flex justify-between font-black text-amber-400">
-                <span>Total a pagar</span>
-                <span>{salePrice} coins</span>
-              </div>
-            </>
-          ) : (
-            <div className="flex justify-between font-black text-amber-400">
-              <span>Costo</span>
-              <span>{salePrice} coins</span>
-            </div>
-          )}
-        </div>
-
-        <p className="text-[11px] text-zinc-500 flex items-start gap-1.5">
-          <AlertTriangle className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
-          La solicitud será revisada por el administrador antes de ser aprobada.
-        </p>
-
-        <div className="flex gap-2 pt-1">
-          <button
-            onClick={onCancel}
-            className="flex-1 h-10 rounded-xl border border-zinc-700 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={requesting}
-            className="flex-1 h-10 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-900 text-xs font-black transition-colors disabled:opacity-60"
-          >
-            {requesting ? 'Enviando…' : 'Confirmar solicitud'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -408,16 +328,16 @@ export function RecompensasTab({ student, rewards, requesting, onRequest, onLogo
     <div className="min-h-screen pb-28">
       <PortalTabHeader student={student} onLogout={onLogout} />
 
-      {/* Confirmation modal */}
-      {confirmReward && (
-        <ConfirmModal
-          reward={confirmReward}
-          salePrice={confirmReward.salePrice}
-          onConfirm={doRequest}
-          onCancel={() => setConfirmReward(null)}
-          requesting={requesting === confirmReward.id}
-        />
-      )}
+      <ConfirmDialog
+        open={!!confirmReward}
+        onConfirm={doRequest}
+        onCancel={() => setConfirmReward(null)}
+        title={`Pedir: ${confirmReward?.name ?? ''}`}
+        message={`Costo: ${confirmReward?.salePrice ?? 0} coins${(confirmReward?.coinsRequired ?? 0) > (confirmReward?.salePrice ?? 0) ? ` (descuento aplicado, precio original ${confirmReward?.coinsRequired})` : ''}. La solicitud será revisada por el administrador.`}
+        confirmText="Confirmar solicitud"
+        loading={requesting === confirmReward?.id}
+        icon={confirmReward ? <span className="text-4xl">{(confirmReward as any).icon}</span> : undefined}
+      />
 
       <main className="max-w-2xl mx-auto px-4 pt-6">
 
@@ -446,16 +366,12 @@ export function RecompensasTab({ student, rewards, requesting, onRequest, onLogo
 
         {/* Filters row */}
         <div className="flex items-center gap-2 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 pointer-events-none" />
-            <input
-              type="text"
-              value={search}
-              onChange={e => handleSearch(e.target.value)}
-              placeholder="Buscar premio…"
-              className="w-full h-9 pl-8 pr-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition-colors"
-            />
-          </div>
+          <SearchInput
+            value={search}
+            onChange={handleSearch}
+            placeholder="Buscar premio…"
+            className="flex-1"
+          />
           {maxPrice > 0 && (
             <PricePopover
               maxPrice={maxPrice}

@@ -13,3 +13,5 @@ export { Tooltip }                                                   from './too
 export { Toast }                                                     from './toast'
 export { Skeleton }                                                  from './skeleton'
 export { Checkbox }                                                  from './checkbox'
+export { StatusBadge }                                               from './status-badge'
+export { SearchInput }                                               from './search-input'

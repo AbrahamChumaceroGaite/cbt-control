@@ -4,10 +4,11 @@ import { Plus, SlidersHorizontal, X, ChevronDown, Gift } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { RewardResponse } from '@control-aula/shared'
 import { Modal, Button, Input, Label, Select, Tooltip } from '@/components/ui'
-import { rewardsService } from '@/services/rewards.service'
-import { SectionHeader } from '@/components/shared/SectionHeader'
-import { CardActions }   from '@/components/shared/CardActions'
-import { Pagination }    from '@/components/shared/Pagination'
+import { rewardsService }  from '@/services/rewards.service'
+import { SectionHeader }   from '@/components/shared/SectionHeader'
+import { CardActions }     from '@/components/shared/CardActions'
+import { Pagination }      from '@/components/shared/Pagination'
+import { ConfirmDialog }   from '@/components/shared/ConfirmDialog'
 
 const ICONS = ['★', '♪', '♫', '▶', '◉', '⇄', '◆', '+', '❄', '⚡', '♛', '⊕']
 
@@ -27,8 +28,9 @@ const EMPTY_FORM = { name: '', description: '', icon: '★', coinsRequired: 100,
 
 export function RecompensasSection({ rewards, reload, showToast }: Props) {
   const [modal,    setModal]    = useState(false)
-  const [editing,  setEditing]  = useState<RewardResponse | null>(null)
-  const [form,     setForm]     = useState(EMPTY_FORM)
+  const [editing,        setEditing]        = useState<RewardResponse | null>(null)
+  const [form,           setForm]           = useState(EMPTY_FORM)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [search,   setSearch]   = useState('')
   const [page,     setPage]     = useState(0)
   const [pageSize, setPageSize] = useState(5)
@@ -65,12 +67,13 @@ export function RecompensasSection({ rewards, reload, showToast }: Props) {
     } catch (err: any) { showToast(err.message ?? 'Error al guardar', false) }
   }
 
-  async function del(id: string) {
-    if (!confirm('¿Eliminar recompensa permanentemente?')) return
+  async function doDelete() {
+    if (!confirmDeleteId) return
     try {
-      const { message } = await rewardsService.delete(id)
+      const { message } = await rewardsService.delete(confirmDeleteId)
       showToast(message); reload()
     } catch (err: any) { showToast(err.message ?? 'Error al eliminar', false) }
+    finally { setConfirmDeleteId(null) }
   }
 
   const filtersActive = typeFilter !== 'all' || statusFilter !== 'all'
@@ -174,7 +177,7 @@ export function RecompensasSection({ rewards, reload, showToast }: Props) {
                 {!r.isActive && <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-500">Inactiva</span>}
               </div>
             </div>
-            <CardActions onEdit={() => openEdit(r)} onDelete={() => del(r.id)} />
+            <CardActions onEdit={() => openEdit(r)} onDelete={() => setConfirmDeleteId(r.id)} />
           </div>
         ))}
         {filtered.length === 0 && <div className="col-span-full text-center py-12 text-zinc-500">Sin recompensas.</div>}
@@ -236,6 +239,16 @@ export function RecompensasSection({ rewards, reload, showToast }: Props) {
           </div>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        open={!!confirmDeleteId}
+        onConfirm={doDelete}
+        onCancel={() => setConfirmDeleteId(null)}
+        title="Eliminar recompensa"
+        message="¿Eliminar esta recompensa permanentemente? Esta operación no se puede deshacer."
+        confirmText="Eliminar"
+        variant="red"
+      />
     </div>
   )
 }

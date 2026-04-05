@@ -1,18 +1,14 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
-import { CheckCircle2, XCircle, Clock, ArrowRight, Landmark, RefreshCw } from 'lucide-react'
+import { CheckCircle2, XCircle, ArrowRight, Landmark, RefreshCw } from 'lucide-react'
 import { apiFetch, apiFetchFull } from '@/lib/api'
 import type { CoinTransactionResponse } from '@control-aula/shared'
-import { SectionHeader } from '@/components/shared/SectionHeader'
-import { Pagination }    from '@/components/shared/Pagination'
+import { SectionHeader }  from '@/components/shared/SectionHeader'
+import { FilterPills }    from '@/components/shared/FilterPills'
+import { StatusBadge }    from '@/components/ui'
+import { Pagination }     from '@/components/shared/Pagination'
 import { useSocketEvent } from '@/hooks/useSocketEvent'
-import { WS }            from '@/ws/events'
-
-const STATUS_STYLE: Record<string, { label: string; pill: string }> = {
-  pending:  { label: 'Pendiente', pill: 'bg-amber-500/15 text-amber-400 border-amber-500/25' },
-  approved: { label: 'Aprobada',  pill: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25' },
-  rejected: { label: 'Rechazada', pill: 'bg-red-500/15 text-red-400 border-red-500/25' },
-}
+import { WS }             from '@/ws/events'
 
 interface ProcessPayload { status: 'approved' | 'rejected'; adminNotes?: string }
 
@@ -79,16 +75,16 @@ export function TransaccionesSection({ showToast }: Props) {
       />
 
       {/* Status filter */}
-      <div className="flex gap-1.5 flex-wrap">
-        {(['all', 'pending', 'approved', 'rejected'] as const).map(f => (
-          <button key={f} onClick={() => { setFilter(f); setPage(0) }}
-            className={`px-3 h-7 rounded-lg text-xs font-semibold transition-colors ${
-              filter === f ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 border border-transparent'
-            }`}>
-            {f === 'all' ? `Todas (${txs.length})` : f === 'pending' ? `Pendientes (${pending})` : f === 'approved' ? 'Aprobadas' : 'Rechazadas'}
-          </button>
-        ))}
-      </div>
+      <FilterPills
+        options={[
+          { value: 'all',      label: `Todas (${txs.length})`   },
+          { value: 'pending',  label: `Pendientes (${pending})`  },
+          { value: 'approved', label: 'Aprobadas'                },
+          { value: 'rejected', label: 'Rechazadas'               },
+        ]}
+        value={filter}
+        onChange={v => { setFilter(v as typeof filter); setPage(0) }}
+      />
 
       {loading ? (
         <div className="grid gap-3">
@@ -101,7 +97,7 @@ export function TransaccionesSection({ showToast }: Props) {
       ) : (
         <div className="space-y-3">
           {paged.map(tx => (
-            <div key={tx.id} className={`rounded-xl border p-4 flex items-center gap-4 ${tx.status === 'pending' ? 'bg-zinc-900/80 border-purple-500/20' : 'bg-zinc-900/40 border-zinc-800'}`}>
+            <div key={tx.id} className={`rounded-xl border p-4 flex items-center gap-4 ${tx.status === 'pending' ? 'bg-zinc-900/80 border-amber-500/20' : 'bg-zinc-900/40 border-zinc-800'}`}>
               {/* Arrow visual */}
               <div className="flex items-center gap-2 flex-shrink-0">
                 <div className="text-center">
@@ -111,7 +107,7 @@ export function TransaccionesSection({ showToast }: Props) {
                   <p className="text-[9px] text-zinc-600 mt-0.5 max-w-[48px] truncate">{tx.fromStudent.name.split(' ')[0]}</p>
                 </div>
                 <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-xs font-black text-purple-400">{tx.amount}c</span>
+                  <span className="text-xs font-black text-amber-400">{tx.amount}c</span>
                   <ArrowRight className="w-4 h-4 text-zinc-600" />
                   <span className="text-[9px] text-zinc-600">+{tx.tax}c imp</span>
                 </div>
@@ -135,9 +131,7 @@ export function TransaccionesSection({ showToast }: Props) {
 
               {/* Status + Actions */}
               <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${STATUS_STYLE[tx.status]?.pill ?? ''}`}>
-                  {STATUS_STYLE[tx.status]?.label ?? tx.status}
-                </span>
+                <StatusBadge status={tx.status} />
                 {tx.status === 'pending' && (
                   <div className="flex gap-1.5">
                     <button

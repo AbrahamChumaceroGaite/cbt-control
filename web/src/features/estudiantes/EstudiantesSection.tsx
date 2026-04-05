@@ -4,10 +4,11 @@ import { Plus, Upload, Pencil, Trash2, Users, SlidersHorizontal, X, ChevronDown 
 import * as XLSX from 'xlsx'
 import type { StudentResponse, CourseResponse } from '@control-aula/shared'
 import { Modal, Button, Input, Label, Tooltip } from '@/components/ui'
-import { studentsService } from '@/services/students.service'
-import { SectionHeader }  from '@/components/shared/SectionHeader'
-import { CourseSelect }   from '@/components/shared/CourseSelect'
-import { Pagination }     from '@/components/shared/Pagination'
+import { studentsService }  from '@/services/students.service'
+import { SectionHeader }    from '@/components/shared/SectionHeader'
+import { CourseSelect }     from '@/components/shared/CourseSelect'
+import { Pagination }       from '@/components/shared/Pagination'
+import { ConfirmDialog }    from '@/components/shared/ConfirmDialog'
 
 interface Props {
   students:       StudentResponse[]
@@ -20,9 +21,10 @@ interface Props {
 }
 
 export function EstudiantesSection({ students, courses, currentCourse, onCourseChange, reload, reloadAll, showToast }: Props) {
-  const [modal,    setModal]    = useState(false)
-  const [editing,  setEditing]  = useState<StudentResponse | null>(null)
-  const [form,     setForm]     = useState({ name: '', code: '', email: '', coins: 0 })
+  const [modal,          setModal]          = useState(false)
+  const [editing,        setEditing]        = useState<StudentResponse | null>(null)
+  const [form,           setForm]           = useState({ name: '', code: '', email: '', coins: 0 })
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [search,   setSearch]   = useState('')
   const [page,     setPage]     = useState(0)
   const [pageSize, setPageSize] = useState(5)
@@ -51,12 +53,13 @@ export function EstudiantesSection({ students, courses, currentCourse, onCourseC
     } catch (err: any) { showToast(err.message ?? 'Error al guardar', false) }
   }
 
-  async function del(id: string) {
-    if (!confirm('¿Eliminar estudiante?')) return
+  async function doDelete() {
+    if (!confirmDeleteId) return
     try {
-      const { message } = await studentsService.delete(id)
+      const { message } = await studentsService.delete(confirmDeleteId)
       showToast(message); reload(); reloadAll()
     } catch (err: any) { showToast(err.message ?? 'Error al eliminar', false) }
+    finally { setConfirmDeleteId(null) }
   }
 
   async function handleExcelUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -220,7 +223,7 @@ export function EstudiantesSection({ students, courses, currentCourse, onCourseC
                         <button onClick={() => openEdit(s)} className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-md transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
                       </Tooltip>
                       <Tooltip content="Eliminar alumno">
-                        <button onClick={() => del(s.id)} className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-950/30 rounded-md transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => setConfirmDeleteId(s.id)} className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-950/30 rounded-md transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                       </Tooltip>
                     </div>
                   </td>
@@ -251,6 +254,16 @@ export function EstudiantesSection({ students, courses, currentCourse, onCourseC
           <Button onClick={save} className="flex-1">{editing ? 'Guardar' : 'Crear'}</Button>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        open={!!confirmDeleteId}
+        onConfirm={doDelete}
+        onCancel={() => setConfirmDeleteId(null)}
+        title="Eliminar estudiante"
+        message="¿Eliminar este estudiante? Esta operación no se puede deshacer."
+        confirmText="Eliminar"
+        variant="red"
+      />
     </div>
   )
 }
