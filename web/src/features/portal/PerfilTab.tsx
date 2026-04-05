@@ -208,24 +208,25 @@ function RewardsProgress({ coins, rewards, pendingIds }: {
 }) {
   const countdown = useResetCountdown()
 
-  // Only show rewards NOT yet pending (still achievable this week)
+  // "Próximos Premios" = only rewards NOT yet affordable AND NOT already pending this week
+  // (affordable rewards are already visible in the Premios tab — no need to duplicate)
   const sorted = [...rewards]
-    .filter(r => !pendingIds.has(r.id))
+    .filter(r => !pendingIds.has(r.id) && coins < r.coinsRequired)
     .sort((a, b) => a.coinsRequired - b.coinsRequired)
 
-  const nextIdx = sorted.findIndex(r => coins < r.coinsRequired)
-
   if (!sorted.length) return (
-    <p className="text-xs text-zinc-600 text-center py-4">No hay premios pendientes esta semana</p>
+    <p className="text-xs text-zinc-500 text-center py-4">
+      {rewards.length > 0 ? '¡Ya puedes canjear todos tus premios disponibles!' : 'Sin premios configurados'}
+    </p>
   )
 
   return (
     <div>
       <div className="space-y-4">
         {sorted.map((r, i) => {
-          const unlocked = coins >= r.coinsRequired
-          const isNext   = i === nextIdx
-          const pct      = Math.min(100, Math.round((coins / r.coinsRequired) * 100))
+          const unlocked = false // all shown rewards are not yet affordable
+          const isNext   = i === 0 // closest upcoming reward
+          const pct      = Math.min(99, Math.round((coins / r.coinsRequired) * 100))
           return (
             <div key={r.id} className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
@@ -256,9 +257,9 @@ function RewardsProgress({ coins, rewards, pendingIds }: {
       </div>
 
       {/* Weekly reset timer */}
-      <div className="mt-4 pt-3 border-t border-zinc-800/50 flex items-center justify-between">
-        <span className="text-[10px] text-zinc-600">Se resetea en</span>
-        <span className="font-mono text-[11px] font-bold text-amber-400/70 tracking-widest">{countdown}</span>
+      <div className="mt-5 pt-4 border-t border-zinc-800/50">
+        <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500 mb-2">Se resetea en</p>
+        <span className="font-mono text-2xl font-black text-amber-400 tracking-widest tabular-nums">{countdown}</span>
       </div>
     </div>
   )
@@ -442,7 +443,7 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
 
         {/* Top-right: notification + logout — with solid bg to stay visible over banner */}
         <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
-          <div className="rounded-xl bg-black/55 backdrop-blur-sm border border-white/10 overflow-hidden">
+          <div className="rounded-xl bg-black/55 backdrop-blur-sm border border-white/10">
             <NotificationBell />
           </div>
           <button
