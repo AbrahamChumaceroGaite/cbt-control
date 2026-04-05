@@ -1,6 +1,6 @@
 'use client'
-import { useState } from 'react'
-import { ChevronLeft, ChevronRight, ShoppingCart, CheckCircle2 } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { ChevronLeft, ChevronRight, ShoppingCart, CheckCircle2, Search, SlidersHorizontal } from 'lucide-react'
 import { PortalTabHeader } from '@/features/portal/PortalTabHeader'
 import type { StudentData, IndividualReward } from '@/services/portal.service'
 
@@ -22,10 +22,29 @@ interface Props {
 }
 
 export function RecompensasTab({ student, rewards, requesting, onRequest, onLogout }: Props) {
-  const [page, setPage] = useState(0)
+  const [page, setPage]         = useState(0)
+  const [search, setSearch]     = useState('')
+  const [maxCoins, setMaxCoins] = useState<number | null>(null)
 
-  // API already returns only active individual rewards — just sort
-  const available = [...rewards].sort((a, b) => a.coinsRequired - b.coinsRequired)
+  // API already returns only active individual rewards — sort by price
+  const sorted = useMemo(
+    () => [...rewards].sort((a, b) => a.coinsRequired - b.coinsRequired),
+    [rewards]
+  )
+
+  const maxPrice = sorted.length > 0 ? sorted[sorted.length - 1].coinsRequired : 0
+
+  const available = useMemo(() => {
+    const q   = search.trim().toLowerCase()
+    const cap = maxCoins ?? maxPrice
+    return sorted.filter(r =>
+      (q === '' || r.name.toLowerCase().includes(q) || r.description?.toLowerCase().includes(q)) &&
+      r.coinsRequired <= cap
+    )
+  }, [sorted, search, maxCoins, maxPrice])
+
+  const handleSearch = (v: string) => { setSearch(v); setPage(0) }
+  const handleSlider = (v: number) => { setMaxCoins(v); setPage(0) }
 
   const totalPages = Math.ceil(available.length / PAGE_SIZE)
   const paged      = available.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
@@ -50,6 +69,65 @@ export function RecompensasTab({ student, rewards, requesting, onRequest, onLogo
             <ShoppingCart className="w-7 h-7 text-amber-400" />
           </div>
         </section>
+
+        {/* Filters */}
+        <div className="flex flex-col gap-3 mb-6">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 pointer-events-none" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => handleSearch(e.target.value)}
+              placeholder="Buscar premio…"
+              className="w-full h-9 pl-8 pr-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition-colors"
+            />
+          </div>
+
+          {/* Price slider */}
+          {maxPrice > 0 && (
+            <div className="rounded-xl bg-zinc-900/80 border border-zinc-800 px-4 py-3 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.15em] text-zinc-500">
+                  <SlidersHorizontal className="w-3 h-3" />
+                  Precio máximo
+                </div>
+                <span className="font-mono text-xs font-bold text-amber-400">
+                  {maxCoins ?? maxPrice} coins
+                </span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={maxPrice}
+                step={1}
+                value={maxCoins ?? maxPrice}
+                onChange={e => handleSlider(Number(e.target.value))}
+                className="w-full h-1.5 rounded-full appearance-none cursor-pointer
+                  [&::-webkit-slider-runnable-track]:rounded-full
+                  [&::-webkit-slider-runnable-track]:bg-zinc-700
+                  [&::-webkit-slider-thumb]:appearance-none
+                  [&::-webkit-slider-thumb]:w-4
+                  [&::-webkit-slider-thumb]:h-4
+                  [&::-webkit-slider-thumb]:rounded-full
+                  [&::-webkit-slider-thumb]:bg-amber-400
+                  [&::-webkit-slider-thumb]:mt-[-5px]
+                  [&::-webkit-slider-thumb]:shadow-[0_0_8px_rgba(251,191,36,0.5)]
+                  [&::-moz-range-track]:rounded-full
+                  [&::-moz-range-track]:bg-zinc-700
+                  [&::-moz-range-thumb]:w-4
+                  [&::-moz-range-thumb]:h-4
+                  [&::-moz-range-thumb]:rounded-full
+                  [&::-moz-range-thumb]:bg-amber-400
+                  [&::-moz-range-thumb]:border-0"
+              />
+              <div className="flex justify-between text-[10px] text-zinc-600">
+                <span>0</span>
+                <span>{maxPrice}</span>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Section title */}
         <div className="flex items-center gap-4 mb-6">

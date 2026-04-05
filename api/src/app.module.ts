@@ -2,6 +2,7 @@ import { Module }         from '@nestjs/common'
 import { AppController }  from './app.controller'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { ConfigModule }   from '@nestjs/config'
+import { ScheduleModule } from '@nestjs/schedule'
 import { TransformInterceptor } from './common/interceptors/transform.interceptor'
 import { PrismaModule }   from './infrastructure/prisma/prisma.module'
 import { CourseModule } from './modules/course/course.module'
@@ -13,6 +14,7 @@ import { PointModule }  from './modules/point/point.module'
 import { AuthModule }   from './modules/auth/auth.module'
 import { PortalModule }  from './modules/portal/portal.module'
 import { BackupModule }  from './modules/backup/backup.module'
+import { ResetModule }   from './modules/reset/reset.module'
 import { PushModule }    from './modules/push/push.module'
 import { InboxModule }    from './modules/inbox/inbox.module'
 import { SocketModule }  from './infrastructure/socket/socket.module'
@@ -21,6 +23,7 @@ import { SocketModule }  from './infrastructure/socket/socket.module'
   controllers: [AppController],
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     SocketModule,
     PushModule,
@@ -34,6 +37,7 @@ import { SocketModule }  from './infrastructure/socket/socket.module'
     AuthModule,
     PortalModule,
     BackupModule,
+    ResetModule,
   ],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },

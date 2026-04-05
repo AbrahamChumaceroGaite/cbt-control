@@ -1,10 +1,14 @@
 'use client'
-import { useRef, useState, useMemo } from 'react'
+import { useRef, useState, useMemo, useEffect } from 'react'
 import {
   Camera, ChevronLeft, ChevronRight, CalendarDays, X,
-  Lock, Coins, BookOpen, Users, Trophy, TrendingUp,
-  TrendingDown, Star, Zap, LogOut,
+  Coins, BookOpen, Users, Trophy, TrendingUp,
+  TrendingDown, Star, Zap, LogOut, Clock,
 } from 'lucide-react'
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer,
+} from 'recharts'
 import { portalService, type StudentData, type IndividualReward } from '@/services/portal.service'
 import { NotificationBell } from '@/features/notifications/NotificationBell'
 
@@ -77,7 +81,7 @@ function Sparkline({ values, color }: { values: number[]; color: string }) {
   )
 }
 
-// ─── Coin trajectory chart with axes ─────────────────────────────────────────
+// ─── Coin trajectory chart (Recharts) ────────────────────────────────────────
 
 function TrajectoryChart({ logs, currentCoins }: { logs: StudentData['coinLogs']; currentCoins: number }) {
   const ordered = [...logs].reverse()
@@ -88,46 +92,39 @@ function TrajectoryChart({ logs, currentCoins }: { logs: StudentData['coinLogs']
   const cumul  = ordered.map(l => l.coins).reduce<number[]>((a, d) => { a.push((a.at(-1) ?? 0) + d); return a }, [])
   const offset = currentCoins - (cumul.at(-1) ?? 0)
   const series = cumul.map(v => v + offset)
+  const trend  = series.at(-1)! >= series[0]
+  const diff   = series.at(-1)! - series[0]
 
-  const minV = Math.min(...series), maxV = Math.max(...series), rangeV = maxV - minV || 1
-  const trend = series.at(-1)! >= series[0]
-  const diff  = series.at(-1)! - series[0]
-
-  // SVG layout: leave margin for Y labels left and X labels bottom
-  const ML = 36, MR = 4, MT = 4, MB = 16
-  const CW = 200, CH = 72
-  const W  = CW + ML + MR, H = CH + MT + MB
-
-  const px = (i: number) => ML + (i / (series.length - 1)) * CW
-  const py = (v: number) => MT + CH - ((v - minV) / rangeV) * CH
-
-  const segments = series.slice(0, -1).map((_, i) => ({
-    d:    `M ${px(i).toFixed(1)},${py(series[i]).toFixed(1)} L ${px(i+1).toFixed(1)},${py(series[i+1]).toFixed(1)}`,
-    rise: series[i+1] >= series[i],
-  }))
-
-  // Y axis labels (3 ticks: min, mid, max)
-  const yTicks = [minV, Math.round((minV + maxV) / 2), maxV]
-
-  // X axis ticks: first entry, month boundaries, last entry
-  const xTicks: { i: number; label: string }[] = [
-    { i: 0, label: new Date(ordered[0].createdAt).toLocaleDateString('es-BO', { day: '2-digit', month: 'short' }) },
-  ]
-  // Find month change points
-  let lastMonth = new Date(ordered[0].createdAt).getMonth()
-  ordered.forEach((l, i) => {
-    if (i === 0) return
-    const m = new Date(l.createdAt).getMonth()
-    if (m !== lastMonth) {
-      xTicks.push({ i, label: new Date(l.createdAt).toLocaleDateString('es-BO', { day: '2-digit', month: 'short' }) })
-      lastMonth = m
+  // Thin the data points for chart performance — max 30 ticks
+  const step     = Math.max(1, Math.floor(ordered.length / 30))
+  const chartData = ordered.filter((_, i) => i % step === 0 || i === ordered.length - 1).map((l, idx) => {
+    const origIdx = idx * step < ordered.length ? idx * step : ordered.length - 1
+    return {
+      date:   new Date(l.createdAt).toLocaleDateString('es-BO', { day: '2-digit', month: 'short' }),
+      coins:  series[Math.min(origIdx, series.length - 1)],
+      change: ordered[Math.min(origIdx, ordered.length - 1)].coins,
     }
   })
-  xTicks.push({ i: series.length - 1, label: 'Hoy' })
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null
+    const change = payload[0]?.payload?.change ?? 0
+    return (
+      <div className="bg-zinc-900 border border-zinc-700/60 rounded-xl p-2.5 shadow-xl text-xs">
+        <p className="text-zinc-400 mb-1">{label}</p>
+        <p className="text-amber-400 font-bold">{payload[0]?.value} coins</p>
+        {change !== 0 && (
+          <p className={`font-semibold ${change > 0 ? 'text-green-400' : 'text-red-400'}`}>
+            {change > 0 ? '+' : ''}{change}
+          </p>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           {trend ? <TrendingUp className="w-3.5 h-3.5 text-green-400" /> : <TrendingDown className="w-3.5 h-3.5 text-red-400" />}
           <span className={`text-xs font-bold ${trend ? 'text-green-400' : 'text-red-400'}`}>
@@ -136,99 +133,133 @@ function TrajectoryChart({ logs, currentCoins }: { logs: StudentData['coinLogs']
         </div>
         <span className="text-[10px] text-zinc-600">{ordered.length} eventos</span>
       </div>
-
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: `${H * 1.4}px` }}>
-        {/* Y gridlines + labels */}
-        {yTicks.map((v, i) => {
-          const y = py(v)
-          return (
-            <g key={i}>
-              <line x1={ML} y1={y} x2={ML + CW} y2={y}
-                stroke="rgba(255,255,255,0.05)" strokeWidth="0.7" strokeDasharray="3,4" />
-              <text x={ML - 3} y={y + 3.5} textAnchor="end"
-                fontSize="7" fill="rgba(161,161,170,0.7)">{v}</text>
-            </g>
-          )
-        })}
-
-        {/* Segments */}
-        {segments.map((s, i) => (
-          <path key={i} d={s.d} fill="none"
-            stroke={s.rise ? '#4ade80' : '#f87171'} strokeWidth="1.8"
-            strokeLinecap="round" opacity="0.9" />
-        ))}
-
-        {/* End dot */}
-        <circle cx={px(series.length - 1)} cy={py(series.at(-1)!)} r="2.5" fill="#fbbf24" />
-
-        {/* X axis */}
-        <line x1={ML} y1={MT + CH} x2={ML + CW} y2={MT + CH}
-          stroke="rgba(255,255,255,0.06)" strokeWidth="0.7" />
-        {xTicks.map((t, i) => {
-          const x = px(t.i)
-          const anchor = t.i === 0 ? 'start' : t.i === series.length - 1 ? 'end' : 'middle'
-          return (
-            <g key={i}>
-              <line x1={x} y1={MT + CH} x2={x} y2={MT + CH + 3}
-                stroke="rgba(255,255,255,0.1)" strokeWidth="0.7" />
-              <text x={x} y={MT + CH + 11} textAnchor={anchor}
-                fontSize="7" fill="rgba(161,161,170,0.6)">{t.label}</text>
-            </g>
-          )
-        })}
-      </svg>
+      <ResponsiveContainer width="100%" height={120}>
+        <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+          <defs>
+            <linearGradient id="coinGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%"  stopColor={trend ? '#4ade80' : '#f87171'} stopOpacity={0.35} />
+              <stop offset="95%" stopColor={trend ? '#4ade80' : '#f87171'} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+          <XAxis
+            dataKey="date"
+            tick={{ fill: 'rgba(161,161,170,0.6)', fontSize: 9 }}
+            tickLine={false}
+            axisLine={false}
+            interval="preserveStartEnd"
+          />
+          <YAxis
+            tick={{ fill: 'rgba(161,161,170,0.6)', fontSize: 9 }}
+            tickLine={false}
+            axisLine={false}
+            width={40}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Area
+            type="monotone"
+            dataKey="coins"
+            stroke={trend ? '#4ade80' : '#f87171'}
+            strokeWidth={2}
+            fill="url(#coinGrad)"
+            dot={false}
+            activeDot={{ r: 4, fill: '#fbbf24', stroke: '#1c1c1c', strokeWidth: 2 }}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
     </div>
   )
 }
 
+// ─── Weekly reset countdown ───────────────────────────────────────────────────
+
+function useResetCountdown() {
+  const [countdown, setCountdown] = useState('')
+
+  useEffect(() => {
+    function calc() {
+      const now   = new Date()
+      const day   = now.getDay()
+      const daysUntil = day === 1 ? 7 : (1 - day + 7) % 7 || 7
+      const next  = new Date(now)
+      next.setDate(now.getDate() + daysUntil)
+      next.setHours(0, 0, 0, 0)
+      const diff  = next.getTime() - now.getTime()
+      const d     = Math.floor(diff / 86_400_000)
+      const h     = Math.floor((diff % 86_400_000) / 3_600_000)
+      const m     = Math.floor((diff % 3_600_000)  / 60_000)
+      const s     = Math.floor((diff % 60_000) / 1_000)
+      setCountdown(`${String(d).padStart(2,'0')}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`)
+    }
+    calc()
+    const id = setInterval(calc, 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  return countdown
+}
+
 // ─── Rewards progress list ────────────────────────────────────────────────────
 
-function RewardsProgress({ coins, rewards }: { coins: number; rewards: IndividualReward[] }) {
-  const sorted = [...rewards].sort((a, b) => a.coinsRequired - b.coinsRequired)
-  if (!sorted.length) return <p className="text-xs text-zinc-600 text-center py-4">Sin premios disponibles</p>
+function RewardsProgress({ coins, rewards, pendingIds }: {
+  coins: number
+  rewards: IndividualReward[]
+  pendingIds: Set<string>
+}) {
+  const countdown = useResetCountdown()
 
-  // find the "next" unlockable
+  // Only show rewards NOT yet pending (still achievable this week)
+  const sorted = [...rewards]
+    .filter(r => !pendingIds.has(r.id))
+    .sort((a, b) => a.coinsRequired - b.coinsRequired)
+
   const nextIdx = sorted.findIndex(r => coins < r.coinsRequired)
 
+  if (!sorted.length) return (
+    <p className="text-xs text-zinc-600 text-center py-4">No hay premios pendientes esta semana</p>
+  )
+
   return (
-    <div className="space-y-4">
-      {sorted.map((r, i) => {
-        const unlocked = coins >= r.coinsRequired
-        const isNext   = i === nextIdx
-        const pct      = Math.min(100, Math.round((coins / r.coinsRequired) * 100))
-        const glowColor = unlocked ? 'rgba(251,191,36,0.35)' : isNext ? 'rgba(16,185,129,0.25)' : 'transparent'
-        return (
-          <div key={r.id} className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className={`font-bold flex items-center gap-2 ${unlocked ? 'text-amber-300' : isNext ? 'text-emerald-400' : 'text-zinc-500'}`}>
-                <span className="text-base leading-none">{r.icon}</span>
-                {r.name}
-                {unlocked && <Star className="w-3 h-3 text-amber-400 fill-amber-400" />}
-                {!unlocked && isNext && <Zap className="w-3 h-3 text-emerald-400" />}
-              </span>
-              <span className={`font-semibold ${unlocked ? 'text-amber-400' : 'text-zinc-500'}`}>{pct}%</span>
+    <div>
+      <div className="space-y-4">
+        {sorted.map((r, i) => {
+          const unlocked = coins >= r.coinsRequired
+          const isNext   = i === nextIdx
+          const pct      = Math.min(100, Math.round((coins / r.coinsRequired) * 100))
+          return (
+            <div key={r.id} className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className={`font-bold flex items-center gap-2 ${unlocked ? 'text-amber-300' : isNext ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                  <span className="text-base leading-none">{r.icon}</span>
+                  {r.name}
+                  {unlocked && <Star className="w-3 h-3 text-amber-400 fill-amber-400" />}
+                  {!unlocked && isNext && <Zap className="w-3 h-3 text-emerald-400" />}
+                </span>
+                <span className={`font-semibold ${unlocked ? 'text-amber-400' : 'text-zinc-500'}`}>{pct}%</span>
+              </div>
+              <div className="w-full h-1.5 bg-zinc-800/80 rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-700"
+                  style={{
+                    width: `${pct}%`,
+                    background: unlocked ? 'linear-gradient(90deg,#f59e0b,#fbbf24)' : isNext ? 'linear-gradient(90deg,#059669,#10b981)' : '#3f3f46',
+                    boxShadow: unlocked ? '0 0 8px rgba(251,191,36,0.35)' : isNext ? '0 0 8px rgba(16,185,129,0.25)' : 'none',
+                  }}
+                />
+              </div>
+              <div className="flex justify-between text-[10px] text-zinc-600">
+                <span>{coins} / {r.coinsRequired} coins</span>
+                {!unlocked && <span>Faltan {r.coinsRequired - coins}</span>}
+              </div>
             </div>
-            <div className="w-full h-1.5 bg-zinc-800/80 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-700"
-                style={{
-                  width: `${pct}%`,
-                  background: unlocked
-                    ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
-                    : isNext
-                      ? 'linear-gradient(90deg, #059669, #10b981)'
-                      : '#3f3f46',
-                  boxShadow: `0 0 8px ${glowColor}`,
-                }}
-              />
-            </div>
-            <div className="flex justify-between text-[10px] text-zinc-600">
-              <span>{coins} / {r.coinsRequired} coins</span>
-              {!unlocked && <span>Faltan {r.coinsRequired - coins}</span>}
-            </div>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
+
+      {/* Weekly reset timer */}
+      <div className="mt-4 pt-3 border-t border-zinc-800/50 flex items-center justify-between">
+        <span className="text-[10px] text-zinc-600">Se resetea en</span>
+        <span className="font-mono text-[11px] font-bold text-amber-400/70 tracking-widest">{countdown}</span>
+      </div>
     </div>
   )
 }
@@ -288,6 +319,29 @@ function DateFilterPopover({ filter, onApply, onClear }: {
   )
 }
 
+// ─── Current date/time chip ───────────────────────────────────────────────────
+
+function DateTimeChip() {
+  const [now, setNow] = useState(new Date())
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(id)
+  }, [])
+  return (
+    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-950/50 backdrop-blur-xl border border-white/[0.07]">
+      <Clock className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+      <div>
+        <p className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold leading-none mb-0.5">
+          {now.toLocaleDateString('es-BO', { weekday: 'short', day: '2-digit', month: 'short' })}
+        </p>
+        <p className="font-mono text-xs font-semibold text-white leading-none">
+          {now.toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+        </p>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface Props {
@@ -307,6 +361,18 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
   const initials    = student.name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
   const latestTramo = student.tramos.at(-1)
   const tramoData   = latestTramo ? TRAMOS.find(t => t.id === latestTramo.tramo) : null
+
+  // Set of reward IDs with pending requests this week (filter from RewardsProgress)
+  const pendingRewardIds = useMemo(() => {
+    const weekStart = new Date()
+    weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7)) // last Monday
+    weekStart.setHours(0, 0, 0, 0)
+    return new Set(
+      student.redemptionRequests
+        .filter(r => r.status === 'pending' && new Date(r.createdAt) >= weekStart)
+        .map(r => r.rewardId)
+    )
+  }, [student.redemptionRequests])
 
   // Filtered + paginated logs
   const filteredLogs = useMemo(() => {
@@ -351,7 +417,7 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
       {/* ── HERO ────────────────────────────────────────────────────────────── */}
       <section className="relative w-full h-[420px] sm:h-[480px] overflow-hidden">
 
-        {/* Banner / background */}
+        {/* Banner */}
         <div className="absolute inset-0">
           {student.bannerUrl
             ? <img src={student.bannerUrl} alt="" className="w-full h-full object-cover" />
@@ -367,19 +433,21 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
         <button
           onClick={() => bannerRef.current?.click()}
           disabled={uploading === 'banner'}
-          className="absolute bottom-4 left-4 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white/75 text-xs font-medium hover:bg-black/70 hover:text-white transition-all"
+          className="absolute bottom-4 left-4 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/55 backdrop-blur-sm text-white/80 text-xs font-medium hover:bg-black/70 hover:text-white transition-all border border-white/10"
         >
           <Camera className="w-3 h-3" />
           {uploading === 'banner' ? 'Subiendo…' : 'Cambiar portada'}
         </button>
         <input ref={bannerRef} type="file" accept="image/*" className="hidden" onChange={uploadBanner} />
 
-        {/* Top-right: notification + logout */}
+        {/* Top-right: notification + logout — with solid bg to stay visible over banner */}
         <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
-          <NotificationBell />
+          <div className="rounded-xl bg-black/55 backdrop-blur-sm border border-white/10 overflow-hidden">
+            <NotificationBell />
+          </div>
           <button
             onClick={onLogout}
-            className="w-8 h-8 rounded-xl bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-black/60 transition-all"
+            className="w-8 h-8 rounded-xl bg-black/55 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/80 hover:text-white hover:bg-black/70 transition-all"
           >
             <LogOut className="w-3.5 h-3.5" />
           </button>
@@ -388,7 +456,7 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
         {/* Gradient fade bottom */}
         <div className="absolute bottom-0 left-0 right-0 h-56 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent pointer-events-none" />
 
-        {/* Centered identity (avatar + name) */}
+        {/* Centered identity */}
         <div className="absolute inset-0 flex flex-col items-center justify-end pb-10 px-4">
 
           {/* Avatar */}
@@ -411,7 +479,6 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
                 </div>
               )}
             </div>
-            {/* Tramo badge */}
             {tramoData && (
               <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full border-2 border-zinc-950 flex items-center justify-center shadow-lg"
                 style={{ background: tramoData.color }}>
@@ -421,23 +488,19 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
             <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={uploadAvatar} />
           </div>
 
-          {/* Name + subtitle */}
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-0.5 text-center drop-shadow-lg">
+          {/* Name only — no redundant subtitle */}
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-1 text-center drop-shadow-lg">
             {student.name}
           </h1>
-          <p className="text-amber-400 uppercase tracking-[0.22em] font-semibold text-[11px] mb-5">
-            {tramoData ? `${tramoData.id} · ${tramoData.label}` : student.course.level}
-          </p>
+          {tramoData && (
+            <p className="text-amber-400 uppercase tracking-[0.22em] font-semibold text-[11px] mb-5">
+              {tramoData.id} · {tramoData.label}
+            </p>
+          )}
 
-          {/* Glassmorphism info chips */}
+          {/* Info chips — date/time + groups */}
           <div className="flex flex-wrap justify-center gap-2.5 w-full max-w-sm">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-950/50 backdrop-blur-xl border border-white/[0.07]">
-              <BookOpen className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-              <div>
-                <p className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold leading-none mb-0.5">Curso</p>
-                <p className="text-xs font-semibold text-white leading-none">{student.course.name}</p>
-              </div>
-            </div>
+            <DateTimeChip />
             {student.groupMemberships.slice(0, 2).map(m => (
               <div key={m.group.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-950/50 backdrop-blur-xl border border-white/[0.07]">
                 <Users className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
@@ -456,8 +519,6 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
 
         {/* Row 1: Mis Coins + Coins del Curso */}
         <div className="grid grid-cols-2 gap-3">
-
-          {/* Mis Coins */}
           <div className="relative overflow-hidden rounded-2xl bg-zinc-900/80 border-t-2 border-amber-500/60 p-4 group">
             <div className="absolute -right-3 -bottom-3 opacity-[0.07] group-hover:opacity-[0.12] transition-all duration-700 rotate-12 pointer-events-none">
               <Coins className="w-24 h-24 text-amber-400" />
@@ -480,7 +541,6 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
             </div>
           </div>
 
-          {/* Coins del Curso */}
           <div className="relative overflow-hidden rounded-2xl bg-zinc-900/80 border-t-2 border-emerald-500/60 p-4 group">
             <div className="absolute -right-3 -bottom-3 opacity-[0.07] group-hover:opacity-[0.12] transition-all duration-700 -rotate-12 pointer-events-none">
               <BookOpen className="w-24 h-24 text-emerald-400" />
@@ -513,7 +573,7 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
               <p className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-zinc-500">Próximos Premios</p>
               <Star className="w-3.5 h-3.5 text-amber-500/60" />
             </div>
-            <RewardsProgress coins={student.coins} rewards={rewards} />
+            <RewardsProgress coins={student.coins} rewards={rewards} pendingIds={pendingRewardIds} />
           </div>
         )}
 
@@ -549,18 +609,15 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
                   const pos = log.coins >= 0
                   return (
                     <div key={log.id} className="flex items-center gap-3 px-4 py-3.5 hover:bg-white/[0.03] transition-colors group">
-                      {/* Icon */}
-                      <div className={`w-10 h-10 rounded-xl border flex items-center justify-center flex-shrink-0 group-hover:opacity-90 transition-opacity ${c.bg} ${c.border}`}>
+                      <div className={`w-10 h-10 rounded-xl border flex items-center justify-center flex-shrink-0 ${c.bg} ${c.border}`}>
                         <div className={`w-2 h-2 rounded-full ${c.dot}`} />
                       </div>
-                      {/* Text */}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-zinc-200 font-semibold truncate leading-tight">{log.action?.name ?? log.reason}</p>
                         <p className="text-[11px] text-zinc-600 mt-0.5">
                           {new Date(log.createdAt).toLocaleDateString('es-BO', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
-                      {/* Amount */}
                       <div className="text-right flex-shrink-0">
                         <span className={`text-base font-black ${pos ? 'text-emerald-400' : 'text-red-400'}`}>
                           {pos ? '+' : ''}{log.coins}

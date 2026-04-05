@@ -43,7 +43,7 @@ export class PortalRepositoryImpl extends PortalRepository {
       })),
       groupMemberships:      student.groupMemberships,
       redemptionRequests:    student.redemptionRequests.map(r => ({
-        id: r.id, status: r.status, notes: r.notes, createdAt: r.createdAt.toISOString(),
+        id: r.id, rewardId: r.rewardId, status: r.status, notes: r.notes, createdAt: r.createdAt.toISOString(),
         reward: r.reward,
       })),
       individualRedemptions: student.individualRedemptions,

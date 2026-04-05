@@ -21,6 +21,7 @@ export type RewardInput = {
 
 export type RedemptionResponse = {
   id:        string
+  rewardId:  string
   status:    string
   createdAt: string
   notes:     string
