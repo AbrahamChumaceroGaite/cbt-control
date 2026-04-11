@@ -1635,6 +1635,183 @@ className={cn(buttonVariants({ variant, size }), className)}
 
 ---
 
+### 9.6 Audit de Features — CVA adicionales (12 candidatos confirmados)
+
+La sección 9.3 cubre los 22 componentes de `components/ui/` y `components/shared/`.
+Esta sección cubre los patrones encontrados dentro de los 54 archivos `.tsx` en `features/`.
+
+---
+
+#### 9.6.1 Mapa completo — features
+
+| # | Archivo | Líneas | Patrón | Descripción | Tipo | Prioridad |
+|---|---------|--------|--------|-------------|------|-----------|
+| 23 | `portal/ui/PerfilTab.tsx` | 29–37 | Object map 6 colores | `CAT_COLOR: Record<string, {dot,text,bg,border}>` — categorías de coin log | CVA color variant | 🔴 HIGH |
+| 24 | `portal/ui/components/DiscountCarousel.tsx` | 9–15 | Array de 5 gradients | `DEAL_GRADIENTS` con `{bg, accent, glow}` por índice de carousel | CVA theme variant | 🔴 HIGH |
+| 25 | `aula/ui/StudentRanking.tsx` | 23–28 | Ternario encadenado × 3 | Rank badge: gold (i=0) / silver (i=1) / bronze (i=2) / rest | CVA `rank` variant | 🔴 HIGH |
+| 26 | `aula/ui/StudentRanking.tsx` | 40–44 | Ternario encadenado × 3 | Reward button: reached / isNextR / default — cada uno con shadow y cursor distintos | CVA `state` variant | 🔴 HIGH |
+| 27 | `usuarios/ui/UserCard.tsx` | 10–17 | 3 variables derivadas de `isAdmin` | `aura`, `avatarCls`, `roleCls` — purple (admin) vs blue (student) | CVA `role` variant | 🟡 MEDIUM |
+| 28 | `recompensas/ui/RewardCard.tsx` | 36–41 | Ternario type + compound inactive | `type: 'class' | 'individual'` → blue/rose + `!isActive → opacity-60` | CVA compound | 🟡 MEDIUM |
+| 29 | `tienda/ui/TxCard.tsx` | 16 | Ternario 1 nivel | `PENDING ? bg-zinc-900/80 : bg-zinc-900/40` para el fondo de la card | CVA `status` variant | 🟡 MEDIUM |
+| 30 | `aula/ui/RecentHistory.tsx` | 21–23 | Ternario coins | `coins > 0 → emerald` / `=== 0 → blue` / `< 0 → rose` para indicator dot | CVA / `config/` | 🟡 MEDIUM |
+| 31 | `usuarios/ui/UserCard.tsx` | 35 | Ternario activo | `isActive ? 'text-emerald-400' : 'text-zinc-600'` — mismo patrón en 3+ lugares | config/component-styles | 🟢 LOW |
+| 32 | `portal/ui/RecompensasTab.tsx` | ~150 | Layout featured | `isFeatured ? col-span-2 : ''` en grid — alternate featured item | CVA grid compound | 🟢 LOW |
+| 33 | `solicitudes/ui/SolicitudCard.tsx` | ~16–39 | Conditional render | Status PENDING → muestra botones de acción. Patrón igual que TxCard | CVA `status` variant | 🟢 LOW |
+| 34 | `aula/ui/AwardModal.tsx` | 22–25 | Object map (recién añadido) | `MODE_ACTIVE_STYLES` — ya corregido a mapa estático, pero extrae a shared si AwardModal se reutiliza | config/ si se reutiliza | 🟢 LOW |
+
+---
+
+#### 9.6.2 Detalles de los 4 HIGH — código exacto
+
+**#23 — `CAT_COLOR` en `PerfilTab.tsx`**
+```typescript
+// portal/ui/PerfilTab.tsx líneas 29-37 (ACTUAL)
+const CAT_COLOR: Record<string, { dot: string; text: string; bg: string; border: string }> = {
+  green:  { dot: 'bg-green-400',   text: 'text-green-400',   bg: 'bg-green-400/10',   border: 'border-green-400/20' },
+  blue:   { dot: 'bg-blue-400',    text: 'text-blue-400',    bg: 'bg-blue-400/10',    border: 'border-blue-400/20' },
+  red:    { dot: 'bg-red-400',     text: 'text-red-400',     bg: 'bg-red-400/10',     border: 'border-red-400/20' },
+  amber:  { dot: 'bg-amber-400',   text: 'text-amber-400',   bg: 'bg-amber-400/10',   border: 'border-amber-400/20' },
+  purple: { dot: 'bg-purple-400',  text: 'text-purple-400',  bg: 'bg-purple-400/10',  border: 'border-purple-400/20' },
+  mag:    { dot: 'bg-fuchsia-400', text: 'text-fuchsia-400', bg: 'bg-fuchsia-400/10', border: 'border-fuchsia-400/20' },
+}
+const fallbackCat = { dot: 'bg-zinc-500', text: 'text-zinc-400', bg: 'bg-zinc-700/30', border: 'border-zinc-700/40' }
+```
+Este patrón es **idéntico** al `SEVERITY` de `NotificationItem.tsx` (4 colores).
+El Gap A de la sección 9.4 ya lo documenta — ambos deben moverse a `config/component-styles.ts`.
+Un componente `CoinLogCategoryBadge` o `ColorDotBadge` con CVA eliminaría ~60L duplicadas.
+
+---
+
+**#24 — `DEAL_GRADIENTS` en `DiscountCarousel.tsx`**
+```typescript
+// portal/ui/components/DiscountCarousel.tsx líneas 9-15 (ACTUAL)
+const DEAL_GRADIENTS = [
+  { bg: 'from-rose-950 via-zinc-950 to-zinc-950',    accent: '#f43f5e', glow: 'bg-rose-500/20'    },
+  { bg: 'from-violet-950 via-zinc-950 to-zinc-950',  accent: '#8b5cf6', glow: 'bg-violet-500/20'  },
+  { bg: 'from-amber-950 via-zinc-950 to-zinc-950',   accent: '#f59e0b', glow: 'bg-amber-500/20'   },
+  { bg: 'from-sky-950 via-zinc-950 to-zinc-950',     accent: '#0ea5e9', glow: 'bg-sky-500/20'     },
+  { bg: 'from-emerald-950 via-zinc-950 to-zinc-950', accent: '#10b981', glow: 'bg-emerald-500/20' },
+]
+// Se usa como: const theme = DEAL_GRADIENTS[idx % DEAL_GRADIENTS.length]
+```
+Problema: `accent` es un hex en `style={}` (no Tailwind). No es un bug, pero mezcla paradigmas.
+Si games/academic necesitan cards temáticas similares → mover a `config/component-styles.ts` como `THEME_GRADIENTS`.
+
+---
+
+**#25 + #26 — `StudentRanking.tsx` (dos CVAs en un mismo componente)**
+```typescript
+// Rank badge (líneas 23-28)
+cn('w-7 h-7 rounded-full...',
+  i === 0 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :  // oro
+  i === 1 ? 'bg-zinc-300/20 text-zinc-300 border border-zinc-300/30'   :  // plata
+  i === 2 ? 'bg-amber-700/20 text-amber-600 border border-amber-700/30':  // bronce
+  'text-zinc-600 border border-zinc-800'                                    // resto
+)
+
+// Reward button state (líneas 40-44)
+cn('w-7 h-7 rounded-full...',
+  reached  ? 'bg-amber-400 border-amber-200 text-amber-900 shadow-[...] hover:scale-125 cursor-pointer' :
+  isNextR  ? 'bg-zinc-900 border-emerald-500/50 text-zinc-500 animate-pulse' :
+  'bg-zinc-900 border-zinc-800 text-zinc-600 opacity-40 cursor-default grayscale'
+)
+```
+Ambos son candidatos a componentes extraíbles con CVA:
+- `RankBadge` → variant: `'1st' | '2nd' | '3rd' | 'default'`
+- `RewardMilestoneButton` → variant: `'reached' | 'next' | 'locked'`
+El componente `StudentRanking.tsx` (57L) quedaría en ~30L.
+
+---
+
+#### 9.6.3 Shared patterns cross-feature
+
+Tres patrones se repiten en ≥2 features distintas:
+
+**Patrón A — Color dot/badge (CAT_COLOR == SEVERITY)**
+```
+PerfilTab.tsx      → CAT_COLOR (6 colores, 4 keys: dot+text+bg+border)
+NotificationItem   → SEVERITY_DOT + SEVERITY_BG (mismo patrón, 4 colores)
+RecentHistory.tsx  → dot de coins (3 colores: emerald/blue/rose)
+UserCard.tsx       → indicator activo/inactivo (2 colores)
+
+→ TODOS pertenecen a config/component-styles.ts → SEVERITY_STYLES
+→ Elimina ~40L distribuidas en 4 archivos
+```
+
+**Patrón B — Type badge (class vs individual)**
+```
+recompensas/RewardCard.tsx  → type: 'class' | 'individual' → blue/rose badge
+portal/RecompensasTab.tsx   → mismo badge renderizado en el portal de alumno
+
+→ Crear shared/RewardTypeBadge.tsx con CVA
+→ Elimina duplicación entre panel admin y portal estudiante
+```
+
+**Patrón C — Role variant (admin vs student colors)**
+```
+usuarios/UserCard.tsx     → isAdmin → purple/blue (aura+avatar+role badge)
+portal/PerfilTab.tsx      → PerfilTab renderiza info del estudiante (solo blue)
+                           → Si se añade vista admin al portal → mismo patrón
+
+→ Extender UserCard con CVA role variant
+→ Si es solo 1 uso: mantener como está (acceptable)
+```
+
+---
+
+#### 9.6.4 No hay CVA en estas features (confirmado)
+
+| Feature | Por qué no hay CVA |
+|---------|--------------------|
+| `acciones/` | AccionesSection usa FilterSelect/FilterPopover externos. Cards estáticas. |
+| `backup/` | ExportPanel/ImportPanel usan Button/Checkbox existentes. Sin variantes. |
+| `cursos/` | CursoCard styling completamente estático. |
+| `grupos/` | GroupCard styling completamente estático. |
+| `dashboard/` | Un único componente de página. Ternarios de uso único = aceptables inline. |
+| `estudiantes/` | CoinRangeFilter usa slider. EstudianteRow tiene un badge simple aceptable. |
+| `notifications/` | La UI real está en `components/shared/` — ya auditada en §9.3. |
+
+---
+
+#### 9.6.5 Resumen total del proyecto
+
+| Fuente | Candidatos | HIGH | MEDIUM | LOW |
+|--------|-----------|------|--------|-----|
+| `components/ui/` (§9.3) | 19 | 5 | 12 | 2 |
+| `components/shared/` (§9.3) | 3 | 0 | 2 | 1 |
+| **Features (§9.6)** | **12** | **4** | **4** | **4** |
+| **TOTAL** | **34** | **9** | **18** | **7** |
+
+**Impacto estimado si se implementan todos los HIGH + MEDIUM:**
+- Líneas eliminadas: ~200–250L (duplicación + boilerplate de ternarios)
+- Componentes nuevos (shared): `RankBadge`, `RewardMilestoneButton`, `RewardTypeBadge`, `ColorDotBadge`
+- Config entries nuevas: `CAT_COLOR → SEVERITY_STYLES`, `DEAL_GRADIENTS → THEME_GRADIENTS`
+- Features sin tocar (no tienen CVA): 7 de 14
+
+---
+
+#### 9.6.6 Fase E — Features CVA (nueva fase de refactor)
+
+```
+Rama: refactor/web-cva-features
+
+Prerequisito: Fase A completada (config/component-styles.ts creado)
+
+□ config/component-styles.ts   → añadir CAT_COLOR → SEVERITY_STYLES (6 colores) + THEME_GRADIENTS
+□ components/shared/RankBadge.tsx          → CVA rank: '1st'|'2nd'|'3rd'|'default'
+□ components/shared/RewardMilestoneButton.tsx → CVA state: 'reached'|'next'|'locked'
+□ components/shared/RewardTypeBadge.tsx    → CVA type: 'class'|'individual'
+□ portal/ui/PerfilTab.tsx       → importar SEVERITY_STYLES de config/, eliminar CAT_COLOR local
+□ aula/ui/StudentRanking.tsx    → usar RankBadge + RewardMilestoneButton (57L → ~30L)
+□ recompensas/ui/RewardCard.tsx → usar RewardTypeBadge (47L → ~30L)
+□ portal/ui/RecompensasTab.tsx  → usar RewardTypeBadge (eliminar badge duplicado)
+□ usuarios/ui/UserCard.tsx      → UserCard a CVA role variant (optional — solo 1 uso real)
+
+Tests: typecheck ✓ lint ✓ build ✓ 284 web tests ✓
+```
+
+---
+
 ## Decisiones pendientes de aprobación
 
 Antes de iniciar cualquier implementación, confirmar:
