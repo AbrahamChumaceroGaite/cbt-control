@@ -1,6 +1,7 @@
 'use client'
 import { useState, useCallback } from 'react'
 import { CheckCircle2, Zap }     from 'lucide-react'
+import { Button }                from '@/components/ui'
 import { useInterval }           from '@/hooks/useInterval'
 import { REQUEST_STATUS }        from '@/config/status'
 import type { StudentData, Deal } from '../../domain/types'
@@ -101,16 +102,17 @@ export function DiscountCarousel({ deals, coins, requesting, onAskConfirm, redem
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Enviado
               </div>
             ) : (
-              <button
+              <Button
                 onClick={() => canAfford && !requesting && onAskConfirm(deal, deal.salePrice)}
                 disabled={!canAfford || !!requesting}
-                className="px-6 py-2.5 rounded-xl text-sm font-black transition-all active:scale-95 flex-shrink-0 shadow-lg"
+                loading={requesting === deal.id}
+                className="px-6 py-2.5 h-auto rounded-xl text-sm font-black active:scale-95 flex-shrink-0 shadow-lg"
                 style={canAfford
                   ? { background: theme.accent, color: '#000', boxShadow: `0 0 20px ${theme.accent}40` }
                   : { background: 'rgba(39,39,42,0.8)', color: '#71717a' }}
               >
-                {requesting === deal.id ? '…' : canAfford ? 'Pedir ahora' : 'Sin coins'}
-              </button>
+                {canAfford ? 'Pedir ahora' : 'Sin coins'}
+              </Button>
             )}
           </div>
 

@@ -5,7 +5,7 @@ import { PortalTabHeader }       from './PortalTabHeader'
 import { DiscountCarousel }      from './components/DiscountCarousel'
 import { PricePopover }          from './components/PricePopover'
 import { ConfirmDialog }         from '@/components/shared/ConfirmDialog'
-import { SearchInput, Grid }     from '@/components/ui'
+import { SearchInput, Grid, Button } from '@/components/ui'
 import { REQUEST_STATUS }        from '@/config/status'
 import type { StudentData, IndividualReward, RewardWithDiscount, Deal } from '../domain/types'
 
@@ -180,19 +180,22 @@ export function RecompensasTab({ student, rewards, requesting, onRequest, onLogo
                         </div>
                       )}
                       {alreadyPending ? (
-                        <button disabled className={`${isFeatured ? 'mt-2' : ''} w-full py-2 rounded-xl bg-zinc-800 text-zinc-500 text-xs font-bold flex items-center justify-center gap-2 cursor-default`}>
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Enviado
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => canAfford && !requesting && setConfirmReward({ ...r, salePrice: r.coinsRequired })}
-                          disabled={!canAfford || !!requesting}
-                          className={`${isFeatured ? 'mt-2' : ''} w-full py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${
-                            canAfford ? 'bg-amber-400 text-zinc-900 hover:bg-amber-300' : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
-                          }`}
+                        <Button
+                          disabled variant="secondary"
+                          className={`${isFeatured ? 'mt-2' : ''} w-full py-2 h-auto rounded-xl cursor-default`}
                         >
-                          {requesting === r.id ? 'Enviando…' : canAfford ? 'Pedir' : 'Sin coins'}
-                        </button>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Enviado
+                        </Button>
+                      ) : (
+                        <Button
+                          variant={canAfford ? 'amber' : 'secondary'}
+                          disabled={!canAfford || !!requesting}
+                          loading={requesting === r.id}
+                          onClick={() => canAfford && !requesting && setConfirmReward({ ...r, salePrice: r.coinsRequired })}
+                          className={`${isFeatured ? 'mt-2' : ''} w-full py-2 h-auto rounded-xl active:scale-95 ${!canAfford ? 'cursor-not-allowed' : ''}`}
+                        >
+                          {canAfford ? 'Pedir' : 'Sin coins'}
+                        </Button>
                       )}
                     </div>
                   </div>

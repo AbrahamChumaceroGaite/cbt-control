@@ -1,4 +1,4 @@
-import { Modal, Button, Input, Select, Checkbox } from '@/components/ui'
+import { Modal, Button, Input, Combobox, Checkbox } from '@/components/ui'
 import { FormField }                    from '@/components/shared/FormField'
 import { REWARD_TYPES, REWARD_ICONS }   from '../domain/types'
 import type { RewardFormState, RewardViewModel, RewardType } from '../domain/types'
@@ -34,9 +34,11 @@ export function RewardFormModal({ open, editing, form, setForm, changeType, onSa
             <Input type="number" value={form.coinsRequired} onChange={e => upd('coinsRequired', parseInt(e.target.value) || 0)} />
           </FormField>
           <FormField label="Icono">
-            <Select value={form.icon} onChange={e => upd('icon', e.target.value)}>
-              {REWARD_ICONS.map(i => <option key={i} value={i}>{i}</option>)}
-            </Select>
+            <Combobox
+              value={form.icon}
+              onChange={v => upd('icon', v)}
+              options={REWARD_ICONS.map(i => ({ value: i, label: i }))}
+            />
           </FormField>
         </div>
         <FormField label="Descuento (%) — 0 = sin descuento">
@@ -49,10 +51,12 @@ export function RewardFormModal({ open, editing, form, setForm, changeType, onSa
           </div>
         </FormField>
         <FormField label="Tipo de Premio">
-          <Select value={form.type} onChange={e => changeType(e.target.value as RewardType)}>
-            {REWARD_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </Select>
-          <p className="text-xs text-zinc-500 pl-1">
+          <Combobox
+            value={form.type}
+            onChange={v => changeType(v as RewardType)}
+            options={REWARD_TYPES.map(t => ({ value: t.value, label: t.label }))}
+          />
+          <p className="text-xs text-zinc-500 pl-1 mt-1">
             {form.type === 'class'
               ? 'Canjeable con coins grupales desde el panel de Aula'
               : 'Canjeable con coins personales desde el portal del alumno'}

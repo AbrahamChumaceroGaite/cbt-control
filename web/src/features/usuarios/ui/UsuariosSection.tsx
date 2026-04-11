@@ -1,6 +1,6 @@
 'use client'
 import { Plus, Users } from 'lucide-react'
-import { Modal, Button, Input, Label, Select, Tooltip, Grid, EmptyState } from '@/components/ui'
+import { Modal, Button, Input, Label, Combobox, Tooltip, Grid, EmptyState } from '@/components/ui'
 import { SectionHeader }  from '@/components/shared/SectionHeader'
 import { Pagination }     from '@/components/shared/Pagination'
 import { FilterPopover }  from '@/components/shared/FilterPopover'
@@ -76,10 +76,11 @@ export function UsuariosSection() {
             <Input value={s.form.code}     onChange={e => h.setForm(p => ({ ...p, code:     e.target.value }))} placeholder="e.g. s1a01 or admin" />
           </div>
           <div className="space-y-1.5"><Label>Role</Label>
-            <Select value={s.form.role}    onChange={e => h.setForm(p => ({ ...p, role:     e.target.value }))}>
-              <option value="student">Student</option>
-              <option value="admin">Administrator</option>
-            </Select>
+            <Combobox
+              value={s.form.role}
+              onChange={v => h.setForm(p => ({ ...p, role: v }))}
+              options={[{ value: 'student', label: 'Student' }, { value: 'admin', label: 'Administrator' }]}
+            />
           </div>
           <div className="space-y-1.5"><Label>Full Name</Label>
             <Input value={s.form.fullName} onChange={e => h.setForm(p => ({ ...p, fullName: e.target.value }))} placeholder="Display name" />

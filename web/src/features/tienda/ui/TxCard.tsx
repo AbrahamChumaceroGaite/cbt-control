@@ -1,7 +1,7 @@
 'use client'
 import { CheckCircle2, XCircle, ArrowRight } from 'lucide-react'
-import { StatusBadge }         from '@/components/ui'
-import { TRANSACTION_STATUS }  from '@/config/status'
+import { StatusBadge, Button }  from '@/components/ui'
+import { TRANSACTION_STATUS }   from '@/config/status'
 import type { CoinTransactionResponse } from '@control-aula/shared'
 import type { NoteModalState } from '../domain/types'
 
@@ -45,14 +45,22 @@ export function TxCard({ tx, processing, onOpenModal }: Props) {
         <StatusBadge status={tx.status} />
         {tx.status === TRANSACTION_STATUS.PENDING && (
           <div className="flex gap-1.5">
-            <button onClick={() => onOpenModal({ id: tx.id, status: 'approved' })} disabled={!!processing}
-              className="flex items-center gap-1 px-2.5 h-7 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 text-xs font-bold hover:bg-emerald-500/25 transition-colors disabled:opacity-50">
+            <Button
+              variant="outline" size="sm"
+              className="h-7 px-2.5 text-emerald-400 border-emerald-500/25 bg-emerald-500/15 hover:bg-emerald-500/25 hover:border-emerald-500/40 hover:text-emerald-400"
+              onClick={() => onOpenModal({ id: tx.id, status: 'approved' })}
+              disabled={!!processing}
+            >
               <CheckCircle2 className="w-3.5 h-3.5" /> Approve
-            </button>
-            <button onClick={() => onOpenModal({ id: tx.id, status: 'rejected' })} disabled={!!processing}
-              className="flex items-center gap-1 px-2.5 h-7 rounded-lg bg-red-500/15 text-red-400 border border-red-500/25 text-xs font-bold hover:bg-red-500/25 transition-colors disabled:opacity-50">
+            </Button>
+            <Button
+              variant="destructive" size="sm"
+              className="h-7 px-2.5"
+              onClick={() => onOpenModal({ id: tx.id, status: 'rejected' })}
+              disabled={!!processing}
+            >
               <XCircle className="w-3.5 h-3.5" /> Reject
-            </button>
+            </Button>
           </div>
         )}
       </div>

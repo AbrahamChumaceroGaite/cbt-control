@@ -1,4 +1,5 @@
 'use client'
+import { Button }              from '@/components/ui'
 import type { NoteModalState } from '../domain/types'
 import { TRANSACTION_STATUS }  from '@/config/status'
 
@@ -30,18 +31,15 @@ export function NoteModal({ modal, note, processing, onNote, onCancel, onConfirm
           />
         </div>
         <div className="flex gap-2">
-          <button onClick={onCancel} className="flex-1 h-9 rounded-xl border border-zinc-700 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors">
-            Cancel
-          </button>
-          <button
+          <Button variant="outline" onClick={onCancel} className="flex-1">Cancel</Button>
+          <Button
+            variant={modal.status === TRANSACTION_STATUS.APPROVED ? 'success' : 'destructive'}
             onClick={() => onConfirm(modal.id, modal.status, note)}
-            disabled={processing}
-            className={`flex-1 h-9 rounded-xl text-xs font-bold transition-colors disabled:opacity-50 ${
-              modal.status === TRANSACTION_STATUS.APPROVED ? 'bg-emerald-600 text-white hover:bg-emerald-500' : 'bg-red-600 text-white hover:bg-red-500'
-            }`}
+            loading={processing}
+            className="flex-1"
           >
-            {processing ? 'Processing…' : modal.status === TRANSACTION_STATUS.APPROVED ? 'Confirm approval' : 'Confirm rejection'}
-          </button>
+            {modal.status === TRANSACTION_STATUS.APPROVED ? 'Confirm approval' : 'Confirm rejection'}
+          </Button>
         </div>
       </div>
     </div>

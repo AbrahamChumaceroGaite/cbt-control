@@ -1,8 +1,8 @@
 'use client'
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, ClipboardList, Loader2, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ClipboardList, X } from 'lucide-react'
 import { PortalTabHeader }     from './PortalTabHeader'
-import { StatusBadge }         from '@/components/ui'
+import { StatusBadge, Button } from '@/components/ui'
 import { FilterPills }         from '@/components/shared/FilterPills'
 import { ConfirmDialog }       from '@/components/shared/ConfirmDialog'
 import { SearchInput }         from '@/components/ui'
@@ -111,14 +111,14 @@ export function SolicitudesTab({ student, requests, onLogout, onReload }: Props)
                   <div className="flex flex-col items-end gap-2 flex-shrink-0">
                     <StatusBadge status={req.status} variant="request" size="sm" />
                     {req.status === REQUEST_STATUS.PENDING && (
-                      <button
+                      <Button
+                        variant="ghost" size="sm"
                         onClick={() => setConfirmId(req.id)}
-                        disabled={cancelling === req.id}
-                        className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold text-zinc-600 hover:text-red-400 hover:bg-red-950/30 border border-transparent hover:border-red-900/40 transition-colors disabled:opacity-50"
+                        loading={cancelling === req.id}
+                        className="h-auto px-2 py-0.5 text-[10px] font-semibold text-zinc-600 hover:text-red-400 hover:bg-red-950/30 border border-transparent hover:border-red-900/40"
                       >
-                        {cancelling === req.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3 h-3" />}
-                        Cancelar
-                      </button>
+                        <X className="w-3 h-3" /> Cancelar
+                      </Button>
                     )}
                   </div>
                 </div>

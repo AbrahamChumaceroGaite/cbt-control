@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'default' | 'ghost' | 'outline' | 'destructive' | 'secondary' | 'amber'
+  variant?: 'default' | 'ghost' | 'outline' | 'destructive' | 'secondary' | 'amber' | 'success'
   size?: 'sm' | 'md' | 'lg' | 'icon'
   loading?: boolean
 }
@@ -20,6 +20,7 @@ export function Button({ className, variant = 'default', size = 'sm', loading, c
           destructive: 'bg-red-900/40 text-red-400 hover:bg-red-900/60 border border-red-900',
           secondary:   'bg-zinc-800 text-zinc-300 hover:bg-zinc-700',
           amber:       'bg-amber-500 text-zinc-900 hover:bg-amber-400 font-semibold',
+          success:     'bg-emerald-600 text-white hover:bg-emerald-500',
         }[variant],
         { sm: 'h-8 px-3 text-xs gap-1.5', md: 'h-9 px-4 text-sm gap-2', lg: 'h-11 px-6 text-base gap-2', icon: 'h-8 w-8' }[size],
         className

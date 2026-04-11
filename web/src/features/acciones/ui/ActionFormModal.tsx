@@ -1,4 +1,4 @@
-import { Modal, Button, Input, Select, Checkbox } from '@/components/ui'
+import { Modal, Button, Input, Combobox, Checkbox } from '@/components/ui'
 import { FormField }                    from '@/components/shared/FormField'
 import { ACTION_CATEGORIES }            from '../domain/types'
 import type { ActionFormState, ActionViewModel } from '../domain/types'
@@ -33,9 +33,11 @@ export function ActionFormModal({ open, editing, form, setForm, onSave, onClose 
               onChange={e => upd('coins', parseInt(e.target.value) || 0)} />
           </FormField>
           <FormField label="Categoría/Color">
-            <Select value={form.category} onChange={e => upd('category', e.target.value)}>
-              {ACTION_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-            </Select>
+            <Combobox
+              value={form.category}
+              onChange={v => upd('category', v)}
+              options={ACTION_CATEGORIES.map(c => ({ value: c.value, label: c.label }))}
+            />
           </FormField>
         </div>
         <div className="space-y-2 pt-2 border-t border-zinc-800">

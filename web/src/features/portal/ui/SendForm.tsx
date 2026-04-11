@@ -1,5 +1,6 @@
 'use client'
-import { CheckCircle2, Loader2, Send, User, X, XCircle } from 'lucide-react'
+import { CheckCircle2, Send, User, X, XCircle } from 'lucide-react'
+import { Button }           from '@/components/ui'
 import { useSendForm }      from '../application/useSendForm'
 import { RecipientPicker }  from './RecipientPicker'
 import { BANK_TX_LIMIT }   from '@/config/ui'
@@ -51,9 +52,9 @@ export function SendForm({ myCoins, remaining, onSent }: Props) {
               <p className="text-sm font-bold text-zinc-200">{recipient.name}</p>
               <p className="text-[11px] text-zinc-500">{recipient.courseName}</p>
             </div>
-            <button onClick={() => setRecipient(null)} className="p-1 text-zinc-600 hover:text-zinc-300 rounded-lg">
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setRecipient(null)}>
               <X className="w-3.5 h-3.5" />
-            </button>
+            </Button>
           </div>
         ) : (
           <RecipientPicker courses={courses} courseId={courseId} q={q} results={results} searching={searching}
@@ -65,10 +66,10 @@ export function SendForm({ myCoins, remaining, onSent }: Props) {
           <div>
             <label className="block text-[10px] font-extrabold uppercase tracking-[0.15em] text-zinc-500 mb-2">Cantidad</label>
             <div className="flex items-center gap-3">
-              <button onClick={() => setAmount(Math.max(1, amount - 1))} className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300 hover:bg-zinc-700 transition-colors font-bold text-lg">−</button>
+              <Button variant="secondary" size="sm" className="w-10 h-10 rounded-xl text-lg font-bold" onClick={() => setAmount(Math.max(1, amount - 1))}>−</Button>
               <input type="number" min={1} value={amount} onChange={e => setAmount(Math.max(1, parseInt(e.target.value) || 1))}
                 className="flex-1 h-10 rounded-xl bg-zinc-800/80 border border-zinc-700 text-center text-lg font-black text-amber-300 focus:outline-none focus:border-amber-500/50 transition-colors" />
-              <button onClick={() => setAmount(amount + 1)} className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300 hover:bg-zinc-700 transition-colors font-bold text-lg">+</button>
+              <Button variant="secondary" size="sm" className="w-10 h-10 rounded-xl text-lg font-bold" onClick={() => setAmount(amount + 1)}>+</Button>
             </div>
           </div>
           <div className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-3 space-y-1.5 text-xs">
@@ -90,10 +91,16 @@ export function SendForm({ myCoins, remaining, onSent }: Props) {
           {remaining === 0 && (
             <p className="text-xs text-red-400 text-center">Has alcanzado el límite semanal de {BANK_TX_LIMIT} transacciones.</p>
           )}
-          <button onClick={send} disabled={!canSend || state === 'sending'}
-            className={`w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${canSend ? 'bg-amber-500 hover:bg-amber-400 text-zinc-900 shadow-[0_0_20px_rgba(245,158,11,0.25)]' : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'}`}>
-            {state === 'sending' ? <><Loader2 className="w-4 h-4 animate-spin" /> Enviando…</> : <><Send className="w-4 h-4" /> Enviar solicitud</>}
-          </button>
+          <Button
+            variant={canSend ? 'amber' : 'secondary'}
+            size="lg"
+            loading={state === 'sending'}
+            disabled={!canSend}
+            onClick={send}
+            className={`w-full rounded-xl active:scale-[0.98] ${canSend ? 'shadow-[0_0_20px_rgba(245,158,11,0.25)]' : 'cursor-not-allowed'}`}
+          >
+            <Send className="w-4 h-4" /> Enviar solicitud
+          </Button>
         </>
       )}
     </div>

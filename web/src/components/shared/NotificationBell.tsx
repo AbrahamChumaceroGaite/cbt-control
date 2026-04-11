@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useRef, useState }              from 'react'
 import { Bell, CheckCheck, Trash2, X, AlertCircle } from 'lucide-react'
-import { Skeleton }              from '@/components/ui'
+import { Skeleton, Button }      from '@/components/ui'
 import { useInbox }              from '@/hooks/useInbox'
 import { usePushNotifications }  from '@/hooks/usePushNotifications'
 import { useSocketEvent }        from '@/hooks/useSocketEvent'
@@ -63,7 +63,7 @@ export function NotificationBell() {
         )}
       </button>
       {open && (
-        <div ref={panelRef} className="absolute right-0 top-[calc(100%+8px)] w-[360px] max-h-[520px] flex flex-col rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl shadow-black/60 z-[300] overflow-hidden">
+        <div ref={panelRef} className="absolute right-0 top-[calc(100%+8px)] w-[calc(100vw-1rem)] max-w-[360px] max-h-[520px] flex flex-col rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl shadow-black/60 z-[300] overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 flex-shrink-0">
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold text-zinc-100">Notificaciones</span>
@@ -104,9 +104,13 @@ export function NotificationBell() {
               <>
                 <ul>{items.slice(0, visibleCount).map(n => <NotificationItem key={n.id} item={n} severity={inferSeverity(n.title, n.body)} onMarkRead={markRead} onDelete={deleteOne} />)}</ul>
                 {visibleCount < items.length && (
-                  <button onClick={() => setVisibleCount(c => c + INBOX_PAGE)} className="w-full py-2.5 text-xs text-zinc-500 hover:text-amber-400 hover:bg-zinc-900/40 transition-colors border-t border-zinc-800/40">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setVisibleCount(c => c + INBOX_PAGE)}
+                    className="w-full py-2.5 h-auto text-zinc-500 hover:text-amber-400 hover:bg-zinc-900/40 border-t border-zinc-800/40 rounded-none"
+                  >
                     Cargar más ({items.length - visibleCount} restantes)
-                  </button>
+                  </Button>
                 )}
               </>
             )}

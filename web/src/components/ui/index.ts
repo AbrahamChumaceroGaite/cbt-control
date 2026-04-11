@@ -4,6 +4,8 @@ export { Button }                from './button'
 // Inputs
 export { Input }                 from './input'
 export { Select }                from './select'
+export { Combobox }              from './combobox'
+export type { ComboboxOption }   from './combobox'
 export { Checkbox }              from './checkbox'
 export { Textarea }              from './textarea'
 export { SliderField }           from './slider'
