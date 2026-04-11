@@ -18,6 +18,12 @@ interface Props {
 const STEPS: AwardStep[] = ['recipients', 'action', 'confirm']
 const STEP_LABELS = ['Recipients', 'Action', 'Confirm']
 
+// Static class maps — Tailwind JIT requires full class strings (no template interpolation)
+const MODE_ACTIVE_STYLES: Record<TargetMode, string> = {
+  class:    'bg-blue-500/10 border-blue-500/40 text-blue-300',
+  students: 'bg-amber-500/10 border-amber-500/40 text-amber-300',
+}
+
 function actionColor(category: string) {
   return (COLORS.action as Record<string, { bg: string; text: string }>)[category] ?? { bg: '#1e3a8a', text: '#bfdbfe' }
 }
@@ -48,9 +54,9 @@ export function AwardModal({ open, step, targetMode, selectedIds, studentQuery, 
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-2">
             {(['class', 'students'] as TargetMode[]).map(m => {
-              const active = targetMode === m; const cls = m === 'class' ? 'blue' : 'amber'
+              const active = targetMode === m
               return (
-                <button key={m} onClick={() => setTargetMode(m)} className={`flex items-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${active ? `bg-${cls}-500/10 border-${cls}-500/40 text-${cls}-300` : 'border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'}`}>
+                <button key={m} onClick={() => setTargetMode(m)} className={`flex items-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${active ? MODE_ACTIVE_STYLES[m] : 'border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'}`}>
                   {m === 'class' ? <Users className="w-4 h-4" /> : <User className="w-4 h-4" />}
                   <div className="text-left">
                     <div className="font-semibold">{m === 'class' ? 'Whole class' : 'Select students'}</div>
