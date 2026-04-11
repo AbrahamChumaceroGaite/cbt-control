@@ -196,3 +196,20 @@ export const PROGRESS_BAR = {
   next:    { gradient: 'linear-gradient(90deg,#059669,#10b981)', shadow: '0 0 8px rgba(16,185,129,0.25)' },
   default: { gradient: '#3f3f46',                               shadow: 'none'                           },
 } as const
+
+// ─── Trend colors (up / down) — hex for SVG/canvas props ─────────────────────
+// Used by: PerfilTab Sparkline, TrajectoryChart, any coin-trend indicator.
+export const TREND_HEX = { up: '#4ade80', down: '#f87171' } as const
+
+// ─── PerfilTab hero banner — elaborate portal hero gradients ──────────────────
+// ProfileHeader uses BANNER_GRADIENT (simple, admin view).
+// PerfilTab hero is the full-page student portal hero with grid overlay.
+// Used by: PerfilTab hero section.
+export const HERO_BANNER = {
+  base:        'linear-gradient(160deg, #0a0800 0%, #1c1400 30%, #2d1f00 55%, #0a0a0a 100%)',
+  overlay:     'radial-gradient(ellipse at 30% 55%, rgba(251,191,36,0.18) 0%, transparent 55%), radial-gradient(ellipse at 80% 25%, rgba(217,119,6,0.1) 0%, transparent 45%)',
+  grid:        'linear-gradient(0deg, #fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
+  gridSize:    '48px 48px',
+  amberGlow:   'radial-gradient(ellipse at 50% 50%, rgba(251,191,36,0.08) 0%, transparent 70%)',
+  emeraldGlow: 'radial-gradient(ellipse at 50% 50%, rgba(16,185,129,0.08) 0%, transparent 70%)',
+} as const

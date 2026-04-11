@@ -14,9 +14,8 @@ import { Sparkline }            from './components/Sparkline'
 import { NotificationBell }     from '@/components/shared/NotificationBell'
 import { usePerfilTab }         from '../application/usePerfilTab'
 import type { StudentData, IndividualReward, DateFilter } from '../domain/types'
-import { REQUEST_STATUS }                         from '@/config/status'
-import { ACTION_CATEGORY, ACTION_CATEGORY_FALLBACK } from '@/config/scheme'
-import { TRAMOS }                                    from '@/config/scheme'
+import { REQUEST_STATUS }                                               from '@/config/status'
+import { ACTION_CATEGORY, ACTION_CATEGORY_FALLBACK, TRAMOS, HERO_BANNER, TREND_HEX } from '@/config/scheme'
 
 const PAGE_SIZE = 5
 
@@ -78,9 +77,9 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
           {student.bannerUrl
             ? <img src={student.bannerUrl} alt="" className="w-full h-full object-cover" />
             : (
-              <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #0a0800 0%, #1c1400 30%, #2d1f00 55%, #0a0a0a 100%)' }}>
-                <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(ellipse at 30% 55%, rgba(251,191,36,0.18) 0%, transparent 55%), radial-gradient(ellipse at 80% 25%, rgba(217,119,6,0.1) 0%, transparent 45%)' }} />
-                <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(0deg, #fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
+              <div className="absolute inset-0" style={{ background: HERO_BANNER.base }}>
+                <div className="absolute inset-0" style={{ backgroundImage: HERO_BANNER.overlay }} />
+                <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: HERO_BANNER.grid, backgroundSize: HERO_BANNER.gridSize }} />
               </div>
             )}
         </div>
@@ -165,7 +164,7 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
               <Coins className="w-24 h-24 text-amber-400" />
             </div>
             <div className="absolute inset-0 pointer-events-none"
-              style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(251,191,36,0.08) 0%, transparent 70%)' }} />
+              style={{ background: HERO_BANNER.amberGlow }} />
             <div className="relative z-10">
               <p className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-zinc-500 mb-3">Mis Coins</p>
               <div className="flex items-end gap-1 mb-1">
@@ -178,7 +177,7 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
                   {myTrend ? 'Subiendo' : 'Bajando'}
                 </span>
               </div>
-              <Sparkline values={mySparkline} color={myTrend ? '#4ade80' : '#f87171'} />
+              <Sparkline values={mySparkline} color={myTrend ? TREND_HEX.up : TREND_HEX.down} />
             </div>
           </div>
 
@@ -187,7 +186,7 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
               <BookOpen className="w-24 h-24 text-emerald-400" />
             </div>
             <div className="absolute inset-0 pointer-events-none"
-              style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(16,185,129,0.08) 0%, transparent 70%)' }} />
+              style={{ background: HERO_BANNER.emeraldGlow }} />
             <div className="relative z-10">
               <p className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-zinc-500 mb-3">Clase {student.course.name}</p>
               <div className="flex items-end gap-1 mb-1">

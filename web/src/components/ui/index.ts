@@ -21,14 +21,14 @@ export type { BadgeVariants }    from './badge'
 export { Avatar }                from './avatar'
 export { Skeleton }              from './skeleton'
 export { EmptyState }            from './empty-state'
-export { StatusBadge }           from './status-badge'
+export { StatusBadge }           from '../shared/status-badge'
 export { Grid }                  from './grid'
 export { Separator }             from './separator'
 export { Tabs }                  from './tabs'
 
 // Feedback
 export { Spinner }               from './spinner'
-export { ToastContainer }        from './toast-container'
+export { ToastContainer }        from '../shared/toast-container'
 
 // Dialogs
 export { Modal }                 from './modal'

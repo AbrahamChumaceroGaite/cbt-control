@@ -19,7 +19,7 @@ const STEPS: AwardStep[] = ['recipients', 'action', 'confirm']
 const STEP_LABELS = ['Recipients', 'Action', 'Confirm']
 
 function actionColor(category: string) {
-  return (COLORS.action as Record<string, { bg: string; text: string }>)[category] ?? { bg: '#1e3a8a', text: '#bfdbfe' }
+  return (COLORS.action as Record<string, { bg: string; text: string }>)[category] ?? COLORS.actionFallback
 }
 
 export function AwardModal({ open, step, targetMode, selectedIds, studentQuery, chosenAction, awarding, applicable, filteredStu, selectedStu, totalStudents, canProceed, onClose, setStep, setTargetMode, toggleStudent, setStudentQuery, setChosenAction, onExecute }: Props) {
