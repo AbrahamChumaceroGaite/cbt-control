@@ -2,9 +2,8 @@
 import { Camera, Coins, Users, Trophy, BookOpen } from 'lucide-react'
 import { Avatar }                from '@/components/ui'
 import { usePerfilTab }          from '../application/usePerfilTab'
-import { BANNER_GRADIENT }       from '@/config/colors'
-import { STAT_CARD }             from '@/config/scheme'
-import type { StatCardColor }    from '@/config/scheme'
+import { BANNER_GRADIENT, STAT_CARD } from '@/config/scheme'
+import type { StatCardColor }         from '@/config/scheme'
 import type { StudentData }      from '../domain/types'
 
 interface Props {

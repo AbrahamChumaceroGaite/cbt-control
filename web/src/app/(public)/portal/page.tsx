@@ -1,8 +1,8 @@
 'use client'
-import { Gift, ClipboardList, History, Landmark } from 'lucide-react'
+import { Gift, ClipboardList, History, Landmark, LogOut } from 'lucide-react'
 import { usePortal }         from '@/features/portal/application/usePortal'
 import { FloatingNav }       from '@/components/shared/FloatingNav'
-import { LogoutModal }       from '@/components/shared/LogoutModal'
+import { ConfirmDialog }     from '@/components/shared/ConfirmDialog'
 import { PortalSkeleton }    from '@/features/portal/ui/PortalSkeleton'
 import { PerfilTab }         from '@/features/portal/ui/PerfilTab'
 import { RecompensasTab }    from '@/features/portal/ui/RecompensasTab'
@@ -50,7 +50,20 @@ export default function PortalPage() {
         onTabChange={setTab}
       />
 
-      <LogoutModal open={logoutModalOpen} onConfirm={logout} onCancel={() => setLogoutModalOpen(false)} />
+      <ConfirmDialog
+        open={logoutModalOpen}
+        onConfirm={logout}
+        onCancel={() => setLogoutModalOpen(false)}
+        title="¿Cerrar sesión?"
+        message="Se cerrará tu sesión en este dispositivo."
+        confirmText="Cerrar sesión"
+        variant="red"
+        icon={
+          <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+            <LogOut className="w-5 h-5 text-red-400" />
+          </div>
+        }
+      />
     </div>
   )
 }

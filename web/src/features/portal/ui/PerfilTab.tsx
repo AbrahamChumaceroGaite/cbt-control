@@ -16,7 +16,7 @@ import { usePerfilTab }         from '../application/usePerfilTab'
 import type { StudentData, IndividualReward, DateFilter } from '../domain/types'
 import { REQUEST_STATUS }                         from '@/config/status'
 import { ACTION_CATEGORY, ACTION_CATEGORY_FALLBACK } from '@/config/scheme'
-import { TRAMOS }                                    from '@/config/colors'
+import { TRAMOS }                                    from '@/config/scheme'
 
 const PAGE_SIZE = 5
 

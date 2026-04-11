@@ -6,6 +6,7 @@ import { useInbox }              from '@/hooks/useInbox'
 import { usePushNotifications }  from '@/hooks/usePushNotifications'
 import { useSocketEvent }        from '@/hooks/useSocketEvent'
 import { WS }                   from '@/ws/events'
+import { Z }                    from '@/config/scheme'
 import { PushPrompt }           from './PushPrompt'
 import { NotificationItem }     from './NotificationItem'
 import type { Severity }        from '@/hooks/useInbox'
@@ -63,7 +64,7 @@ export function NotificationBell() {
         )}
       </button>
       {open && (
-        <div ref={panelRef} className="absolute right-0 top-[calc(100%+8px)] w-[calc(100vw-1rem)] max-w-[360px] max-h-[520px] flex flex-col rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl shadow-black/60 z-[300] overflow-hidden">
+        <div ref={panelRef} className="absolute right-0 top-[calc(100%+8px)] w-[calc(100vw-1rem)] max-w-[360px] max-h-[520px] flex flex-col rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl shadow-black/60 overflow-hidden" style={{ zIndex: Z.POPOVER }}>
           <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 flex-shrink-0">
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold text-zinc-100">Notificaciones</span>

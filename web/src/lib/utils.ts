@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { AVATAR_PALETTE } from '@/config/colors'
+import { AVATAR_PALETTE } from '@/config/scheme'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

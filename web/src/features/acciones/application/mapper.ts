@@ -1,4 +1,4 @@
-import { COLORS }     from '@/config/colors'
+import { COLORS }     from '@/config/scheme'
 import type { ActionResponse, ActionInput } from '@control-aula/shared'
 import type { ActionViewModel, ActionFormState } from '../domain/types'
 

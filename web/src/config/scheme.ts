@@ -1,22 +1,70 @@
 /**
- * scheme.ts — Tailwind class string mappings (single source of truth).
+ * scheme.ts — All style tokens (single source of truth).
  *
- * Complements colors.ts (which holds hex/rgba for style= props).
- * Every object here contains only Tailwind class strings for className= use.
- * Components must import from here — never redeclare these locally.
+ * Covers Tailwind class strings (className=) AND hex/rgba values (style=).
+ * Components import from here only. Never redeclare these locally.
  */
 
 // ─── Z-index hierarchy ────────────────────────────────────────────────────────
-// Use as: className={`z-[${Z.MODAL}]`} OR directly as Tailwind arbitrary values.
-// Tailwind JIT arbitrary: z-[var(--z-drawer)] works too, but named constants
-// are preferred for readability.
 export const Z = {
   STICKY:  30,   // sticky headers, floating nav
-  POPOVER: 50,   // dropdowns, tooltips
-  DRAWER:  100,  // drawers, overlapping panels, NoteModal, LogoutModal
+  POPOVER: 50,   // dropdowns, tooltips, popover panels
+  DRAWER:  100,  // side drawers, overlapping panels
   MODAL:   200,  // full-screen modals (Modal component)
   TOAST:   600,  // toasts — always on top
 } as const
+
+// ─── Hex/RGBA color tokens (use in style= props) ─────────────────────────────
+// For values that CANNOT be expressed as static Tailwind classes
+// (dynamic gradients, canvas drawing, box-shadow with variable color).
+
+/** Action category colors — bg/text hex for style= props */
+export const COLORS = {
+  action: {
+    green:  { bg: '#1E6B2E', text: '#C0DD97' },
+    blue:   { bg: '#0C447C', text: '#B5D4F4' },
+    red:    { bg: '#501313', text: '#F7C1C1' },
+    amber:  { bg: '#633806', text: '#FAC775' },
+    purple: { bg: '#3C3489', text: '#CECBF6' },
+    mag:    { bg: '#72243E', text: '#F4C0D1' },
+  },
+  status: {
+    success: { bg: 'rgba(34,197,94,0.1)',  text: '#4ade80', border: 'rgba(34,197,94,0.2)'  },
+    warning: { bg: 'rgba(234,179,8,0.1)',  text: '#facc15', border: 'rgba(234,179,8,0.2)'  },
+    danger:  { bg: 'rgba(239,68,68,0.1)',  text: '#f87171', border: 'rgba(239,68,68,0.2)'  },
+    info:    { bg: 'rgba(59,130,246,0.1)', text: '#60a5fa', border: 'rgba(59,130,246,0.2)' },
+  },
+  /** Fallback when no category matches */
+  actionFallback: { bg: '#1e3a8a', text: '#bfdbfe' },
+} as const
+
+/**
+ * Avatar palette — deterministic hash of name → background hex.
+ * Used exclusively by lib/utils.ts hashColor().
+ */
+export const AVATAR_PALETTE = [
+  '#0C447C', '#1E6B2E', '#501313', '#633806', '#3C3489', '#72243E',
+  '#1a4f7a', '#2d6a3f', '#7a2d2d', '#7a5c1e', '#4a3d8f', '#8f2d50',
+] as const
+
+/** Portal banner default gradient (no image). Used by: ProfileHeader, PerfilTab. */
+export const BANNER_GRADIENT = {
+  base:    'linear-gradient(135deg, #1c1400 0%, #2d1f00 40%, #0a0a0a 100%)',
+  overlay: 'radial-gradient(circle at 30% 50%, #fbbf24 0%, transparent 50%), radial-gradient(circle at 80% 30%, #d97706 0%, transparent 40%)',
+} as const
+
+/** TRAMOS — academic performance levels with display colors. Used by: PerfilTab, ProfileHeader. */
+export const TRAMOS = [
+  { id: 'T1', label: 'Atención',        color: '#0C447C', fg: '#85B7EB' },
+  { id: 'T2', label: 'Indagación',      color: '#3C3489', fg: '#AFA9EC' },
+  { id: 'T3', label: 'Metacognición',   color: '#0F6E56', fg: '#5DCAA5' },
+  { id: 'T4', label: 'Pens. Analítico', color: '#633806', fg: '#EF9F27' },
+  { id: 'T5', label: 'Apz. Autónomo',   color: '#72243E', fg: '#ED93B1' },
+  { id: 'T6', label: 'Colaborativo',    color: '#3B6D11', fg: '#97C459' },
+  { id: 'T7', label: 'Innovación',      color: '#501313', fg: '#F09595' },
+] as const
+
+export type TramoId = typeof TRAMOS[number]['id']
 
 // ─── Severity / notification dot ─────────────────────────────────────────────
 // Used by: NotificationItem, any severity-coloured indicator.
@@ -30,8 +78,7 @@ export const SEVERITY = {
 export type SeverityKey = keyof typeof SEVERITY
 
 // ─── Transaction / request status — Tailwind badge classes ───────────────────
-// Used by: status-badge.tsx (via CVA), TX_STATUS consumers in usuarios/,
-//          STATUS_CLASS consumers in solicitudes/. Single definition.
+// Used by: status-badge.tsx (via CVA), DrawerTransactionsTab, StatusBadge.
 export const STATUS_BADGE = {
   pending:      'bg-amber-500/15 text-amber-400 border-amber-500/25',
   approved:     'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
@@ -66,9 +113,9 @@ export function coinSignKey(coins: number): CoinSignKey {
 }
 
 // ─── Transaction direction (sent / received) ──────────────────────────────────
-// Used by: TxHistory, BankTab, any component showing direction indicator.
+// Used by: TxHistory, BankTab, DrawerTransactionsTab.
 export const TX_DIRECTION = {
-  sent:     { icon: 'bg-red-500/10 border border-red-500/20',     text: 'text-red-400',     rotate: 'rotate-12'  },
+  sent:     { icon: 'bg-red-500/10 border border-red-500/20',        text: 'text-red-400',     rotate: 'rotate-12'  },
   received: { icon: 'bg-emerald-500/10 border border-emerald-500/20', text: 'text-emerald-400', rotate: '-rotate-12' },
 } as const
 
@@ -108,7 +155,6 @@ export const STAT_CARD = {
 export type StatCardColor = keyof typeof STAT_CARD
 
 // ─── Action categories — Tailwind classes ────────────────────────────────────
-// Parallel to COLORS.action in colors.ts (hex for style= props).
 // Used by: PerfilTab coin log badge, any category-coloured indicator.
 export const ACTION_CATEGORY = {
   green:  { dot: 'bg-green-400',   text: 'text-green-400',   bg: 'bg-green-400/10',   border: 'border-green-400/20'   },
@@ -124,6 +170,14 @@ export const ACTION_CATEGORY_FALLBACK = {
 } as const
 
 export type ActionCategoryKey = keyof typeof ACTION_CATEGORY
+
+// ─── AwardModal — target-mode active button styles ────────────────────────────
+// Tailwind JIT requires full static class strings (no template interpolation).
+// Used by: AwardModal recipients step.
+export const AWARD_MODE_STYLES = {
+  class:    'bg-blue-500/10 border-blue-500/40 text-blue-300',
+  students: 'bg-amber-500/10 border-amber-500/40 text-amber-300',
+} as const
 
 // ─── Deal themes — portal carousel ───────────────────────────────────────────
 // bg/glow are Tailwind classes; accent is hex for style= prop (dynamic shadow).

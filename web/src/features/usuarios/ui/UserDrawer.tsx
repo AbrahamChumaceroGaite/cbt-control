@@ -7,6 +7,7 @@ import { useUserDrawer } from '../application/useUserDrawer'
 import { DrawerProfileTab }      from './components/DrawerProfileTab'
 import { DrawerTransactionsTab } from './components/DrawerTransactionsTab'
 import { DrawerNotificationsTab } from './components/DrawerNotificationsTab'
+import { Z }              from '@/config/scheme'
 import type { UserViewModel } from '../domain/types'
 import type { DrawerSection } from '../application/useUserDrawer'
 
@@ -29,10 +30,14 @@ export function UserDrawer({ user, onClose, onUpdated }: Props) {
   return (
     <>
       <div
-        className={`fixed inset-0 z-[400] bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${user ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${user ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        style={{ zIndex: Z.DRAWER }}
         onClick={onClose}
       />
-      <div className={`fixed right-0 top-0 bottom-0 z-[401] w-full max-w-sm bg-zinc-950 border-l border-zinc-800 shadow-2xl flex flex-col transition-transform duration-300 ${user ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div
+        className={`fixed right-0 top-0 bottom-0 w-full max-w-sm bg-zinc-950 border-l border-zinc-800 shadow-2xl flex flex-col transition-transform duration-300 ${user ? 'translate-x-0' : 'translate-x-full'}`}
+        style={{ zIndex: Z.DRAWER + 1 }}
+      >
         {!user ? null : (
           <>
             <div className={`relative p-6 bg-gradient-to-b ${aura} border-b border-zinc-800 flex-shrink-0`}>

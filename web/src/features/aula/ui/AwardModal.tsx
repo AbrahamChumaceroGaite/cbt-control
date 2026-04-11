@@ -1,7 +1,7 @@
 'use client'
 import { X, Search, Users, User, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react'
 import { Modal, Button, Input } from '@/components/ui'
-import { COLORS } from '@/config/colors'
+import { COLORS, AWARD_MODE_STYLES } from '@/config/scheme'
 import type { ActionResponse, StudentResponse } from '@control-aula/shared'
 import type { AwardStep, TargetMode } from '../domain/types'
 
@@ -18,12 +18,6 @@ interface Props {
 const STEPS: AwardStep[] = ['recipients', 'action', 'confirm']
 const STEP_LABELS = ['Recipients', 'Action', 'Confirm']
 
-// Static class maps — Tailwind JIT requires full class strings (no template interpolation)
-const MODE_ACTIVE_STYLES: Record<TargetMode, string> = {
-  class:    'bg-blue-500/10 border-blue-500/40 text-blue-300',
-  students: 'bg-amber-500/10 border-amber-500/40 text-amber-300',
-}
-
 function actionColor(category: string) {
   return (COLORS.action as Record<string, { bg: string; text: string }>)[category] ?? { bg: '#1e3a8a', text: '#bfdbfe' }
 }
@@ -32,7 +26,7 @@ export function AwardModal({ open, step, targetMode, selectedIds, studentQuery, 
   const stepIdx = STEPS.indexOf(step)
 
   return (
-    <Modal open={open} onClose={onClose} title="Award Coins" lg>
+    <Modal open={open} onClose={onClose} title="Award Coins" size="lg">
       {/* Step indicator */}
       <div className="flex items-center gap-2 mb-5">
         {STEPS.map((s, i) => {
@@ -56,7 +50,7 @@ export function AwardModal({ open, step, targetMode, selectedIds, studentQuery, 
             {(['class', 'students'] as TargetMode[]).map(m => {
               const active = targetMode === m
               return (
-                <button key={m} onClick={() => setTargetMode(m)} className={`flex items-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${active ? MODE_ACTIVE_STYLES[m] : 'border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'}`}>
+                <button key={m} onClick={() => setTargetMode(m)} className={`flex items-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${active ? AWARD_MODE_STYLES[m] : 'border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'}`}>
                   {m === 'class' ? <Users className="w-4 h-4" /> : <User className="w-4 h-4" />}
                   <div className="text-left">
                     <div className="font-semibold">{m === 'class' ? 'Whole class' : 'Select students'}</div>

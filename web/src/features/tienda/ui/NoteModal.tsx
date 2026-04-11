@@ -1,6 +1,5 @@
 'use client'
-import { Button }              from '@/components/ui'
-import { Z }                   from '@/config/scheme'
+import { Modal, Button }       from '@/components/ui'
 import type { NoteModalState } from '../domain/types'
 import { TRANSACTION_STATUS }  from '@/config/status'
 
@@ -14,13 +13,10 @@ interface Props {
 }
 
 export function NoteModal({ modal, note, processing, onNote, onCancel, onConfirm }: Props) {
+  const isApprove = modal.status === TRANSACTION_STATUS.APPROVED
   return (
-    <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: Z.DRAWER }}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative z-10 w-full max-w-sm rounded-2xl bg-zinc-900 border border-zinc-800 p-5 shadow-2xl space-y-4">
-        <h3 className="text-sm font-bold text-zinc-200">
-          {modal.status === TRANSACTION_STATUS.APPROVED ? '✓ Approve transaction' : '✗ Reject transaction'}
-        </h3>
+    <Modal open title={isApprove ? '✓ Approve transaction' : '✗ Reject transaction'} onClose={onCancel} size="sm">
+      <div className="space-y-4">
         <div className="space-y-1.5">
           <label className="text-[10px] text-zinc-500 uppercase tracking-wider">Note (optional)</label>
           <input
@@ -34,15 +30,15 @@ export function NoteModal({ modal, note, processing, onNote, onCancel, onConfirm
         <div className="flex gap-2">
           <Button variant="outline" onClick={onCancel} className="flex-1">Cancel</Button>
           <Button
-            variant={modal.status === TRANSACTION_STATUS.APPROVED ? 'success' : 'destructive'}
+            variant={isApprove ? 'success' : 'destructive'}
             onClick={() => onConfirm(modal.id, modal.status, note)}
             loading={processing}
             className="flex-1"
           >
-            {modal.status === TRANSACTION_STATUS.APPROVED ? 'Confirm approval' : 'Confirm rejection'}
+            {isApprove ? 'Confirm approval' : 'Confirm rejection'}
           </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }
