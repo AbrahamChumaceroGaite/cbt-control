@@ -1138,72 +1138,499 @@ Antes de crear ningún workspace nuevo, agregar al Core:
 
 ## 9. Refactor CVA — Componentes UI
 
-> Análisis completo del estado actual y qué se refactoriza.
+> Análisis exhaustivo basado en lectura completa de los 41 archivos en
+> `components/ui/` y `components/shared/`. Versión corregida: 22 candidatos,
+> no los 5 del análisis preliminar.
 
-### Estado actual de `components/ui/`
+---
 
-| Componente | Variantes | Patrón actual | CVA candidato |
-|---|---|---|---|
-| `button.tsx` | 7 variantes × 4 tamaños | Object lookup manual | ✅ TIER 1 |
-| `badge.tsx` | 7 variantes | Object lookup manual | ✅ TIER 1 |
-| `spinner.tsx` | 3 tamaños | Object lookup manual | ✅ TIER 1 |
-| `grid.tsx` | 5 cols × 3 gaps | Object lookup manual | ✅ TIER 1 |
-| `status-badge.tsx` | 6 status × 2 tamaños | Condicionales anidados | ✅ TIER 1 |
-| `avatar.tsx` | 4 tamaños | Object lookup manual | ✅ TIER 2 |
-| `combobox.tsx` | 2 tamaños | Condicional inline | ✅ TIER 2 |
-| `modal.tsx` | 1 bool (`lg`) | Boolean → 2 variantes | ✅ TIER 3 |
-| `drawer.tsx` | `side` left/right | Condicional | ✅ TIER 3 |
-| `tooltip.tsx` | `side` top/bottom | Condicional | ✅ TIER 3 |
-| `card.tsx` | Ninguna | `cn()` solo | ❌ No aplica |
-| `input.tsx` | Ninguna | Lógica de toggle | ❌ No aplica |
-| `label.tsx` | Ninguna | Estático | ❌ No aplica |
+### 9.1 Inventario completo — `components/ui/` (26 archivos)
 
-### Gaps de abstracción encontrados
+#### TIER 1 — Refactor inmediato, máximo ROI
 
-**Gap 1 — Colors de estado duplicados**
-`status-badge.tsx` y `notification-item.tsx` definen colores de severidad por separado.
-**Solución:** `config/component-styles.ts` con los mapas centralizados.
-
-**Gap 2 — `ConfirmDialog` re-implementa variante de Button**
-Lines 30-32 de `confirm-dialog.tsx` repiten lógica de amber/red que ya está en Button.
-**Solución:** Pasar `variant` como prop y delegar a `<Button>`.
-
-**Gap 3 — `FilterPills` hardcodea colores de acento**
-`filter-pills.tsx` lines 21-23 definen `amber` vs `purple` inline.
-**Solución:** Exponer `accentVariant: 'amber' | 'purple'` y resolverlo con CVA.
-
-**Gap 4 — Sin `useBreakpoint` hook**
-La responsividad se maneja con clases Tailwind `sm:` / `md:` pero no hay forma programática de saber en qué breakpoint está la app.
-**Solución:** `hooks/useBreakpoint.ts` (ref: abe-s-ui implementation).
-
-### Plan de refactor CVA (por prioridad)
-
+**`button.tsx`** — 36 líneas
 ```
-FASE A — Instalar CVA y refactorizar Tier 1
-  □ pnpm add -w class-variance-authority     ← agregar al root
-  □ button.tsx   → buttonVariants con CVA
-  □ badge.tsx    → badgeVariants con CVA
-  □ spinner.tsx  → spinnerVariants con CVA
-  □ grid.tsx     → gridVariants con CVA (compound: cols × gap)
-  □ status-badge.tsx → statusBadgeVariants con CVA
+Problema: object lookup doble (variant + size) en líneas 16–25.
+          El tipo de props se define manualmente en lugar de inferirse.
+Variantes: 7 × 4 tamaños = 28 combinaciones sin compound variants
+Solución:  cva() con compoundVariants para casos edge (ej: icon+loading)
+Impacto:   Es el componente más usado en todo el proyecto. Cambio de mayor
+           alcance. VariantProps<typeof buttonVariants> elimina definición manual.
+```
 
-FASE B — Config centralización de colores
-  □ Crear config/component-styles.ts con mapas de severidad y status
-  □ Actualizar notification-item.tsx y status-badge.tsx para importar de ahí
+**`badge.tsx`** — 28 líneas
+```
+Problema: objeto de variantes en líneas 13–21, lookup manual [variant].
+          7 colores hardcodeados sin tipo derivado.
+Variantes: 7 (default, green, amber, red, blue, violet, demo)
+Solución:  cva() → badgeVariants exportado. Tipo inferido automáticamente.
+Impacto:   Badge se usa en múltiples features. Quick win.
+```
 
-FASE C — Tier 2 y hooks nuevos
-  □ avatar.tsx   → avatarVariants con CVA
-  □ combobox.tsx → comboboxVariants con CVA
-  □ hooks/useBreakpoint.ts  → "mobile" | "tablet" | "desktop"
+**`spinner.tsx`** — 20 líneas
+```
+Problema: object lookup en línea 13 para 3 tamaños.
+          Color hardcodeado border-amber-400 (no variante de color).
+Variantes: 3 tamaños. Podría añadir color variant (amber/white/zinc).
+Solución:  cva() → spinnerVariants. Añadir color: 'amber'|'white' como nueva variante.
+Impacto:   Bajo, pero establece el patrón para los demás.
+```
 
-FASE D — Tier 3 (opcional, baja prioridad)
-  □ modal.tsx, drawer.tsx, tooltip.tsx → side/size variants con CVA
+**`grid.tsx`** — 32 líneas
+```
+Problema: dos object lookups independientes (colsMap + gapMap, líneas 9–20).
+          No hay compound variant que valide combinaciones inválidas.
+Variantes: cols(5) × gap(3) = 15 combinaciones → CVA compound variant ideal.
+Solución:  cva() con variants: { cols, gap }. El inline style para minColWidth
+           se mantiene como prop extra (no es un variant, es un valor dinámico).
+Impacto:   Grid se usa en todas las secciones de lista.
+```
 
-REGLA: Cada refactor CVA debe:
-  1. Exportar VariantProps<typeof xxxVariants> para que los consumidores
-     hereden los tipos automáticamente
-  2. No cambiar la API pública del componente (mismos props names)
-  3. Pasar todos los tests existentes sin modificación
+**`status-badge.tsx`** — 38 líneas
+```
+Problema: lógica de resolución en líneas 21–30 mezcla 3 dimensiones:
+          - STATUS_CONFIG object (colores por key)
+          - variant (default | request) que cambia el key prefix
+          - size (xs | sm) que cambia el tamaño
+          Todo en condicionales anidados sin tipo fuerte.
+Variantes: status(6) × size(2) × variant(2) = 24 combinaciones
+Solución:  cva() con compoundVariants para manejar status+variant.
+           STATUS_CONFIG migra a config/component-styles.ts (ver Gap 1).
+Impacto:   Alto — status-badge aparece en TxCard, SolicitudesTab, listas admin.
+```
+
+---
+
+#### TIER 2 — Refactor en segunda ronda, impacto medio-alto
+
+**`avatar.tsx`** — 38 líneas
+```
+Problema: sizeMap object en líneas 10–15. hashColor() genera color inline.
+Variantes: 4 tamaños (sm, md, lg, xl). No tiene variante de forma (round/square).
+Solución:  cva() para size. Añadir shape: 'circle'|'square' como variante futura.
+           hashColor() se mantiene — es lógica dinámica, no variante.
+```
+
+**`combobox.tsx`** — 123 líneas  ⚠️ Cerca del límite de 120L
+```
+Problema: size se resuelve con variable `sm` booleana en líneas 55, 63–66.
+          Múltiples ternarios inline para height/text/padding.
+Variantes: 2 tamaños (sm, default).
+Solución:  cva() para la clase del trigger. El dropdown siempre es igual.
+Nota:      El archivo está en 123L → al refactorizar verificar que no supere 120L.
+```
+
+**`slider.tsx`** (SliderField) — 42 líneas
+```
+Problema: triple ternario en líneas 25–27 para effectPct → color badge.
+          Lógica: ≥80 → emerald, ≥50 → amber, <50 → red.
+          Este mismo patrón de "semáforo" aparece en otros componentes.
+Variantes: 3 estados de color (good, warning, danger) basados en umbral numérico.
+Solución:  cva() con effectLevel: 'good'|'warning'|'danger'.
+           El componente padre computa el nivel a partir del número y lo pasa.
+           Esto separa la lógica de decisión del estilo visual.
+```
+
+**`toast.tsx`** — 20 líneas
+**`toast-container.tsx`** — 33 líneas
+```
+PROBLEMA CRÍTICO: Estos dos archivos son la misma lógica duplicada.
+  toast.tsx:           ok     ? emerald / red
+  toast-container.tsx: success ? emerald / red
+  Ambos renderizan SVG de check/x inline — duplicados literalmente.
+
+Variantes: 2 estados (success, error).
+Solución:
+  1. Crear toastVariants con cva() en toast.tsx
+  2. Eliminar toast.tsx (componente huérfano — no se usa directamente en ningún lugar)
+     o convertirlo en el componente base que usa toast-container.tsx
+  3. Extraer los SVGs a <CheckIcon> y <XIcon> dentro de toast.tsx y reutilizar
+  4. toast-container.tsx importa las variantes, no repite la lógica
+```
+
+**`checkbox.tsx`** — 35 líneas
+```
+Problema: ternario en líneas 25–27 para checked/unchecked.
+          Color hardcodeado amber-500 para checked.
+Variantes: 2 estados (checked, unchecked). Potencial: color variant (amber | purple).
+Solución:  cva() con data-state o checked variant.
+           Exportar CheckboxVariants para heredar el tipo.
+```
+
+**`tabs.tsx`** — 44 líneas
+```
+Problema: ternario en líneas 27–29 por cada tab para active/inactive.
+          El badge del tab es amber hardcodeado (línea 35).
+Variantes: active/inactive state per tab item.
+Solución:  cva() para el item del tab. Separar TabItem como sub-componente.
+           Exportar tabItemVariants para tests.
+```
+
+**`modal.tsx`** — 32 líneas
+```
+Problema: prop `lg?: boolean` en lugar de `size?: 'sm'|'md'|'lg'|'xl'`.
+          Ternario en línea 17 para max-w.
+          El botón de cierre (líneas 21–25) es inline, debería ser <Button>.
+Variantes: size('sm'=max-w-md | 'lg'=max-w-2xl). Extensible a 'sm'|'md'|'lg'|'xl'.
+Solución:  Cambiar lg boolean → size: 'md'|'lg' (no-breaking si default='md').
+           cva() para modalVariants.
+           Botón X → <Button variant="ghost" size="icon">.
+```
+
+**`drawer.tsx`** — 54 líneas
+```
+Problema: ternario en línea 38 para side.
+          El botón de cierre (línea 45) es inline <button>.
+          style={{ zIndex: 'var(--z-drawer)' as unknown as number }} — cast feo.
+Variantes: side: 'left'|'right'.
+Solución:  cva() para drawerPanelVariants.
+           Botón X → <Button variant="ghost" size="icon">.
+           zIndex: usar className con z-[var(--z-drawer)] en lugar de style.
+```
+
+**`tooltip.tsx`** — 25 líneas
+```
+Problema: ternario en línea 15 para side (posición) y líneas 18–20 para arrow.
+Variantes: side: 'top'|'bottom'. Extensible: 'top'|'bottom'|'left'|'right'.
+Solución:  cva() con tooltipVariants para wrapper + arrowVariants para el triángulo.
+```
+
+**`input.tsx`** — 44 líneas
+```
+Problema: padding condicional en líneas 25–26 dependiendo de startIcon e isPassword.
+          No es un variant clásico — es una combinación de presencia de iconos.
+Variantes: withStartIcon: boolean, withEndIcon: boolean → compound variant de padding.
+Solución:  cva() con compoundVariants:
+           [{ withStartIcon: true } → 'pl-8']
+           [{ withEndIcon: true }   → 'pr-8']
+           Esto documenta explícitamente la dependencia.
+```
+
+**`popover.tsx`** — 45 líneas
+```
+Problema: ternario en línea 34 para align.
+          style={{ zIndex: 'var(--z-dropdown)' as unknown as number }} — cast feo.
+          Duplicado con Drawer en el patrón de zIndex vía style.
+Variantes: align: 'left'|'right'.
+Solución:  cva() para popoverContentVariants.
+           z-[var(--z-dropdown)] como clase CSS en lugar de style prop.
+```
+
+---
+
+#### TIER 3 — Sin CVA pero con abstracción pendiente
+
+**`card.tsx`** — 22 líneas
+```
+Estado:   Compuesto de sub-componentes puros (Card, CardHeader, CardContent...).
+          Sin variantes — solo cn() para merge de className.
+Problema: NO es CVA. Pero falta un compound component más rico como abe-s-ui:
+          CardIconContainer, CardEffect (colores por efecto), CardVariant.
+Acción:   Agregar variantes de Card cuando se implemente la sección de blocks/
+          para Academic y Games. Por ahora: no tocar.
+```
+
+**`select.tsx`** — 15 líneas  
+**`textarea.tsx`** — 15 líneas
+```
+Estado: Wrappers simples sin variantes. 
+Problema: No tienen size ni variant — solo wrappean el elemento nativo.
+          select.tsx debería ser Combobox en la mayoría de usos (ya migrado).
+Acción: Añadir size: 'sm'|'md' cuando se necesite. No urgente.
+```
+
+**`search-input.tsx`** — 28 líneas
+```
+Estado: Sin variantes visuales.
+Problema: No tiene size. Internamente renderiza Input (que sí se refactoriza).
+Acción: Recibe el beneficio de Input automáticamente. No tocar.
+```
+
+---
+
+### 9.2 Inventario completo — `components/shared/` (15 archivos)
+
+#### CVA/Abstracción requerida
+
+**`ConfirmDialog.tsx`** — 62 líneas
+```
+PROBLEMA DOBLE:
+  1. CVA: línea 30–32 re-implementa lógica de color que ya tiene Button.
+     btnClass se calcula manualmente con un ternario amber/red.
+  2. BOTONES INLINE: líneas 44–55 tienen dos <button> sin usar <Button>.
+     El cancelar es outline, el confirmar es amber o destructive.
+
+Solución:
+  - Eliminar btnClass completamente
+  - Botón cancelar  → <Button variant="outline" className="flex-1">
+  - Botón confirmar → <Button variant={variant === 'red' ? 'destructive' : 'amber'} loading={loading}>
+  - cva() para el ícono contenedor si se añaden más variantes de color de ícono
+```
+
+**`FilterPills.tsx`** — 43 líneas
+```
+PROBLEMA DOBLE:
+  1. CVA: líneas 21–23 y 31–35 definen el color activo/inactivo inline.
+     accentColor prop resuelve 'amber' vs 'purple' en 2 strings de clase separadas.
+  2. BOTONES INLINE: cada pill es un <button> inline en líneas 28–38.
+     Son pills/tabs → no son el Button genérico, pero sí CVA candidatos.
+
+Solución:
+  - cva() → pillVariants con variants: { accent: 'amber'|'purple', active: boolean }
+  - compoundVariant: accent=amber + active=true → bg-amber-500/15 text-amber-300...
+  - compoundVariant: accent=purple + active=true → bg-purple-600/20 text-purple-300...
+  - Las pills usan <button> con className={pillVariants({accent, active})} — correcto
+    (No es el Button genérico, es un atom propio con su propio CVA)
+```
+
+**`NotificationItem.tsx`** — 53 líneas
+```
+Problema: SEVERITY_DOT y SEVERITY_BG son Records hardcodeados en líneas 6–18.
+          Los mismos colores de severidad (emerald/red/blue/amber) aparecen en:
+          - NotificationItem (dot + border)
+          - NotificationBell (badge de unread)
+          - status-badge.tsx (colores de estado)
+          - slider.tsx (badge de effectPct)
+          Cuatro fuentes de verdad para el mismo sistema de colores semáforo.
+
+Solución:
+  - Crear config/component-styles.ts con:
+      SEVERITY_STYLES: Record<Severity, { dot: string, border: string, text: string }>
+      EFFECT_LEVEL_STYLES: Record<'good'|'warning'|'danger', { bg: string, text: string }>
+  - NotificationItem importa SEVERITY_STYLES en vez de definir sus propios Records
+  - slider.tsx importa EFFECT_LEVEL_STYLES
+  - status-badge.tsx importa STATUS_STYLES
+  - Resultado: un único lugar para cambiar colores de estado en toda la app
+```
+
+**`FilterPopover.tsx`** — 52 líneas
+```
+Problema: Botón "Limpiar filtros" en líneas 40–46 es un <button> inline.
+          Tiene text-xs, gap-1.5, hover:text-zinc-300 hardcodeados.
+Solución: <Button variant="ghost" size="sm" onClick={...}> con X icon.
+          Ya usa <Button> para el trigger principal — consistencia.
+```
+
+**`Pagination.tsx`** — 56 líneas
+```
+Estado:   YA usa <Button> correctamente para los botones de página (líneas 42–50).
+Problema: El <select> de page size en líneas 30–37 es nativo y tiene clases inline.
+          Debería ser un Combobox para consistencia con el resto de la app.
+Solución: Reemplazar <select> → <Combobox size="sm" options={PAGE_SIZES.map(...)}/>.
+          Nota: PAGE_SIZES como options array se convierte en una constante exportable.
+```
+
+**`FloatingNav.tsx`** — 39 líneas
+```
+Problema: active state se resuelve con cn('nav-item', active === t.id && 'active').
+          Usa clases CSS globales ('nav-item', 'active', 'nav-icon', 'nav-label')
+          — probablemente en globals.css — no en Tailwind.
+Análisis: Este componente depende de CSS externo, no de Tailwind classes.
+          CVA aquí requeriría migrar ese CSS a clases de Tailwind.
+Acción:   Baja prioridad. No tocar hasta que se requiera personalización.
+```
+
+#### Sin cambios requeridos
+
+**`CardActions.tsx`** — Simple overlay con dos botones de acción (icon-only). OK.  
+**`SectionHeader.tsx`** — Composición pura, iconClass como prop string. OK.  
+**`FormField.tsx`** — Wrapper de label + error. Sin variantes. OK.  
+**`CourseSelect.tsx`** — Template string en className. Mejorable pero no urgente.  
+**`LogoutModal.tsx`** — Modal de confirmación simple. OK.  
+**`PushPrompt.tsx`** — Tiene inline `style={{ background: 'rgba(...)' }}`. Convertir a clase Tailwind `bg-amber-500/10`. Mínimo impacto.  
+**`ConditionalSocketProvider.tsx`** — Sin styling. OK.  
+
+---
+
+### 9.3 Mapa completo de problemas — todos los componentes
+
+| # | Archivo | Problema exacto | Líneas afectadas | Tipo | Prioridad |
+|---|---------|-----------------|------------------|------|-----------|
+| 1 | `ui/button.tsx` | Object lookup doble variant+size | 16–25 | CVA | 🔴 TIER 1 |
+| 2 | `ui/badge.tsx` | Object lookup variant | 13–21 | CVA | 🔴 TIER 1 |
+| 3 | `ui/spinner.tsx` | Object lookup size | 13 | CVA | 🔴 TIER 1 |
+| 4 | `ui/grid.tsx` | Dos object lookups cols+gap | 9–20 | CVA compound | 🔴 TIER 1 |
+| 5 | `ui/status-badge.tsx` | Condicionales anidados 3 dims | 21–30 | CVA compound | 🔴 TIER 1 |
+| 6 | `ui/avatar.tsx` | Object lookup size | 10–15 | CVA | 🟡 TIER 2 |
+| 7 | `ui/combobox.tsx` | Ternarios inline de size | 55, 63–66 | CVA | 🟡 TIER 2 |
+| 8 | `ui/slider.tsx` | Triple ternario effectPct | 25–27 | CVA + config | 🟡 TIER 2 |
+| 9 | `ui/toast.tsx` | Ternario ok → emerald/red + SVG inline | 8–14 | CVA + extracción | 🟡 TIER 2 |
+| 10 | `ui/toast-container.tsx` | Duplica lógica de toast.tsx | 15–26 | Eliminar duplicado | 🟡 TIER 2 |
+| 11 | `ui/checkbox.tsx` | Ternario checked → amber | 25–27 | CVA | 🟡 TIER 2 |
+| 12 | `ui/tabs.tsx` | Ternario active/inactive por tab | 27–29 | CVA | 🟡 TIER 2 |
+| 13 | `ui/modal.tsx` | Boolean lg + botón X inline | 17, 21–25 | CVA + Button | 🟡 TIER 2 |
+| 14 | `ui/drawer.tsx` | Ternario side + botón X inline + style cast | 38, 45, 31/41 | CVA + Button | 🟡 TIER 2 |
+| 15 | `ui/tooltip.tsx` | Ternario side + arrow duplicado | 15, 18–20 | CVA | 🟡 TIER 2 |
+| 16 | `ui/input.tsx` | Padding condicional startIcon+password | 25–26 | CVA compound | 🟡 TIER 2 |
+| 17 | `ui/popover.tsx` | Ternario align + style cast | 34, 37 | CVA | 🟡 TIER 2 |
+| 18 | `shared/ConfirmDialog.tsx` | Re-implementa Button variant + botones inline | 30–55 | CVA + Button | 🟡 TIER 2 |
+| 19 | `shared/FilterPills.tsx` | Colores inline + pills sin CVA | 21–35 | CVA pill atom | 🟡 TIER 2 |
+| 20 | `shared/NotificationItem.tsx` | SEVERITY Records duplicados | 6–18 | config/ centralizar | 🟡 TIER 2 |
+| 21 | `shared/FilterPopover.tsx` | Botón "Limpiar" inline | 40–46 | Button | 🟢 TIER 3 |
+| 22 | `shared/Pagination.tsx` | `<select>` nativo para page size | 30–37 | Combobox | 🟢 TIER 3 |
+
+**Total: 22 componentes. El análisis anterior reportó 5. Los 17 faltantes son reales.**
+
+---
+
+### 9.4 Gaps de abstracción transversales
+
+**Gap A — `config/component-styles.ts` (no existe)**
+```typescript
+// Actualmente estos colores están duplicados en 4+ archivos:
+// notification-item.tsx → SEVERITY_DOT, SEVERITY_BG
+// status-badge.tsx      → STATUS_CONFIG
+// slider.tsx            → triple ternario emerald/amber/red
+// toast.tsx             → emerald-950, red-950
+
+// Lo que falta crear:
+export const SEVERITY_STYLES = {
+  positive: { dot: 'bg-emerald-400', border: 'border-l-emerald-500/40', text: 'text-emerald-400' },
+  negative: { dot: 'bg-red-400',     border: 'border-l-red-500/40',     text: 'text-red-400'     },
+  info:     { dot: 'bg-blue-400',    border: 'border-l-blue-500/40',    text: 'text-blue-400'    },
+  default:  { dot: 'bg-amber-400',   border: 'border-l-amber-500/40',   text: 'text-amber-400'   },
+} as const
+
+export const EFFECT_LEVEL_STYLES = {
+  good:    { bg: 'bg-emerald-950', text: 'text-emerald-400' },
+  warning: { bg: 'bg-amber-950',   text: 'text-amber-400'   },
+  danger:  { bg: 'bg-red-950',     text: 'text-red-400'     },
+} as const
+```
+
+**Gap B — Toast duplicado**
+```
+toast.tsx         → componente standalone (huérfano, no se importa en ningún consumer)
+toast-container.tsx → el que realmente se usa (conectado a Zustand)
+Misma lógica: ok/success → emerald, error → red, mismo SVG de check/x
+
+Acción: Fusionar. Toast como componente puro interno de ToastContainer.
+        O: Toast acepta children y ToastContainer lo instancia.
+        Resultado: -33 líneas de código duplicado.
+```
+
+**Gap C — `style` casts feos en Drawer y Popover**
+```typescript
+// Drawer línea 31 y 41 + Popover línea 37:
+style={{ zIndex: 'var(--z-drawer)' as unknown as number }}
+
+// Debería ser simplemente una clase Tailwind:
+className="z-[var(--z-drawer)]"   // Tailwind JIT soporta CSS variables
+// o definir las variables en tailwind.config.ts como z-index tokens
+```
+
+**Gap D — Botones inline en componentes shared**
+```
+ConfirmDialog   → 2 <button> sin usar <Button>  (ya detectado en la tarea anterior)
+FilterPopover   → 1 <button> "Limpiar filtros"
+FilterPills     → N <button> pills (correcto usarlos aquí, pero necesitan CVA propio)
+NotificationItem → 2 <button> icon-only (correctos como están — son utility icons)
+```
+
+**Gap E — `useBreakpoint` hook inexistente**
+```typescript
+// No existe en hooks/. Responsividad solo con sm:/md:/lg: Tailwind.
+// Casos donde se necesita lógicamente:
+// - NotificationBell: panel width diferente en mobile (ya corregido con CSS)
+// - Portal: RecipientPicker podría mostrar Drawer en mobile, Popover en desktop
+// - Academic/Games: layouts que cambian drásticamente por breakpoint
+
+// Implementación (ref: abe-s-ui):
+export function useBreakpoint(): 'mobile' | 'tablet' | 'desktop' {
+  const [bp, setBp] = useState<'mobile'|'tablet'|'desktop'>('desktop')
+  useEffect(() => {
+    const check = () => {
+      const w = window.innerWidth
+      setBp(w < 640 ? 'mobile' : w < 1024 ? 'tablet' : 'desktop')
+    }
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+  return bp
+}
+```
+
+---
+
+### 9.5 Plan de refactor CVA — fases concretas
+
+**Prerequisito**
+```bash
+# Instalar CVA en workspace web
+pnpm add class-variance-authority --filter @control-aula/web
+```
+
+**Fase A — Core atoms (Tier 1, máximo impacto)**
+```
+Rama: refactor/web-cva-core-atoms
+
+□ config/component-styles.ts   → SEVERITY_STYLES, EFFECT_LEVEL_STYLES, STATUS_STYLES
+□ ui/button.tsx                → buttonVariants = cva(...) + VariantProps export
+□ ui/badge.tsx                 → badgeVariants = cva(...)
+□ ui/spinner.tsx               → spinnerVariants = cva(...) + color variant añadida
+□ ui/grid.tsx                  → gridVariants = cva(...) compound cols×gap
+□ ui/status-badge.tsx          → statusBadgeVariants = cva(...) importa de config/
+□ Tests: typecheck ✓ lint ✓ build ✓ (no hay tests de componentes UI puros)
+```
+
+**Fase B — Estado y tamaño (Tier 2a)**
+```
+Rama: refactor/web-cva-state-variants
+
+□ ui/avatar.tsx      → avatarVariants = cva(...)
+□ ui/combobox.tsx    → comboboxVariants (trigger), verificar ≤120L
+□ ui/checkbox.tsx    → checkboxVariants con checked compound
+□ ui/tabs.tsx        → tabItemVariants = cva(...)
+□ ui/slider.tsx      → SliderBadge interno con effectLevelVariants, importa config/
+□ ui/input.tsx       → inputVariants compound: withStartIcon × withEndIcon
+□ Tests: typecheck ✓ lint ✓ build ✓ 284 web tests ✓
+```
+
+**Fase C — Posicionamiento y overlays (Tier 2b)**
+```
+Rama: refactor/web-cva-overlays
+
+□ ui/toast.tsx           → toastVariants = cva(...), extraer <CheckIcon> <XIcon>
+□ ui/toast-container.tsx → reutiliza toastVariants, elimina duplicado
+□ ui/modal.tsx           → modalVariants (size: 'md'|'lg'), botón X → <Button>
+□ ui/drawer.tsx          → drawerPanelVariants (side), botón X → <Button>, fix zIndex
+□ ui/tooltip.tsx         → tooltipVariants (side), arrowVariants
+□ ui/popover.tsx         → popoverContentVariants (align), fix zIndex style cast
+□ Tests: typecheck ✓ lint ✓ build ✓
+```
+
+**Fase D — Shared components y gaps (Tier 2c + Tier 3)**
+```
+Rama: refactor/web-cva-shared
+
+□ shared/ConfirmDialog.tsx   → eliminar btnClass, usar Button variant prop
+□ shared/FilterPills.tsx     → pillVariants = cva(...) con accent × active compound
+□ shared/NotificationItem.tsx → importar SEVERITY_STYLES de config/
+□ shared/FilterPopover.tsx   → "Limpiar" → <Button variant="ghost" size="sm">
+□ shared/Pagination.tsx      → <select> → <Combobox size="sm">
+□ shared/PushPrompt.tsx      → estilo rgba → clase Tailwind
+□ hooks/useBreakpoint.ts     → nuevo hook
+□ Tests: typecheck ✓ lint ✓ build ✓ 284 web tests ✓
+```
+
+**Regla de oro para cada refactor CVA:**
+```typescript
+// 1. Exportar siempre el tipo inferido
+export type ButtonVariants = VariantProps<typeof buttonVariants>
+
+// 2. No cambiar la API pública (mismos nombres de prop)
+// Antes: variant?: 'default' | 'ghost' | ...
+// Después: variant?: ButtonVariants['variant']  ← equivalente, tipado más fuerte
+
+// 3. defaultVariants en cva() en lugar de default en desestructuración
+const buttonVariants = cva(base, {
+  variants: { variant: { ... }, size: { ... } },
+  defaultVariants: { variant: 'default', size: 'md' }
+})
+
+// 4. Pasar className siempre al final para permitir override
+className={cn(buttonVariants({ variant, size }), className)}
 ```
 
 ---
