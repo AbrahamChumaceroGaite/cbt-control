@@ -1,15 +1,10 @@
-import { ICommandHandler, CommandHandler } from '@nestjs/cqrs'
-import { StudentRepository } from '../../domain/student.repository'
+import { IsUUID } from 'class-validator'
 
 export class DeleteStudentCommand {
-  constructor(public readonly id: string) {}
-}
+  @IsUUID('4')
+  readonly id: string
 
-@CommandHandler(DeleteStudentCommand)
-export class DeleteStudentHandler implements ICommandHandler<DeleteStudentCommand, void> {
-  constructor(private readonly repo: StudentRepository) {}
-
-  async execute({ id }: DeleteStudentCommand): Promise<void> {
-    await this.repo.delete(id)
+  constructor(id: string) {
+    this.id = id
   }
 }

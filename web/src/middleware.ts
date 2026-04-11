@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { verifyToken, COOKIE_NAME } from '@/lib/jwt'
-
-const PUBLIC_PATHS = ['/login', '/api/auth/login']
+import { verifyToken }                              from '@/lib/auth'
+import { COOKIE_NAME, PUBLIC_PATHS, STUDENT_ALLOWED_PATHS } from '@/config/auth'
+import { ROLES }                                    from '@/config/roles'
+import { APP_ROUTES }                               from '@/config/routes'
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -19,25 +20,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  const token = request.cookies.get(COOKIE_NAME)?.value
+  const token   = request.cookies.get(COOKIE_NAME)?.value
   const session = token ? await verifyToken(token) : null
 
   if (!session) {
-    const loginUrl = new URL('/login', request.url)
+    const loginUrl = new URL(APP_ROUTES.LOGIN, request.url)
     loginUrl.searchParams.set('from', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  if (session.role === 'student') {
-    const allowed =
-      pathname.startsWith('/portal') ||
-      pathname.startsWith('/api/portal') ||
-      pathname.startsWith('/api/auth') ||
-      pathname.startsWith('/api/notifications') ||
-      pathname.startsWith('/api/push') ||
-      pathname.startsWith('/ws')
+  if (session.role === ROLES.STUDENT) {
+    const allowed = STUDENT_ALLOWED_PATHS.some(p => pathname.startsWith(p))
     if (!allowed) {
-      return NextResponse.redirect(new URL('/portal', request.url))
+      return NextResponse.redirect(new URL(APP_ROUTES.PORTAL, request.url))
     }
   }
 

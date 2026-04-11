@@ -1,57 +1,57 @@
 'use client'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { inboxService, type NotificationItem } from '@/services/inbox.service'
+// uses socket — subscribes to WS.NOTIFICATION_NEW via NotificationBell
+import { useCallback, useState }    from 'react'
+import { notificationsService }     from '@/features/notifications/infrastructure/notifications.service'
+import { useInterval }              from '@/hooks/useInterval'
+import { POLL_MS }                  from '@/config/ui'
+import type { NotificationItem, Severity } from '@/features/notifications/domain/types'
 
-const POLL_MS = 30_000
+export type { NotificationItem, Severity }
 
 export function useInbox() {
   const [items,       setItems]       = useState<NotificationItem[]>([])
   const [loading,     setLoading]     = useState(true)
   const [error,       setError]       = useState<string | null>(null)
   const [unreadCount, setUnreadCount] = useState(0)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const refresh = useCallback(async () => {
     try {
-      const res = await inboxService.getAll()
+      const res = await notificationsService.getAll()
       setItems(res.items)
       setUnreadCount(res.unreadCount)
       setError(null)
-    } catch (err: any) {
-      setError(err?.message ?? 'Error al cargar notificaciones')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error loading notifications')
     } finally {
       setLoading(false)
     }
   }, [])
 
-  useEffect(() => {
-    refresh()
-    timerRef.current = setInterval(refresh, POLL_MS)
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [refresh])
+  // Poll every POLL_MS — delay=null would pause without unmounting
+  useInterval(refresh, POLL_MS)
 
   const markRead = useCallback(async (id: string) => {
     const item = items.find(n => n.id === id)
-    await inboxService.markRead(id).catch(() => {})
+    await notificationsService.markRead(id).catch(() => {})
     setItems(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
     if (item && !item.isRead) setUnreadCount(prev => Math.max(0, prev - 1))
   }, [items])
 
   const markAllRead = useCallback(async () => {
-    await inboxService.markAllRead().catch(() => {})
+    await notificationsService.markAllRead().catch(() => {})
     setItems(prev => prev.map(n => ({ ...n, isRead: true })))
     setUnreadCount(0)
   }, [])
 
   const deleteOne = useCallback(async (id: string) => {
     const wasUnread = items.find(n => n.id === id)?.isRead === false
-    await inboxService.deleteOne(id).catch(() => {})
+    await notificationsService.deleteOne(id).catch(() => {})
     setItems(prev => prev.filter(n => n.id !== id))
     if (wasUnread) setUnreadCount(prev => Math.max(0, prev - 1))
   }, [items])
 
   const deleteAll = useCallback(async () => {
-    await inboxService.deleteAll().catch(() => {})
+    await notificationsService.deleteAll().catch(() => {})
     setItems([])
     setUnreadCount(0)
   }, [])

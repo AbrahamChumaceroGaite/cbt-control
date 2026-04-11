@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from '../../../infrastructure/prisma/prisma.service'
+import { PrismaService }     from '../../../infrastructure/prisma/prisma.service'
 import { StudentRepository } from '../domain/student.repository'
-import type { StudentEntity } from '../domain/student.entity'
+import { StudentEntity }     from '../domain/student.entity'
+import type { StudentTramoEntity } from '../domain/student.entity'
 
 const TRAMOS_ORDER = { tramos: { orderBy: { awardedAt: 'asc' as const } } }
 
@@ -9,16 +10,17 @@ const TRAMOS_ORDER = { tramos: { orderBy: { awardedAt: 'asc' as const } } }
 export class StudentRepositoryImpl extends StudentRepository {
   constructor(private readonly prisma: PrismaService) { super() }
 
-  findAll(courseId?: string): Promise<StudentEntity[]> {
-    return this.prisma.student.findMany({
+  async findAll(courseId?: string): Promise<StudentEntity[]> {
+    const records = await this.prisma.student.findMany({
       where:   courseId ? { courseId } : undefined,
       include: { ...TRAMOS_ORDER, course: { select: { name: true } } },
       orderBy: { name: 'asc' },
     })
+    return records.map(r => this.toDomain(r))
   }
 
-  findById(id: string): Promise<StudentEntity | null> {
-    return this.prisma.student.findUnique({
+  async findById(id: string): Promise<StudentEntity | null> {
+    const record = await this.prisma.student.findUnique({
       where:   { id },
       include: {
         ...TRAMOS_ORDER,
@@ -27,13 +29,15 @@ export class StudentRepositoryImpl extends StudentRepository {
         individualRedemptions: { include: { reward: true }, orderBy: { redeemedAt: 'desc' } },
       },
     })
+    return record ? this.toDomain(record) : null
   }
 
-  create(data: { courseId: string; name: string; code?: string; email?: string }): Promise<StudentEntity> {
-    return this.prisma.student.create({
+  async create(data: { courseId: string; name: string; code?: string; email?: string }): Promise<StudentEntity> {
+    const record = await this.prisma.student.create({
       data:    { courseId: data.courseId, name: data.name, code: data.code ?? '', email: data.email ?? '' },
       include: { tramos: true },
     })
+    return this.toDomain(record)
   }
 
   async createMany(courseId: string, students: { name: string; code?: string; email?: string }[]): Promise<number> {
@@ -52,7 +56,7 @@ export class StudentRepositoryImpl extends StudentRepository {
         })
       }
     }
-    return this.prisma.student.update({
+    const record = await this.prisma.student.update({
       where:   { id },
       data:    {
         ...(data.name  !== undefined && { name:  data.name }),
@@ -65,9 +69,22 @@ export class StudentRepositoryImpl extends StudentRepository {
         course: { select: { name: true, classCoins: true } },
       },
     })
+    return this.toDomain(record)
   }
 
   async delete(id: string): Promise<void> {
     await this.prisma.student.delete({ where: { id } })
+  }
+
+  private toDomain(record: {
+    id: string; courseId: string; code: string; name: string; email: string | null
+    coins: number; createdAt: Date
+    tramos: StudentTramoEntity[]
+    course?: { name: string; classCoins?: number } | null
+  }): StudentEntity {
+    return new StudentEntity({
+      ...record,
+      course: record.course ?? undefined,
+    })
   }
 }

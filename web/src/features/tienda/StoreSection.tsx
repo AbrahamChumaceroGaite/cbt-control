@@ -1,28 +1,19 @@
 'use client'
-import React, { useState } from 'react'
-import { Zap, Gift, ShoppingBag, Landmark } from 'lucide-react'
-import type { ActionResponse, RewardResponse } from '@control-aula/shared'
-import { AccionesSection }      from '@/features/acciones/AccionesSection'
-import { RecompensasSection }   from '@/features/recompensas/RecompensasSection'
-import { TransaccionesSection } from '@/features/tienda/TransaccionesSection'
-import { SectionHeader }        from '@/components/shared/SectionHeader'
-
-type StoreTab = 'acciones' | 'premios' | 'transacciones'
+import React, { useState }         from 'react'
+import { Zap, Gift, Landmark, ShoppingBag } from 'lucide-react'
+import { AccionesSection }    from '@/features/acciones/ui/AccionesSection'
+import { RecompensasSection } from '@/features/recompensas/ui/RecompensasSection'
+import { TransaccionesSection } from './ui/TransaccionesSection'
+import { SectionHeader }      from '@/components/shared/SectionHeader'
+import type { StoreTab }      from './domain/types'
 
 const STORE_TABS: { id: StoreTab; label: string; icon: React.ElementType; desc: string }[] = [
-  { id: 'acciones',      label: 'Acciones',      icon: Zap,      desc: 'Comportamientos y puntajes' },
-  { id: 'premios',       label: 'Premios',       icon: Gift,     desc: 'Recompensas canjeables'      },
-  { id: 'transacciones', label: 'Transacciones', icon: Landmark, desc: 'Transferencias de coins'     },
+  { id: 'acciones',      label: 'Actions',      icon: Zap,      desc: 'Behaviours and scores'   },
+  { id: 'premios',       label: 'Rewards',       icon: Gift,     desc: 'Redeemable rewards'      },
+  { id: 'transacciones', label: 'Transactions',  icon: Landmark, desc: 'Coin transfers'          },
 ]
 
-interface Props {
-  actions:   ActionResponse[]
-  rewards:   RewardResponse[]
-  reload:    () => void
-  showToast: (msg: string, ok?: boolean) => void
-}
-
-export function StoreSection({ actions, rewards, reload, showToast }: Props) {
+export function StoreSection() {
   const [activeTab, setActiveTab] = useState<StoreTab>('acciones')
 
   return (
@@ -30,8 +21,8 @@ export function StoreSection({ actions, rewards, reload, showToast }: Props) {
       <SectionHeader
         icon={ShoppingBag}
         iconClass="text-amber-400"
-        title="Tienda"
-        subtitle="Configura acciones, premios y gestiona transferencias de coins"
+        title="Store"
+        subtitle="Configure actions, rewards and manage coin transfers"
       />
 
       {/* Sub-navigation */}
@@ -59,15 +50,9 @@ export function StoreSection({ actions, rewards, reload, showToast }: Props) {
         })}
       </div>
 
-      {activeTab === 'acciones' && (
-        <AccionesSection actions={actions} reload={reload} showToast={showToast} />
-      )}
-      {activeTab === 'premios' && (
-        <RecompensasSection rewards={rewards} reload={reload} showToast={showToast} />
-      )}
-      {activeTab === 'transacciones' && (
-        <TransaccionesSection showToast={showToast} />
-      )}
+      {activeTab === 'acciones'      && <AccionesSection />}
+      {activeTab === 'premios'       && <RecompensasSection />}
+      {activeTab === 'transacciones' && <TransaccionesSection />}
     </div>
   )
 }

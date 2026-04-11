@@ -1,11 +1,12 @@
-import { apiFetch } from '@/lib/api'
+import { api } from '@/lib/api'
+import { API_ROUTES } from '@/config/routes'
 
 export const pushService = {
   getVapidKey: () =>
-    apiFetch<{ publicKey: string }>('/api/push/vapid-key'),
+    api<{ publicKey: string }>(API_ROUTES.PUSH.VAPID).then(r => r.data),
 
   subscribe: (sub: PushSubscription) =>
-    apiFetch<void>('/api/push/subscribe', {
+    api<void>(API_ROUTES.PUSH.SUBSCRIBE, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({
@@ -15,14 +16,14 @@ export const pushService = {
           auth:   arrayBufferToBase64(sub.getKey('auth')!),
         },
       }),
-    }),
+    }).then(r => r.data),
 
   unsubscribe: (endpoint: string) =>
-    apiFetch<void>('/api/push/unsubscribe', {
+    api<void>(API_ROUTES.PUSH.UNSUBSCRIBE, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ endpoint }),
-    }),
+    }).then(r => r.data),
 }
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {

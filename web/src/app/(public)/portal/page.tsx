@@ -1,0 +1,56 @@
+'use client'
+import { Gift, ClipboardList, History, Landmark } from 'lucide-react'
+import { usePortal }         from '@/features/portal/application/usePortal'
+import { FloatingNav }       from '@/components/shared/FloatingNav'
+import { LogoutModal }       from '@/components/shared/LogoutModal'
+import { PortalSkeleton }    from '@/features/portal/ui/PortalSkeleton'
+import { PerfilTab }         from '@/features/portal/ui/PerfilTab'
+import { RecompensasTab }    from '@/features/portal/ui/RecompensasTab'
+import { SolicitudesTab }    from '@/features/portal/ui/SolicitudesTab'
+import { BankTab }           from '@/features/portal/ui/BankTab'
+import type { PortalTab }    from '@/features/portal/domain/types'
+
+const NAV_TABS: { id: PortalTab; icon: React.ElementType; label: string }[] = [
+  { id: 'perfil',      icon: History,      label: 'Inicio'      },
+  { id: 'recompensas', icon: Gift,         label: 'Premios'     },
+  { id: 'solicitudes', icon: ClipboardList, label: 'Solicitudes' },
+  { id: 'bank',        icon: Landmark,     label: 'Bank'        },
+]
+
+export default function PortalPage() {
+  const {
+    student, rewards, tab, loading, requesting, logoutModalOpen,
+    setTab, setLogoutModalOpen,
+    onStudentUpdate, onCoinsUpdate,
+    requestReward, logout, reloadStudent,
+  } = usePortal()
+
+  if (loading) return <PortalSkeleton />
+  if (!student) return null
+
+  const solicitudesCount = student.redemptionRequests.filter(r => r.status === 'pending').length
+  const onLogout = () => setLogoutModalOpen(true)
+
+  return (
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 relative overflow-x-hidden">
+      <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden z-0">
+        <div className="blob blob-1" /><div className="blob blob-2" /><div className="blob blob-3" />
+      </div>
+
+      <main className="relative z-10">
+        {tab === 'perfil'      && <PerfilTab      student={student} rewards={rewards} onStudentUpdate={onStudentUpdate} onLogout={onLogout} />}
+        {tab === 'recompensas' && <RecompensasTab student={student} rewards={rewards} requesting={requesting} onRequest={requestReward} onLogout={onLogout} />}
+        {tab === 'solicitudes' && <SolicitudesTab student={student} requests={student.redemptionRequests} onLogout={onLogout} onReload={reloadStudent} />}
+        {tab === 'bank'        && <BankTab        student={student} onLogout={onLogout} onCoinsUpdate={onCoinsUpdate} />}
+      </main>
+
+      <FloatingNav
+        tabs={NAV_TABS.map(t => ({ ...t, badge: t.id === 'solicitudes' ? solicitudesCount : undefined }))}
+        active={tab}
+        onTabChange={setTab}
+      />
+
+      <LogoutModal open={logoutModalOpen} onConfirm={logout} onCancel={() => setLogoutModalOpen(false)} />
+    </div>
+  )
+}

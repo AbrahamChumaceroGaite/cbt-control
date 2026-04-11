@@ -1,5 +1,4 @@
 'use client'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui'
 
 const PAGE_SIZES = [5, 10, 20, 50]

@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from '../../../infrastructure/prisma/prisma.service'
+import { PrismaService }   from '../../../infrastructure/prisma/prisma.service'
 import { GroupRepository } from '../domain/group.repository'
-import type { GroupEntity } from '../domain/group.entity'
+import { GroupEntity }     from '../domain/group.entity'
+import type { GroupMemberEntity } from '../domain/group.entity'
 
 const MEMBER_INCLUDE = { members: { include: { student: { select: { id: true, name: true, coins: true } } } } }
 
@@ -9,20 +10,25 @@ const MEMBER_INCLUDE = { members: { include: { student: { select: { id: true, na
 export class GroupRepositoryImpl extends GroupRepository {
   constructor(private readonly prisma: PrismaService) { super() }
 
-  findAll(courseId?: string): Promise<GroupEntity[]> {
-    return this.prisma.group.findMany({
+  async findAll(courseId?: string): Promise<GroupEntity[]> {
+    const records = await this.prisma.group.findMany({
       where:   courseId ? { courseId } : undefined,
       include: MEMBER_INCLUDE,
       orderBy: { name: 'asc' },
     })
+    return records.map(r => this.toDomain(r))
   }
 
-  findById(id: string): Promise<GroupEntity | null> {
-    return this.prisma.group.findUnique({ where: { id }, include: MEMBER_INCLUDE })
+  async findById(id: string): Promise<GroupEntity | null> {
+    const record = await this.prisma.group.findUnique({
+      where:   { id },
+      include: MEMBER_INCLUDE,
+    })
+    return record ? this.toDomain(record) : null
   }
 
-  create(data: { name: string; courseId: string; studentIds?: string[] }): Promise<GroupEntity> {
-    return this.prisma.group.create({
+  async create(data: { name: string; courseId: string; studentIds?: string[] }): Promise<GroupEntity> {
+    const record = await this.prisma.group.create({
       data: {
         name:     data.name,
         courseId: data.courseId,
@@ -32,6 +38,7 @@ export class GroupRepositoryImpl extends GroupRepository {
       },
       include: MEMBER_INCLUDE,
     })
+    return this.toDomain(record)
   }
 
   async update(id: string, data: { name?: string; studentIds?: string[] }): Promise<GroupEntity> {
@@ -43,14 +50,23 @@ export class GroupRepositoryImpl extends GroupRepository {
         })
       }
     }
-    return this.prisma.group.update({
+    const record = await this.prisma.group.update({
       where:   { id },
       data:    data.name ? { name: data.name } : {},
       include: MEMBER_INCLUDE,
     })
+    return this.toDomain(record)
   }
 
   async delete(id: string): Promise<void> {
     await this.prisma.group.delete({ where: { id } })
+  }
+
+  private toDomain(record: {
+    id: string; name: string; courseId: string
+    createdAt: Date; updatedAt: Date
+    members: GroupMemberEntity[]
+  }): GroupEntity {
+    return new GroupEntity(record)
   }
 }

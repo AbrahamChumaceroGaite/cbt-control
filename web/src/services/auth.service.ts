@@ -1,20 +1,21 @@
-import { apiFetch } from '@/lib/api'
+import { api } from '@/lib/api'
+import { API_ROUTES } from '@/config/routes'
 import type { SessionPayload } from '@control-aula/shared'
 
-type LoginBody    = { code: string; password?: string }
-type LoginResult  = { user: SessionPayload }
+type LoginBody   = { code: string; password?: string }
+type LoginResult = { user: SessionPayload }
 
 export const authService = {
   login: (body: LoginBody) =>
-    apiFetch<LoginResult>('/api/auth/login', {
+    api<LoginResult>(API_ROUTES.AUTH.LOGIN, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify(body),
-    }),
+    }).then(r => r.data),
 
   logout: () =>
-    apiFetch<null>('/api/auth/logout', { method: 'POST' }),
+    api<null>(API_ROUTES.AUTH.LOGOUT, { method: 'POST' }).then(r => r.data),
 
   me: () =>
-    apiFetch<SessionPayload>('/api/auth/me'),
+    api<SessionPayload>(API_ROUTES.AUTH.ME).then(r => r.data),
 }

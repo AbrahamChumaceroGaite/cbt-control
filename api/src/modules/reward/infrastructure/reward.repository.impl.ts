@@ -1,22 +1,29 @@
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from '../../../infrastructure/prisma/prisma.service'
+import { PrismaService }    from '../../../infrastructure/prisma/prisma.service'
 import { RewardRepository } from '../domain/reward.repository'
-import type { RewardEntity } from '../domain/reward.entity'
+import { RewardEntity }     from '../domain/reward.entity'
 
 @Injectable()
 export class RewardRepositoryImpl extends RewardRepository {
   constructor(private readonly prisma: PrismaService) { super() }
 
-  findAll(): Promise<RewardEntity[]> {
-    return this.prisma.reward.findMany({ orderBy: [{ type: 'asc' }, { coinsRequired: 'asc' }] })
+  async findAll(): Promise<RewardEntity[]> {
+    const records = await this.prisma.reward.findMany({
+      orderBy: [{ type: 'asc' }, { coinsRequired: 'asc' }],
+    })
+    return records.map(r => this.toDomain(r))
   }
 
-  findById(id: string): Promise<RewardEntity | null> {
-    return this.prisma.reward.findUnique({ where: { id } })
+  async findById(id: string): Promise<RewardEntity | null> {
+    const record = await this.prisma.reward.findUnique({ where: { id } })
+    return record ? this.toDomain(record) : null
   }
 
-  create(data: { name: string; coinsRequired: number; description?: string; icon?: string; type?: string; isGlobal?: boolean; discount?: number }): Promise<RewardEntity> {
-    return this.prisma.reward.create({
+  async create(data: {
+    name: string; coinsRequired: number; description?: string
+    icon?: string; type?: string; isGlobal?: boolean; discount?: number
+  }): Promise<RewardEntity> {
+    const record = await this.prisma.reward.create({
       data: {
         name:          data.name,
         coinsRequired: Number(data.coinsRequired),
@@ -27,10 +34,18 @@ export class RewardRepositoryImpl extends RewardRepository {
         discount:      data.discount    ?? 0,
       },
     })
+    return this.toDomain(record)
   }
 
-  update(id: string, data: Partial<{ name: string; description: string; icon: string; coinsRequired: number; discount: number; type: string; isGlobal: boolean; isActive: boolean }>): Promise<RewardEntity> {
-    return this.prisma.reward.update({
+  async update(
+    id: string,
+    data: Partial<{
+      name: string; description: string; icon: string
+      coinsRequired: number; discount: number; type: string
+      isGlobal: boolean; isActive: boolean
+    }>,
+  ): Promise<RewardEntity> {
+    const record = await this.prisma.reward.update({
       where: { id },
       data:  {
         ...data,
@@ -38,9 +53,19 @@ export class RewardRepositoryImpl extends RewardRepository {
         ...(data.discount      !== undefined && { discount:      Number(data.discount) }),
       },
     })
+    return this.toDomain(record)
   }
 
   async delete(id: string): Promise<void> {
     await this.prisma.reward.delete({ where: { id } })
+  }
+
+  private toDomain(record: {
+    id: string; name: string; description: string; icon: string
+    coinsRequired: number; discount: number; discountEndsAt: Date | null
+    type: string; isGlobal: boolean; isActive: boolean
+    createdAt: Date; updatedAt: Date
+  }): RewardEntity {
+    return new RewardEntity(record)
   }
 }

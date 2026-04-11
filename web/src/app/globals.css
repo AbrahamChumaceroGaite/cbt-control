@@ -31,6 +31,17 @@
     --p-text-muted-color: #6b7280;
     --p-content-border-color: #e5e7eb;
     --p-border-radius-full: 9999px;
+
+    /* Z-index hierarchy — canonical, non-negotiable. Use var(--z-*) everywhere. */
+    --z-base:     0;    /* Normal content flow */
+    --z-above:    10;   /* Positioned elements (card badges, overlapping elements) */
+    --z-sticky:   20;   /* Sticky/fixed headers (AdminHeader) */
+    --z-float:    30;   /* FloatingNav in student portal */
+    --z-dropdown: 200;  /* Popovers, FilterPopover, NotificationBell panel */
+    --z-drawer:   400;  /* Drawer component (side panel) */
+    --z-modal:    500;  /* Modal (dialogs, ConfirmDialog) */
+    --z-toast:    600;  /* Toast notifications */
+    --z-tooltip:  700;  /* Tooltips — always on top */
   }
 
   .dark {

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { ConditionalSocketProvider } from '@/components/shared/ConditionalSocketProvider'
+import { ToastContainer }            from '@/components/ui'
 
 export const metadata: Metadata = {
   title: 'CBT Home Room',
@@ -12,6 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" className="dark">
       <body className="bg-zinc-950 text-zinc-100 antialiased min-h-screen">
         <ConditionalSocketProvider>{children}</ConditionalSocketProvider>
+        <ToastContainer />
       </body>
     </html>
   )

@@ -1,25 +1,17 @@
 'use client'
 import React, { useState } from 'react'
 import { UserCog, Database, Shield } from 'lucide-react'
-import type { CourseResponse } from '@control-aula/shared'
 import { SectionHeader }   from '@/components/shared/SectionHeader'
-import { UsuariosSection } from '@/features/usuarios/UsuariosSection'
-import { BackupSection }   from '@/features/backup/BackupSection'
-
-type AdminTab = 'usuarios' | 'backup'
+import { UsuariosSection } from '@/features/usuarios/ui/UsuariosSection'
+import { BackupSection }   from '@/features/backup/ui/BackupSection'
+import type { AdminTab }   from './domain/types'
 
 const ADMIN_TABS: { id: AdminTab; label: string; icon: React.ElementType; desc: string }[] = [
-  { id: 'usuarios', label: 'Usuarios', icon: UserCog,  desc: 'Cuentas de acceso al sistema' },
-  { id: 'backup',   label: 'Backup',   icon: Database, desc: 'Exportar e importar datos'    },
+  { id: 'usuarios', label: 'Users',  icon: UserCog,  desc: 'System access accounts' },
+  { id: 'backup',   label: 'Backup', icon: Database, desc: 'Export and import data'  },
 ]
 
-interface Props {
-  courses:   CourseResponse[]
-  showToast: (msg: string, ok?: boolean) => void
-  reloadAll: () => void
-}
-
-export function AdminSection({ courses, showToast, reloadAll }: Props) {
+export function AdminSection() {
   const [activeTab, setActiveTab] = useState<AdminTab>('usuarios')
 
   return (
@@ -27,8 +19,8 @@ export function AdminSection({ courses, showToast, reloadAll }: Props) {
       <SectionHeader
         icon={Shield}
         iconClass="text-purple-400"
-        title="Administración"
-        subtitle="Gestión de usuarios y datos del sistema"
+        title="Administration"
+        subtitle="User management and system data"
       />
 
       {/* Sub-navigation */}
@@ -56,12 +48,8 @@ export function AdminSection({ courses, showToast, reloadAll }: Props) {
         })}
       </div>
 
-      {activeTab === 'usuarios' && (
-        <UsuariosSection courses={courses} showToast={showToast} reloadAll={reloadAll} />
-      )}
-      {activeTab === 'backup' && (
-        <BackupSection showToast={showToast} reloadAll={reloadAll} />
-      )}
+      {activeTab === 'usuarios' && <UsuariosSection />}
+      {activeTab === 'backup'   && <BackupSection />}
     </div>
   )
 }

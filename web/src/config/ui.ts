@@ -1,0 +1,10 @@
+export const PAGE_SIZE         = 5
+export const PAGE_SIZE_OPTIONS = [5, 10, 20, 50] as const
+export const POLL_MS           = 30_000  // useInbox polling interval
+export const TOAST_MS          = 3_000   // toast auto-dismiss
+export const DEBOUNCE_MS       = 350     // search input debounce
+export const ANIMATION         = { fast: 150, base: 300, slow: 500 } as const
+export const MAX_AVATAR_PX     = 400
+export const MAX_BANNER_PX     = 1_200
+export const BANK_TX_LIMIT     = 3       // weekly transaction limit
+export const BANK_TAX          = 1       // tax per transaction
