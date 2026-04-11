@@ -1,7 +1,8 @@
-import type { CoinTransactionResponse } from '@control-aula/shared'
+import type { CoinTransactionResponse }  from '@control-aula/shared'
+import type { TransactionWithRelations } from '../domain/transaction.entity'
 
 export class BankMapper {
-  static toResponse(entity: any): CoinTransactionResponse {
+  static toResponse(entity: TransactionWithRelations): CoinTransactionResponse {
     return {
       id:          entity.id,
       fromStudent: {

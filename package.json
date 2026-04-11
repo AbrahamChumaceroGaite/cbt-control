@@ -9,5 +9,8 @@
     "build:web":    "npm run build -w web",
     "dev:api":      "npm run dev -w api",
     "dev:web":      "npm run dev -w web"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1"
   }
 }
