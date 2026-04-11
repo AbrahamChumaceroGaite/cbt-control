@@ -1,0 +1,48 @@
+name: CI — API
+
+on:
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - 'api/**'
+      - 'shared/**'
+      - 'package.json'
+      - 'package-lock.json'
+  push:
+    branches: [develop]
+    paths:
+      - 'api/**'
+      - 'shared/**'
+
+jobs:
+  shared:
+    name: Build shared types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build -w shared
+
+  api:
+    name: API — test · build
+    runs-on: ubuntu-latest
+    needs: shared
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+
+      # nest build uses tsconfig.build.json (excludes spec files)
+      # and performs full TypeScript typecheck as part of compilation
+      - name: API — tests
+        run: node_modules/.bin/vitest run --config api/vitest.config.ts
+
+      - name: API — build (includes typecheck via nest build)
+        run: npm run build -w api

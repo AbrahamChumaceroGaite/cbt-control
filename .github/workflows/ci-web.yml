@@ -1,0 +1,55 @@
+name: CI — Web
+
+on:
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - 'web/**'
+      - 'shared/**'
+      - 'package.json'
+      - 'package-lock.json'
+  push:
+    branches: [develop]
+    paths:
+      - 'web/**'
+      - 'shared/**'
+
+jobs:
+  shared:
+    name: Build shared types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build -w shared
+
+  web:
+    name: Web — typecheck · test · lint · build
+    runs-on: ubuntu-latest
+    needs: shared
+    env:
+      # Next.js build requires these at build time — placeholder values for CI
+      NEXT_PUBLIC_WS_URL: ws://localhost:4001/ws
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+
+      - name: Web — typecheck
+        run: npm run typecheck -w web
+
+      - name: Web — tests
+        run: cd web && ../node_modules/.bin/vitest run
+
+      - name: Web — lint
+        run: npm run lint -w web
+
+      - name: Web — build
+        run: npm run build -w web
