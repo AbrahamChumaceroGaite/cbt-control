@@ -69,10 +69,3 @@ export interface NotificationItem {
   createdAt: string
 }
 
-// ── Transaction status display map ────────────────────────────────────────────
-
-export const TX_STATUS: Record<string, { label: string; cls: string }> = {
-  pending:  { label: 'Pending',  cls: 'bg-amber-500/15 text-amber-400 border-amber-500/25'    },
-  approved: { label: 'Approved', cls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25' },
-  rejected: { label: 'Rejected', cls: 'bg-red-500/15 text-red-400 border-red-500/25'          },
-}

@@ -1,8 +1,11 @@
 'use client'
 import { Camera, Coins, Users, Trophy, BookOpen } from 'lucide-react'
-import { Avatar }           from '@/components/ui'
-import { usePerfilTab }     from '../application/usePerfilTab'
-import type { StudentData } from '../domain/types'
+import { Avatar }                from '@/components/ui'
+import { usePerfilTab }          from '../application/usePerfilTab'
+import { BANNER_GRADIENT }       from '@/config/colors'
+import { STAT_CARD }             from '@/config/scheme'
+import type { StatCardColor }    from '@/config/scheme'
+import type { StudentData }      from '../domain/types'
 
 interface Props {
   student: StudentData
@@ -21,11 +24,9 @@ export function ProfileHeader({ student, onStudentUpdate }: Props) {
         {student.bannerUrl ? (
           <img src={student.bannerUrl} alt="Banner" className="w-full h-full object-cover" />
         ) : (
-          <div className="absolute inset-0" style={{
-            background: 'linear-gradient(135deg, #1c1400 0%, #2d1f00 40%, #0a0a0a 100%)'
-          }}>
+          <div className="absolute inset-0" style={{ background: BANNER_GRADIENT.base }}>
             <div className="absolute inset-0 opacity-30"
-              style={{ backgroundImage: 'radial-gradient(circle at 30% 50%, #fbbf24 0%, transparent 50%), radial-gradient(circle at 80% 30%, #d97706 0%, transparent 40%)' }} />
+              style={{ backgroundImage: BANNER_GRADIENT.overlay }} />
           </div>
         )}
         {/* Banner upload button */}
@@ -78,17 +79,12 @@ export function ProfileHeader({ student, onStudentUpdate }: Props) {
 }
 
 function StatCard({ icon, value, label, color }: {
-  icon: React.ReactNode
+  icon:  React.ReactNode
   value: string | number
   label: string
-  color: 'amber' | 'blue' | 'emerald' | 'purple'
+  color: StatCardColor
 }) {
-  const colors = {
-    amber:   { bg: 'bg-amber-500/10',   border: 'border-amber-500/20',   text: 'text-amber-400',   icon: 'text-amber-500/60' },
-    blue:    { bg: 'bg-blue-500/10',    border: 'border-blue-500/20',    text: 'text-blue-400',    icon: 'text-blue-500/60' },
-    emerald: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400', icon: 'text-emerald-500/60' },
-    purple:  { bg: 'bg-purple-500/10',  border: 'border-purple-500/20',  text: 'text-purple-400',  icon: 'text-purple-500/60' },
-  }[color]
+  const colors = STAT_CARD[color]
 
   return (
     <div className={`rounded-xl border p-2.5 flex flex-col gap-1 ${colors.bg} ${colors.border}`}>

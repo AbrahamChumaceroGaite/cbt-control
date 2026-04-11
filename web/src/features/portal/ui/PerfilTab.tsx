@@ -16,16 +16,7 @@ import { usePerfilTab }         from '../application/usePerfilTab'
 import type { StudentData, IndividualReward, DateFilter } from '../domain/types'
 import { REQUEST_STATUS }                         from '@/config/status'
 import { ACTION_CATEGORY, ACTION_CATEGORY_FALLBACK } from '@/config/scheme'
-
-const TRAMOS = [
-  { id: 'T1', label: 'Atención',        color: '#0C447C', fg: '#85B7EB' },
-  { id: 'T2', label: 'Indagación',      color: '#3C3489', fg: '#AFA9EC' },
-  { id: 'T3', label: 'Metacognición',   color: '#0F6E56', fg: '#5DCAA5' },
-  { id: 'T4', label: 'Pens. Analítico', color: '#633806', fg: '#EF9F27' },
-  { id: 'T5', label: 'Apz. Autónomo',   color: '#72243E', fg: '#ED93B1' },
-  { id: 'T6', label: 'Colaborativo',    color: '#3B6D11', fg: '#97C459' },
-  { id: 'T7', label: 'Innovación',      color: '#501313', fg: '#F09595' },
-]
+import { TRAMOS }                                    from '@/config/colors'
 
 const PAGE_SIZE = 5
 

@@ -1,7 +1,8 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
 import { Zap, Clock } from 'lucide-react'
-import { useInterval } from '@/hooks/useInterval'
+import { useInterval }  from '@/hooks/useInterval'
+import { PROGRESS_BAR } from '@/config/scheme'
 import type { IndividualReward } from '../../domain/types'
 
 function useResetCountdown(): string {
@@ -53,6 +54,7 @@ export function RewardsProgress({ coins, rewards, pendingIds }: Props) {
         {sorted.map((r, i) => {
           const isNext = i === 0
           const pct    = Math.min(99, Math.round((coins / r.coinsRequired) * 100))
+          const bar    = PROGRESS_BAR[isNext ? 'next' : 'default']
           return (
             <div key={r.id} className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
@@ -65,11 +67,7 @@ export function RewardsProgress({ coins, rewards, pendingIds }: Props) {
               </div>
               <div className="w-full h-1.5 bg-zinc-800/80 rounded-full overflow-hidden">
                 <div className="h-full rounded-full transition-all duration-700"
-                  style={{
-                    width: `${pct}%`,
-                    background: isNext ? 'linear-gradient(90deg,#059669,#10b981)' : '#3f3f46',
-                    boxShadow: isNext ? '0 0 8px rgba(16,185,129,0.25)' : 'none',
-                  }}
+                  style={{ width: `${pct}%`, background: bar.gradient, boxShadow: bar.shadow }}
                 />
               </div>
               <div className="flex justify-between text-[10px] text-zinc-600">

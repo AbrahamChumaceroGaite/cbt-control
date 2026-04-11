@@ -3,11 +3,10 @@ import type { ActionResponse, ActionInput } from '@control-aula/shared'
 import type { ActionViewModel, ActionFormState } from '../domain/types'
 
 const ACTION_COLOR_MAP = COLORS.action as Record<string, { bg: string; text: string }>
-const FALLBACK_COLOR   = { bg: '#1e3a8a', text: '#bfdbfe' }
 
 export const ActionMapper = {
   toViewModel(dto: ActionResponse): ActionViewModel {
-    return { ...dto, colorConfig: ACTION_COLOR_MAP[dto.category] ?? FALLBACK_COLOR }
+    return { ...dto, colorConfig: ACTION_COLOR_MAP[dto.category] ?? COLORS.actionFallback }
   },
 
   toForm(vm: ActionViewModel): ActionFormState {

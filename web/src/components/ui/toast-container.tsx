@@ -1,7 +1,7 @@
 'use client'
-import { useUiStore }  from '@/store/ui.store'
-import { cn }          from '@/lib/utils'
-import { TOAST_SCHEME } from '@/config/scheme'
+import { useUiStore }      from '@/store/ui.store'
+import { cn }              from '@/lib/utils'
+import { TOAST_SCHEME, Z } from '@/config/scheme'
 
 function CheckIcon() {
   return (
@@ -24,7 +24,7 @@ export function ToastContainer() {
   if (toasts.length === 0) return null
 
   return (
-    <div className="fixed top-6 right-6 z-[600] flex flex-col gap-2 pointer-events-none">
+    <div className="fixed top-6 right-6 flex flex-col gap-2 pointer-events-none" style={{ zIndex: Z.TOAST }}>
       {toasts.map(t => (
         <div
           key={t.id}

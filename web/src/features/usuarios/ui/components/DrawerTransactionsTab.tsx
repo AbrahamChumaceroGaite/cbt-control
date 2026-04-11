@@ -1,6 +1,6 @@
 import { ArrowRight, Landmark } from 'lucide-react'
 import { Skeleton } from '@/components/ui'
-import { TX_STATUS } from '../../domain/types'
+import { STATUS_BADGE, STATUS_LABEL, TX_DIRECTION } from '@/config/scheme'
 import type { UserViewModel } from '../../domain/types'
 import type { CoinTransactionResponse } from '@control-aula/shared'
 
@@ -35,13 +35,16 @@ export function DrawerTransactionsTab({ user, transactions, loading }: Props) {
   return (
     <ul className="divide-y divide-zinc-800/40">
       {transactions.map(tx => {
-        const isFrom = tx.fromStudent.id === user.student?.id
-        const other  = isFrom ? tx.toStudent : tx.fromStudent
-        const st     = TX_STATUS[tx.status] ?? TX_STATUS['pending']
+        const isFrom  = tx.fromStudent.id === user.student?.id
+        const other   = isFrom ? tx.toStudent : tx.fromStudent
+        const dir     = TX_DIRECTION[isFrom ? 'sent' : 'received']
+        const stKey   = tx.status as keyof typeof STATUS_LABEL
+        const badgeCls = STATUS_BADGE[stKey] ?? STATUS_BADGE.pending
+        const stLabel  = STATUS_LABEL[stKey] ?? STATUS_LABEL.pending
         return (
           <li key={tx.id} className="flex items-center gap-3 px-4 py-3">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isFrom ? 'bg-red-500/10 border border-red-500/20' : 'bg-emerald-500/10 border border-emerald-500/20'}`}>
-              <ArrowRight className={`w-3.5 h-3.5 ${isFrom ? 'text-red-400 rotate-180' : 'text-emerald-400'}`} />
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${dir.icon}`}>
+              <ArrowRight className={`w-3.5 h-3.5 ${dir.text} ${isFrom ? 'rotate-180' : ''}`} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-zinc-200 truncate">
@@ -50,10 +53,10 @@ export function DrawerTransactionsTab({ user, transactions, loading }: Props) {
               <p className="text-[10px] text-zinc-600">{new Date(tx.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
             </div>
             <div className="text-right flex-shrink-0 space-y-1">
-              <p className={`text-sm font-black ${isFrom ? 'text-red-400' : 'text-emerald-400'}`}>
+              <p className={`text-sm font-black ${dir.text}`}>
                 {isFrom ? '-' : '+'}{isFrom ? tx.amount + tx.tax : tx.amount}c
               </p>
-              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${st.cls}`}>{st.label}</span>
+              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${badgeCls}`}>{stLabel}</span>
             </div>
           </li>
         )

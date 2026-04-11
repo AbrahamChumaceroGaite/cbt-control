@@ -1,5 +1,6 @@
 'use client'
 import { Button }              from '@/components/ui'
+import { Z }                   from '@/config/scheme'
 import type { NoteModalState } from '../domain/types'
 import { TRANSACTION_STATUS }  from '@/config/status'
 
@@ -14,7 +15,7 @@ interface Props {
 
 export function NoteModal({ modal, note, processing, onNote, onCancel, onConfirm }: Props) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: Z.DRAWER }}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
       <div className="relative z-10 w-full max-w-sm rounded-2xl bg-zinc-900 border border-zinc-800 p-5 shadow-2xl space-y-4">
         <h3 className="text-sm font-bold text-zinc-200">

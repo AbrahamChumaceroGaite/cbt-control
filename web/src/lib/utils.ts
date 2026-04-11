@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { AVATAR_PALETTE } from '@/config/colors'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -71,13 +72,9 @@ export function getInitials(name: string): string {
  * Deterministically maps a name string to one of the brand palette colors.
  */
 export function hashColor(name: string): string {
-  const colors = [
-    '#0C447C', '#1E6B2E', '#501313', '#633806', '#3C3489', '#72243E',
-    '#1a4f7a', '#2d6a3f', '#7a2d2d', '#7a5c1e', '#4a3d8f', '#8f2d50',
-  ]
   let hash = 0
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  return colors[Math.abs(hash) % colors.length]
+  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length]
 }
 
 // ── Image ─────────────────────────────────────────────────────────────────────

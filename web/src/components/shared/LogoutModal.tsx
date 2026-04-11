@@ -1,5 +1,7 @@
 'use client'
-import { LogOut } from 'lucide-react'
+import { LogOut }   from 'lucide-react'
+import { Button }   from '@/components/ui'
+import { Z }        from '@/config/scheme'
 
 interface Props {
   open: boolean
@@ -10,7 +12,7 @@ interface Props {
 export function LogoutModal({ open, onConfirm, onCancel }: Props) {
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: Z.DRAWER }}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
       <div className="relative z-10 w-full max-w-xs rounded-2xl bg-zinc-900 border border-zinc-800/60 shadow-2xl p-6">
         <div className="flex flex-col items-center text-center gap-3 mb-6">
@@ -23,18 +25,8 @@ export function LogoutModal({ open, onConfirm, onCancel }: Props) {
           </div>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={onCancel}
-            className="flex-1 h-10 rounded-xl border border-zinc-700 text-sm font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={onConfirm}
-            className="flex-1 h-10 rounded-xl bg-red-500/90 text-sm font-bold text-white hover:bg-red-400 active:scale-95 transition-all"
-          >
-            Cerrar sesión
-          </button>
+          <Button variant="outline" onClick={onCancel} className="flex-1 h-10">Cancelar</Button>
+          <Button variant="destructive" onClick={onConfirm} className="flex-1 h-10">Cerrar sesión</Button>
         </div>
       </div>
     </div>

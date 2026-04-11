@@ -3,6 +3,7 @@ import { useState }        from 'react'
 import { ChevronLeft, ChevronRight, Coins, Send } from 'lucide-react'
 import { StatusBadge }     from '@/components/ui'
 import { FilterPills }     from '@/components/shared/FilterPills'
+import { TX_DIRECTION }    from '@/config/scheme'
 import type { CoinTransactionResponse, HistoryFilter } from '../domain/types'
 
 const TX_FILTER_OPTIONS: { value: HistoryFilter; label: string }[] = [
@@ -47,10 +48,11 @@ export function TxHistory({ txs, myStudentId }: Props) {
             {paged.map(tx => {
               const isSent = tx.fromStudent.id === myStudentId
               const other  = isSent ? tx.toStudent : tx.fromStudent
+              const dir    = TX_DIRECTION[isSent ? 'sent' : 'received']
               return (
                 <div key={tx.id} className="flex items-center gap-3 p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/60 hover:bg-zinc-900/80 transition-colors">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isSent ? 'bg-red-500/10 border border-red-500/20' : 'bg-emerald-500/10 border border-emerald-500/20'}`}>
-                    <Send className={`w-4 h-4 ${isSent ? 'text-red-400 rotate-12' : 'text-emerald-400 -rotate-12'}`} />
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${dir.icon}`}>
+                    <Send className={`w-4 h-4 ${dir.text} ${dir.rotate}`} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-zinc-200 truncate">{isSent ? `→ ${other.name}` : `← ${other.name}`}</p>
@@ -58,7 +60,7 @@ export function TxHistory({ txs, myStudentId }: Props) {
                     {tx.notes && <p className="text-[10px] text-zinc-500 truncate mt-0.5 italic">&ldquo;{tx.notes}&rdquo;</p>}
                   </div>
                   <div className="text-right flex-shrink-0 space-y-1">
-                    <p className={`text-sm font-black ${isSent ? 'text-red-400' : 'text-emerald-400'}`}>
+                    <p className={`text-sm font-black ${dir.text}`}>
                       {isSent ? '-' : '+'}{isSent ? tx.amount + tx.tax : tx.amount}
                     </p>
                     <StatusBadge status={tx.status} />
