@@ -1,5 +1,6 @@
-import { cn }          from '@/lib/utils'
-import { CardActions } from '@/components/shared/CardActions'
+import { cn }               from '@/lib/utils'
+import { CardActions }       from '@/components/shared/CardActions'
+import { RewardTypeBadge }   from '@/components/shared/RewardTypeBadge'
 import type { RewardViewModel } from '../domain/types'
 
 interface Props {
@@ -33,9 +34,7 @@ export function RewardCard({ reward: r, onEdit, onDelete }: Props) {
         <h3 className="text-lg font-semibold text-white mb-1">{r.name}</h3>
         <p className="text-sm text-zinc-400 line-clamp-2">{r.description || 'Sin descripción'}</p>
         <div className="flex gap-2 text-xs mt-4">
-          {r.type === 'class'
-            ? <span className="px-2 py-0.5 rounded bg-blue-900/30 text-blue-300">Grupal (Clase)</span>
-            : <span className="px-2 py-0.5 rounded bg-rose-900/30 text-rose-300">Individual (Alumno)</span>}
+          <RewardTypeBadge type={r.type === 'class' ? 'class' : 'individual'} />
           {!r.isActive && (
             <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-500">Inactiva</span>
           )}

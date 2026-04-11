@@ -1,5 +1,6 @@
 // Buttons
-export { Button }                from './button'
+export { Button, buttonVariants } from './button'
+export type { ButtonVariants }    from './button'
 
 // Inputs
 export { Input }                 from './input'
@@ -15,7 +16,8 @@ export { Label }                 from './label'
 // Display
 export { Card, CardHeader, CardTitle, CardDescription,
          CardContent, CardFooter } from './card'
-export { Badge }                 from './badge'
+export { Badge, badgeVariants }  from './badge'
+export type { BadgeVariants }    from './badge'
 export { Avatar }                from './avatar'
 export { Skeleton }              from './skeleton'
 export { EmptyState }            from './empty-state'
@@ -26,7 +28,6 @@ export { Tabs }                  from './tabs'
 
 // Feedback
 export { Spinner }               from './spinner'
-export { Toast }                 from './toast'
 export { ToastContainer }        from './toast-container'
 
 // Dialogs

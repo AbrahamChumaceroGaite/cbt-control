@@ -1,6 +1,6 @@
 'use client'
 import * as React from 'react'
-import { cn } from '@/lib/utils'
+import { cn }     from '@/lib/utils'
 
 interface PopoverProps {
   open:      boolean
@@ -34,7 +34,6 @@ export function Popover({ open, onClose, trigger, children, align = 'right', cla
             align === 'right' ? 'right-0' : 'left-0',
             className,
           )}
-          style={{ zIndex: 'var(--z-dropdown)' as unknown as number }}
         >
           {children}
         </div>

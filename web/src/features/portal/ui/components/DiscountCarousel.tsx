@@ -4,15 +4,8 @@ import { CheckCircle2, Zap }     from 'lucide-react'
 import { Button }                from '@/components/ui'
 import { useInterval }           from '@/hooks/useInterval'
 import { REQUEST_STATUS }        from '@/config/status'
+import { DEAL_THEMES }           from '@/config/scheme'
 import type { StudentData, Deal } from '../../domain/types'
-
-const DEAL_GRADIENTS = [
-  { bg: 'from-rose-950 via-zinc-950 to-zinc-950',   accent: '#f43f5e', glow: 'bg-rose-500/20'   },
-  { bg: 'from-violet-950 via-zinc-950 to-zinc-950',  accent: '#8b5cf6', glow: 'bg-violet-500/20' },
-  { bg: 'from-amber-950 via-zinc-950 to-zinc-950',   accent: '#f59e0b', glow: 'bg-amber-500/20'  },
-  { bg: 'from-sky-950 via-zinc-950 to-zinc-950',     accent: '#0ea5e9', glow: 'bg-sky-500/20'    },
-  { bg: 'from-emerald-950 via-zinc-950 to-zinc-950', accent: '#10b981', glow: 'bg-emerald-500/20' },
-]
 
 interface Props {
   deals:              Deal[]
@@ -31,7 +24,7 @@ export function DiscountCarousel({ deals, coins, requesting, onAskConfirm, redem
   if (deals.length === 0) return null
 
   const deal      = deals[idx]
-  const theme     = DEAL_GRADIENTS[idx % DEAL_GRADIENTS.length]
+  const theme     = DEAL_THEMES[idx % DEAL_THEMES.length]
   const canAfford = coins >= deal.salePrice
   const pending   = redemptionRequests.some(r => r.rewardId === deal.id && r.status === REQUEST_STATUS.PENDING)
   const savings   = deal.coinsRequired - deal.salePrice

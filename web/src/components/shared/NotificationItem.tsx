@@ -1,21 +1,8 @@
 'use client'
-import { Check, X } from 'lucide-react'
-import { timeAgo }  from '@/lib/utils'
+import { Check, X }  from 'lucide-react'
+import { timeAgo }   from '@/lib/utils'
+import { SEVERITY }  from '@/config/scheme'
 import type { NotificationItem as TItem, Severity } from '@/hooks/useInbox'
-
-const SEVERITY_DOT: Record<Severity, string> = {
-  positive: 'bg-emerald-400',
-  negative: 'bg-red-400',
-  info:     'bg-blue-400',
-  default:  'bg-amber-400',
-}
-
-const SEVERITY_BG: Record<Severity, string> = {
-  positive: 'border-l-2 border-l-emerald-500/40',
-  negative: 'border-l-2 border-l-red-500/40',
-  info:     'border-l-2 border-l-blue-500/40',
-  default:  'border-l-2 border-l-amber-500/40',
-}
 
 interface Props {
   item:       TItem
@@ -25,10 +12,11 @@ interface Props {
 }
 
 export function NotificationItem({ item, severity, onMarkRead, onDelete }: Props) {
+  const s = SEVERITY[severity]
   return (
-    <li className={`group flex gap-3 px-4 py-3 border-b border-zinc-800/40 last:border-0 hover:bg-zinc-900/60 transition-colors ${!item.isRead ? `bg-zinc-900/25 ${SEVERITY_BG[severity]}` : ''}`}>
+    <li className={`group flex gap-3 px-4 py-3 border-b border-zinc-800/40 last:border-0 hover:bg-zinc-900/60 transition-colors ${!item.isRead ? `bg-zinc-900/25 ${s.border}` : ''}`}>
       <div className="flex-shrink-0 mt-1.5">
-        <div className={`w-1.5 h-1.5 rounded-full ${!item.isRead ? `${SEVERITY_DOT[severity]} animate-pulse` : 'bg-zinc-800'}`} />
+        <div className={`w-1.5 h-1.5 rounded-full ${!item.isRead ? `${s.dot} animate-pulse` : 'bg-zinc-800'}`} />
       </div>
       <div className="flex-1 min-w-0 cursor-pointer" onClick={() => !item.isRead && onMarkRead(item.id)}>
         <div className="flex items-start justify-between gap-2">

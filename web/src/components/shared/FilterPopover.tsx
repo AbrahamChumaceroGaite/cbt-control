@@ -37,13 +37,15 @@ export function FilterPopover({ active, onClear, children, className }: FilterPo
       <div className="flex flex-col gap-3">
         {children}
         {active && onClear && (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => { onClear(); setOpen(false) }}
-            className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 mt-1 transition-colors"
+            className="h-auto px-0 py-0 text-xs text-zinc-500 hover:text-zinc-300 hover:bg-transparent gap-1.5 mt-1"
           >
             <X className="w-3 h-3" />
             Limpiar filtros
-          </button>
+          </Button>
         )}
       </div>
     </Popover>

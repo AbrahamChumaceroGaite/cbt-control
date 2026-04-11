@@ -14,7 +14,8 @@ import { Sparkline }            from './components/Sparkline'
 import { NotificationBell }     from '@/components/shared/NotificationBell'
 import { usePerfilTab }         from '../application/usePerfilTab'
 import type { StudentData, IndividualReward, DateFilter } from '../domain/types'
-import { REQUEST_STATUS }       from '@/config/status'
+import { REQUEST_STATUS }                         from '@/config/status'
+import { ACTION_CATEGORY, ACTION_CATEGORY_FALLBACK } from '@/config/scheme'
 
 const TRAMOS = [
   { id: 'T1', label: 'Atención',        color: '#0C447C', fg: '#85B7EB' },
@@ -25,16 +26,6 @@ const TRAMOS = [
   { id: 'T6', label: 'Colaborativo',    color: '#3B6D11', fg: '#97C459' },
   { id: 'T7', label: 'Innovación',      color: '#501313', fg: '#F09595' },
 ]
-
-const CAT_COLOR: Record<string, { dot: string; text: string; bg: string; border: string }> = {
-  green:  { dot: 'bg-green-400',   text: 'text-green-400',   bg: 'bg-green-400/10',   border: 'border-green-400/20' },
-  blue:   { dot: 'bg-blue-400',    text: 'text-blue-400',    bg: 'bg-blue-400/10',    border: 'border-blue-400/20' },
-  red:    { dot: 'bg-red-400',     text: 'text-red-400',     bg: 'bg-red-400/10',     border: 'border-red-400/20' },
-  amber:  { dot: 'bg-amber-400',   text: 'text-amber-400',   bg: 'bg-amber-400/10',   border: 'border-amber-400/20' },
-  purple: { dot: 'bg-purple-400',  text: 'text-purple-400',  bg: 'bg-purple-400/10',  border: 'border-purple-400/20' },
-  mag:    { dot: 'bg-fuchsia-400', text: 'text-fuchsia-400', bg: 'bg-fuchsia-400/10', border: 'border-fuchsia-400/20' },
-}
-const fallbackCat = { dot: 'bg-zinc-500', text: 'text-zinc-400', bg: 'bg-zinc-700/30', border: 'border-zinc-700/40' }
 
 const PAGE_SIZE = 5
 
@@ -264,7 +255,7 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
               <div className="divide-y divide-zinc-800/40">
                 {pagedLogs.map(log => {
                   const cat = log.action?.category ?? ''
-                  const c   = CAT_COLOR[cat] ?? fallbackCat
+                  const c   = ACTION_CATEGORY[cat as keyof typeof ACTION_CATEGORY] ?? ACTION_CATEGORY_FALLBACK
                   const pos = log.coins >= 0
                   return (
                     <div key={log.id} className="flex items-center gap-3 px-4 py-3.5 hover:bg-white/[0.03] transition-colors group">
