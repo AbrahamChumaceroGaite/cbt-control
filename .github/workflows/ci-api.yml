@@ -8,11 +8,15 @@ on:
       - 'shared/**'
       - 'package.json'
       - 'package-lock.json'
+      - '.github/workflows/ci-api.yml'
   push:
     branches: [develop]
     paths:
       - 'api/**'
       - 'shared/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/ci-api.yml'
 
 jobs:
   api:
