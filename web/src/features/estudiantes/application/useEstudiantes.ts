@@ -105,13 +105,12 @@ export function useEstudiantes() {
   const maxCoins = useMemo(() =>
     items.length ? Math.max(...items.map(s => s.coins), 0) : 500, [items])
 
-  const filtersActive = filters.coinMin > 0 || filters.coinMax !== null
+  const filtersActive = filters.coinMax !== null
 
   const filtered = useMemo(() => items.filter(s => {
     if (debouncedSearch &&
       !s.name.toLowerCase().includes(debouncedSearch.toLowerCase()) &&
       !s.code.toLowerCase().includes(debouncedSearch.toLowerCase())) return false
-    if (s.coins < filters.coinMin) return false
     if (filters.coinMax !== null && s.coins > filters.coinMax) return false
     return true
   }), [items, debouncedSearch, filters])

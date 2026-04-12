@@ -1,26 +1,27 @@
 'use client'
-import { Users, Upload } from 'lucide-react'
-import { Tooltip, Button, EmptyState } from '@/components/ui'
-import { SectionHeader }       from '@/components/shared/SectionHeader'
-import { Pagination }          from '@/components/shared/Pagination'
-import { ConfirmDialog }       from '@/components/shared/ConfirmDialog'
-import { CourseSelect }        from '@/components/shared/CourseSelect'
-import { FilterPopover }       from '@/components/shared/FilterPopover'
-import { useEstudiantes }      from '../application/useEstudiantes'
-import { EstudianteRow }       from './EstudianteRow'
-import { EstudianteFormModal } from './EstudianteFormModal'
-import { CoinRangeFilter }     from './CoinRangeFilter'
+import { Plus, Users, Upload }          from 'lucide-react'
+import { Button, EmptyState, Combobox } from '@/components/ui'
+import { SectionHeader }                from '@/components/shared/SectionHeader'
+import { Pagination }                   from '@/components/shared/Pagination'
+import { ConfirmDialog }                from '@/components/shared/ConfirmDialog'
+import { FilterPopover }                from '@/components/shared/FilterPopover'
+import { useEstudiantes }               from '../application/useEstudiantes'
+import { EstudianteRow }                from './EstudianteRow'
+import { EstudianteFormModal }          from './EstudianteFormModal'
+import { CoinRangeFilter }              from './CoinRangeFilter'
 
 export function EstudiantesSection() {
   const s = useEstudiantes()
   const h = s.handlers
 
+  const courseOptions = s.courses.map(c => ({ value: c.id, label: c.name }))
+
   return (
     <div className="animate-in fade-in duration-500">
       <SectionHeader
         icon={Users} iconClass="text-blue-400"
-        title="Directorio de Alumnos"
-        subtitle={`${s.totalItems} estudiantes en el curso seleccionado.`}
+        title="Student Directory"
+        subtitle={`${s.totalItems} students in the selected course.`}
         search={s.search} onSearch={h.setSearch}
         filters={
           <FilterPopover active={s.filtersActive} onClear={h.clearFilters}>
@@ -30,17 +31,21 @@ export function EstudiantesSection() {
         }
         actions={
           <>
-            <CourseSelect courses={s.courses} value={s.currentCourse} onChange={h.setCourse} />
-            <Tooltip content="Importar desde Excel (.xlsx)">
-              <Button variant="secondary" size="sm" onClick={() => s.fileInputRef.current?.click()}>
-                <Upload className="w-4 h-4 mr-2" /> Importar
-              </Button>
-            </Tooltip>
+            <Combobox
+              value={s.currentCourse}
+              onChange={h.setCourse}
+              options={courseOptions}
+              placeholder="Select course…"
+              className="w-44"
+            />
+            <Button variant="secondary" size="sm" onClick={() => s.fileInputRef.current?.click()}>
+              <Upload className="w-3.5 h-3.5" /> Import
+            </Button>
             <input type="file" ref={s.fileInputRef} accept=".xlsx,.xls,.csv"
               className="hidden" onChange={h.handleExcelUpload} />
-            <Tooltip content="Nuevo alumno">
-              <Button size="sm" onClick={h.openCreate}><span className="text-base leading-none">+</span></Button>
-            </Tooltip>
+            <Button size="sm" onClick={h.openCreate}>
+              <Plus className="w-3.5 h-3.5" /> New Student
+            </Button>
           </>
         }
       />
@@ -49,11 +54,11 @@ export function EstudiantesSection() {
         <table className="w-full text-left text-sm whitespace-nowrap">
           <thead className="bg-zinc-900/50 text-zinc-400 uppercase text-xs font-semibold tracking-wider border-b border-zinc-800">
             <tr>
-              <th className="px-6 py-4">Estudiante</th>
-              <th className="px-6 py-4">Código</th>
-              <th className="px-6 py-4">Correo</th>
+              <th className="px-6 py-4">Student</th>
+              <th className="px-6 py-4">Code</th>
+              <th className="px-6 py-4">Email</th>
               <th className="px-6 py-4 text-right">Coins</th>
-              <th className="px-6 py-4 text-right">Acciones</th>
+              <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800/50">
@@ -62,7 +67,7 @@ export function EstudiantesSection() {
                 onEdit={() => h.openEdit(st)} onDelete={() => h.requestDelete(st.id)} />
             ))}
             {s.totalItems === 0 && !s.loading && (
-              <tr><td colSpan={5}><EmptyState icon={<Users className="w-5 h-5" />} title="No se encontraron estudiantes." /></td></tr>
+              <tr><td colSpan={5}><EmptyState icon={<Users className="w-5 h-5" />} title="No students found." /></td></tr>
             )}
           </tbody>
         </table>
@@ -77,9 +82,9 @@ export function EstudiantesSection() {
         setForm={h.setForm} onSave={h.save} onClose={h.closeModal} />
 
       <ConfirmDialog open={!!s.confirmDeleteId} onConfirm={h.doDelete} onCancel={h.cancelDelete}
-        title="Eliminar estudiante"
-        message="¿Eliminar este estudiante? Esta operación no se puede deshacer."
-        confirmText="Eliminar" variant="red" />
+        title="Delete student"
+        message="Delete this student? This action cannot be undone."
+        confirmText="Delete" variant="red" />
     </div>
   )
 }

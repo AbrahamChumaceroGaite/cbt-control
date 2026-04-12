@@ -1,6 +1,6 @@
 'use client'
-import { BookType } from 'lucide-react'
-import { Grid, Tooltip, Button, EmptyState } from '@/components/ui'
+import { BookType, Plus } from 'lucide-react'
+import { Grid, Button, EmptyState } from '@/components/ui'
 import { SectionHeader }  from '@/components/shared/SectionHeader'
 import { Pagination }     from '@/components/shared/Pagination'
 import { ConfirmDialog }  from '@/components/shared/ConfirmDialog'
@@ -16,13 +16,13 @@ export function CursosSection() {
     <div className="animate-in fade-in duration-500">
       <SectionHeader
         icon={BookType} iconClass="text-blue-400"
-        title="Cursos"
-        subtitle="Administra los cursos y niveles."
+        title="Courses"
+        subtitle="Manage courses and academic levels."
         search={s.search} onSearch={h.setSearch}
         actions={
-          <Tooltip content="Nuevo curso">
-            <Button size="sm" onClick={h.openCreate}><span className="text-base leading-none">+</span></Button>
-          </Tooltip>
+          <Button size="sm" onClick={h.openCreate}>
+            <Plus className="w-3.5 h-3.5" /> New Course
+          </Button>
         }
       />
 
@@ -32,7 +32,7 @@ export function CursosSection() {
         ))}
       </Grid>
       {s.totalItems === 0 && !s.loading && (
-        <EmptyState icon={<BookType className="w-5 h-5" />} title="No hay cursos creados." />
+        <EmptyState icon={<BookType className="w-5 h-5" />} title="No courses found." />
       )}
 
       <div className="mt-4">
@@ -44,9 +44,9 @@ export function CursosSection() {
         setForm={h.setForm} onSave={h.save} onClose={h.closeModal} />
 
       <ConfirmDialog open={!!s.confirmDeleteId} onConfirm={h.doDelete} onCancel={h.cancelDelete}
-        title="Eliminar curso"
-        message="¿Eliminar este curso y todos sus estudiantes? Esta operación no se puede deshacer."
-        confirmText="Eliminar" variant="red" />
+        title="Delete course"
+        message="Delete this course and all its students? This action cannot be undone."
+        confirmText="Delete" variant="red" />
     </div>
   )
 }

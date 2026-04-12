@@ -13,18 +13,18 @@ interface Props {
 }
 
 const CHECKBOX_FIELDS: { key: keyof ActionFormState; label: string }[] = [
-  { key: 'affectsClass',   label: 'Aplica a toda la clase'          },
-  { key: 'affectsStudent', label: 'Aplica a estudiante individual'  },
-  { key: 'isActive',       label: 'Acción Activa (Visible en app)'  },
+  { key: 'affectsClass',   label: 'Applies to the whole class'    },
+  { key: 'affectsStudent', label: 'Applies to individual student' },
+  { key: 'isActive',       label: 'Active (Visible in app)'       },
 ]
 
 export function ActionFormModal({ open, editing, form, setForm, onSave, onClose }: Props) {
   const upd = (key: keyof ActionFormState, val: unknown) => setForm(p => ({ ...p, [key]: val }))
 
   return (
-    <Modal open={open} onClose={onClose} title={editing ? 'Editar Acción' : 'Nueva Acción'}>
+    <Modal open={open} onClose={onClose} title={editing ? 'Edit Action' : 'New Action'}>
       <div className="space-y-4">
-        <FormField label="Nombre descriptivo">
+        <FormField label="Descriptive Name">
           <Input value={form.name} onChange={e => upd('name', e.target.value)} />
         </FormField>
         <div className="grid grid-cols-2 gap-4">
@@ -32,7 +32,7 @@ export function ActionFormModal({ open, editing, form, setForm, onSave, onClose 
             <Input type="number" value={form.coins}
               onChange={e => upd('coins', parseInt(e.target.value) || 0)} />
           </FormField>
-          <FormField label="Categoría/Color">
+          <FormField label="Category / Color">
             <Combobox
               value={form.category}
               onChange={v => upd('category', v)}
@@ -49,8 +49,8 @@ export function ActionFormModal({ open, editing, form, setForm, onSave, onClose 
           ))}
         </div>
         <div className="flex gap-2 pt-2">
-          <Button variant="outline" onClick={onClose} className="flex-1">Cancelar</Button>
-          <Button onClick={onSave} className="flex-1">{editing ? 'Guardar' : 'Crear Acción'}</Button>
+          <Button variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
+          <Button onClick={onSave} className="flex-1">{editing ? 'Save changes' : 'Create Action'}</Button>
         </div>
       </div>
     </Modal>

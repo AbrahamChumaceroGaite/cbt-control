@@ -21,19 +21,19 @@ export function RewardFormModal({ open, editing, form, setForm, changeType, onSa
     : null
 
   return (
-    <Modal open={open} onClose={onClose} title={editing ? 'Editar Recompensa' : 'Nueva Recompensa'}>
+    <Modal open={open} onClose={onClose} title={editing ? 'Edit Reward' : 'New Reward'}>
       <div className="space-y-4">
-        <FormField label="Nombre / Título">
+        <FormField label="Name / Title">
           <Input value={form.name} onChange={e => upd('name', e.target.value)} />
         </FormField>
-        <FormField label="Descripción">
+        <FormField label="Description">
           <Input value={form.description} onChange={e => upd('description', e.target.value)} />
         </FormField>
         <div className="grid grid-cols-2 gap-4">
-          <FormField label="Costo en Coins">
+          <FormField label="Cost in Coins">
             <Input type="number" value={form.coinsRequired} onChange={e => upd('coinsRequired', parseInt(e.target.value) || 0)} />
           </FormField>
-          <FormField label="Icono">
+          <FormField label="Icon">
             <Combobox
               value={form.icon}
               onChange={v => upd('icon', v)}
@@ -41,16 +41,16 @@ export function RewardFormModal({ open, editing, form, setForm, changeType, onSa
             />
           </FormField>
         </div>
-        <FormField label="Descuento (%) — 0 = sin descuento">
+        <FormField label="Discount (%) — 0 = no discount">
           <div className="flex items-center gap-3">
             <Input type="number" min={0} max={100} value={form.discount} className="w-24"
               onChange={e => upd('discount', Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))} />
             {finalPrice !== null && (
-              <span className="text-xs text-rose-400 font-bold">Precio final: {finalPrice} coins</span>
+              <span className="text-xs text-rose-400 font-bold">Final price: {finalPrice} coins</span>
             )}
           </div>
         </FormField>
-        <FormField label="Tipo de Premio">
+        <FormField label="Reward Type">
           <Combobox
             value={form.type}
             onChange={v => changeType(v as RewardType)}
@@ -58,19 +58,19 @@ export function RewardFormModal({ open, editing, form, setForm, changeType, onSa
           />
           <p className="text-xs text-zinc-500 pl-1 mt-1">
             {form.type === 'class'
-              ? 'Canjeable con coins grupales desde el panel de Aula'
-              : 'Canjeable con coins personales desde el portal del alumno'}
+              ? 'Redeemable with class coins from the Classroom panel'
+              : 'Redeemable with personal coins from the student portal'}
           </p>
         </FormField>
         <div className="pt-2 border-t border-zinc-800">
           <label className="flex items-center gap-2 cursor-pointer pt-2">
             <Checkbox checked={form.isActive} onCheckedChange={v => upd('isActive', v)} />
-            <span className="text-sm text-zinc-300">Activa (Disponible para canje)</span>
+            <span className="text-sm text-zinc-300">Active (Available for redemption)</span>
           </label>
         </div>
         <div className="flex gap-2 pt-2">
-          <Button variant="outline" onClick={onClose} className="flex-1">Cancelar</Button>
-          <Button onClick={onSave} className="flex-1">{editing ? 'Guardar' : 'Crear Premio'}</Button>
+          <Button variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
+          <Button onClick={onSave} className="flex-1">{editing ? 'Save changes' : 'Create Reward'}</Button>
         </div>
       </div>
     </Modal>

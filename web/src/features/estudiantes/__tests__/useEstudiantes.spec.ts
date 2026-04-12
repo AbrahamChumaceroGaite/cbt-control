@@ -156,10 +156,9 @@ describe('useEstudiantes', () => {
       const { result } = renderHook(() => useEstudiantes())
       await waitFor(() => expect(result.current.loading).toBe(false))
 
-      act(() => { result.current.handlers.setFilters(p => ({ ...p, coinMin: 100 })) })
+      act(() => { result.current.handlers.setFilters(p => ({ ...p, coinMax: 100 })) })
       act(() => { result.current.handlers.clearFilters() })
 
-      expect(result.current.filters.coinMin).toBe(0)
       expect(result.current.filters.coinMax).toBeNull()
     })
   })

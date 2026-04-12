@@ -20,7 +20,7 @@ interface Props {
 
 export function Combobox({
   value, onChange, options,
-  placeholder = 'Seleccionar…',
+  placeholder = 'Select…',
   className, size = 'sm', disabled = false,
 }: Props) {
   const [open,  setOpen]  = useState(false)
@@ -90,14 +90,14 @@ export function Combobox({
                     onChange(filtered[0].value); setOpen(false); setQuery('')
                   }
                 }}
-                placeholder="Buscar…"
+                placeholder="Search…"
                 className="flex-1 bg-transparent text-xs text-white placeholder-zinc-500 focus:outline-none"
               />
             </div>
           </div>
           <div className="max-h-52 overflow-y-auto">
             {filtered.length === 0 ? (
-              <p className="px-3 py-2.5 text-xs text-zinc-500 text-center">Sin resultados</p>
+              <p className="px-3 py-2.5 text-xs text-zinc-500 text-center">No results</p>
             ) : filtered.map(o => (
               <button
                 key={o.value}

@@ -1,6 +1,7 @@
 'use client'
 import { ArrowRight, Loader2, Search, User, X } from 'lucide-react'
 import { Combobox } from '@/components/ui'
+import { Z }        from '@/config/scheme'
 import type { StudentSearchResult } from '../domain/types'
 
 interface Props {
@@ -17,7 +18,7 @@ interface Props {
 
 export function RecipientPicker({ courses, courseId, q, results, searching, onCourseChange, onQChange, onClearSearch, onSelect }: Props) {
   const courseOptions = [
-    { value: '', label: 'Seleccionar curso…' },
+    { value: '', label: 'Select course…' },
     ...courses.map(c => ({ value: c.id, label: c.name })),
   ]
 
@@ -28,7 +29,7 @@ export function RecipientPicker({ courses, courseId, q, results, searching, onCo
           value={courseId}
           onChange={onCourseChange}
           options={courseOptions}
-          placeholder="Curso…"
+          placeholder="Course…"
           size="default"
           className="w-40 flex-shrink-0"
         />
@@ -39,7 +40,7 @@ export function RecipientPicker({ courses, courseId, q, results, searching, onCo
             value={q}
             onChange={e => onQChange(e.target.value)}
             disabled={!courseId}
-            placeholder={courseId ? 'Buscar por nombre…' : 'Selecciona un curso primero'}
+            placeholder={courseId ? 'Search by name…' : 'Select a course first'}
             className="w-full h-10 pl-9 pr-8 rounded-xl bg-zinc-800/80 border border-zinc-700 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           />
           {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 animate-spin" />}
@@ -56,7 +57,7 @@ export function RecipientPicker({ courses, courseId, q, results, searching, onCo
       </div>
 
       {results.length > 0 && (
-        <div className="rounded-xl border border-zinc-700/60 bg-zinc-900 overflow-hidden shadow-2xl">
+        <div className="rounded-xl border border-zinc-700/60 bg-zinc-900 overflow-hidden shadow-2xl" style={{ zIndex: Z.POPOVER }}>
           {results.map(s => (
             <button
               key={s.id}
@@ -80,7 +81,7 @@ export function RecipientPicker({ courses, courseId, q, results, searching, onCo
       )}
 
       {courseId && q.trim().length >= 2 && results.length === 0 && !searching && (
-        <p className="text-xs text-zinc-600 text-center py-2">Sin resultados para &ldquo;{q}&rdquo;</p>
+        <p className="text-xs text-zinc-600 text-center py-2">No results for &ldquo;{q}&rdquo;</p>
       )}
     </div>
   )

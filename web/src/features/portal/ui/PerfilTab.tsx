@@ -90,7 +90,7 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
           className="absolute bottom-4 left-4 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/55 backdrop-blur-sm text-white/80 text-xs font-medium hover:bg-black/70 hover:text-white transition-all border border-white/10"
         >
           <Camera className="w-3 h-3" />
-          {uploading === 'banner' ? 'Subiendo…' : 'Cambiar portada'}
+          {uploading === 'banner' ? 'Uploading…' : 'Change cover'}
         </button>
         <input ref={bannerRef} type="file" accept="image/*" className="hidden" onChange={uploadBanner} />
 
@@ -145,7 +145,7 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
               <div key={m.group.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-950/50 backdrop-blur-xl border border-white/[0.07]">
                 <Users className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
                 <div>
-                  <p className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold leading-none mb-0.5">Grupo</p>
+                  <p className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold leading-none mb-0.5">Group</p>
                   <p className="text-xs font-semibold text-white leading-none">{m.group.name}</p>
                 </div>
               </div>
@@ -166,7 +166,7 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
             <div className="absolute inset-0 pointer-events-none"
               style={{ background: HERO_BANNER.amberGlow }} />
             <div className="relative z-10">
-              <p className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-zinc-500 mb-3">Mis Coins</p>
+              <p className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-zinc-500 mb-3">My Coins</p>
               <div className="flex items-end gap-1 mb-1">
                 <span className="text-4xl font-black tracking-tighter text-amber-400 leading-none">{student.coins}</span>
                 <span className="text-amber-500/60 text-xs font-bold mb-0.5">NC</span>
@@ -174,7 +174,7 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
               <div className="flex items-center gap-1 mb-2">
                 {myTrend ? <TrendingUp className="w-3 h-3 text-green-400" /> : <TrendingDown className="w-3 h-3 text-red-400" />}
                 <span className={`text-[10px] font-bold ${myTrend ? 'text-green-400' : 'text-red-400'}`}>
-                  {myTrend ? 'Subiendo' : 'Bajando'}
+                  {myTrend ? 'Rising' : 'Falling'}
                 </span>
               </div>
               <Sparkline values={mySparkline} color={myTrend ? TREND_HEX.up : TREND_HEX.down} />
@@ -188,12 +188,12 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
             <div className="absolute inset-0 pointer-events-none"
               style={{ background: HERO_BANNER.emeraldGlow }} />
             <div className="relative z-10">
-              <p className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-zinc-500 mb-3">Clase {student.course.name}</p>
+              <p className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-zinc-500 mb-3">Class {student.course.name}</p>
               <div className="flex items-end gap-1 mb-1">
                 <span className="text-4xl font-black tracking-tighter text-emerald-400 leading-none">{student.course.classCoins}</span>
                 <span className="text-emerald-500/60 text-xs font-bold mb-0.5">NC</span>
               </div>
-              <p className="text-[10px] text-zinc-600 mt-2">coins grupales acumulados</p>
+              <p className="text-[10px] text-zinc-600 mt-2">class coins accumulated</p>
             </div>
           </div>
         </div>
@@ -201,7 +201,7 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
         {/* Trajectory chart */}
         {student.coinLogs.length >= 3 && (
           <div className="rounded-2xl bg-zinc-900/70 border border-zinc-800/60 p-4">
-            <p className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-zinc-500 mb-3">Trayectoria de Coins</p>
+            <p className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-zinc-500 mb-3">Coins Trajectory</p>
             <TrajectoryChart logs={student.coinLogs} currentCoins={student.coins} />
           </div>
         )}
@@ -210,7 +210,7 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
         {rewards.length > 0 && (
           <div className="rounded-2xl bg-zinc-900/70 border border-zinc-800/60 p-4">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-zinc-500">Próximos Premios</p>
+              <p className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-zinc-500">Upcoming Rewards</p>
               <Star className="w-3.5 h-3.5 text-amber-500/60" />
             </div>
             <RewardsProgress coins={student.coins} rewards={rewards} pendingIds={pendingRewardIds} />
@@ -221,9 +221,9 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
         <div className="rounded-2xl bg-zinc-900/70 border border-zinc-800/60 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800/60">
             <div className="flex items-center gap-2">
-              <p className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-zinc-500">Historial</p>
+              <p className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-zinc-500">History</p>
               {filteredLogs.length > 0 && (
-                <span className="text-[10px] text-zinc-600">{filteredLogs.length} registros</span>
+                <span className="text-[10px] text-zinc-600">{filteredLogs.length} records</span>
               )}
             </div>
             <DateFilterPopover
@@ -238,7 +238,7 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
               <div className="w-9 h-9 rounded-xl bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center">
                 <Coins className="w-4 h-4 text-zinc-600" />
               </div>
-              <p className="text-xs text-zinc-600">Sin movimientos{dateFilter ? ' en ese período' : ''}</p>
+              <p className="text-xs text-zinc-600">No movements{dateFilter ? ' in that period' : ''}</p>
             </div>
           ) : (
             <>

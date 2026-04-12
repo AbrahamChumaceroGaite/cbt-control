@@ -7,9 +7,9 @@ import { TX_DIRECTION }    from '@/config/scheme'
 import type { CoinTransactionResponse, HistoryFilter } from '../domain/types'
 
 const TX_FILTER_OPTIONS: { value: HistoryFilter; label: string }[] = [
-  { value: 'all',      label: 'Todas'     },
-  { value: 'sent',     label: 'Enviadas'  },
-  { value: 'received', label: 'Recibidas' },
+  { value: 'all',      label: 'All'      },
+  { value: 'sent',     label: 'Sent'     },
+  { value: 'received', label: 'Received' },
 ]
 
 const PAGE = 5
@@ -40,7 +40,7 @@ export function TxHistory({ txs, myStudentId }: Props) {
           <div className="w-10 h-10 rounded-xl bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center">
             <Coins className="w-4 h-4 text-zinc-600" />
           </div>
-          <p className="text-xs text-zinc-600">Sin transacciones</p>
+          <p className="text-xs text-zinc-600">No transactions</p>
         </div>
       ) : (
         <>

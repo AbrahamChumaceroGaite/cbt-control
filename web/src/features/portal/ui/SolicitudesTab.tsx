@@ -14,10 +14,10 @@ import { REQUEST_STATUS } from '@/config/status'
 const PAGE_SIZE = 5
 
 const STATUS_PILLS: { value: StatusFilter; label: string }[] = [
-  { value: 'all',      label: 'Todos'      },
-  { value: 'pending',  label: 'Pendientes' },
-  { value: 'approved', label: 'Aprobados'  },
-  { value: 'rejected', label: 'Rechazados' },
+  { value: 'all',      label: 'All'      },
+  { value: 'pending',  label: 'Pending'  },
+  { value: 'approved', label: 'Approved' },
+  { value: 'rejected', label: 'Rejected' },
 ]
 
 
@@ -63,17 +63,17 @@ export function SolicitudesTab({ student, requests, onLogout, onReload }: Props)
 
       <main className="max-w-2xl mx-auto px-4 pt-5">
         <div className="flex items-center gap-3 mb-4">
-          <h2 className="text-xs font-extrabold uppercase tracking-[0.15em] text-zinc-400 whitespace-nowrap">Mis Solicitudes</h2>
+          <h2 className="text-xs font-extrabold uppercase tracking-[0.15em] text-zinc-400 whitespace-nowrap">My Requests</h2>
           <div className="flex-1 h-px bg-zinc-800" />
           {pendingCount > 0 && (
             <span className="px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/25 text-[10px] font-bold text-amber-400">
-              {pendingCount} pendiente{pendingCount > 1 ? 's' : ''}
+              {pendingCount} pending{pendingCount > 1 ? '' : ''}
             </span>
           )}
         </div>
 
         <div className="space-y-2.5 mb-5">
-          <SearchInput value={search} onChange={v => { setSearch(v); resetPage() }} placeholder="Buscar por nombre…" />
+          <SearchInput value={search} onChange={v => { setSearch(v); resetPage() }} placeholder="Search by name…" />
           <div className="flex items-center gap-2 flex-wrap">
             <FilterPills options={STATUS_PILLS} value={statusFilter} onChange={v => { setStatusFilter(v); resetPage() }} className="flex-1" />
             <DateFilterPopover
@@ -90,7 +90,7 @@ export function SolicitudesTab({ student, requests, onLogout, onReload }: Props)
               <ClipboardList className="w-5 h-5 text-zinc-600" />
             </div>
             <p className="text-sm text-zinc-600">
-              {requests.length === 0 ? 'No tienes solicitudes aún' : 'Sin resultados con estos filtros'}
+              {requests.length === 0 ? 'No requests yet' : 'No results with these filters'}
             </p>
           </div>
         ) : (
@@ -117,7 +117,7 @@ export function SolicitudesTab({ student, requests, onLogout, onReload }: Props)
                         loading={cancelling === req.id}
                         className="h-auto px-2 py-0.5 text-[10px] font-semibold text-zinc-600 hover:text-red-400 hover:bg-red-950/30 border border-transparent hover:border-red-900/40"
                       >
-                        <X className="w-3 h-3" /> Cancelar
+                        <X className="w-3 h-3" /> Cancel
                       </Button>
                     )}
                   </div>
@@ -129,12 +129,12 @@ export function SolicitudesTab({ student, requests, onLogout, onReload }: Props)
               <div className="flex items-center justify-between py-2">
                 <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
                   className="flex items-center gap-1.5 px-3 h-8 rounded-xl text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 disabled:opacity-30 transition-colors">
-                  <ChevronLeft className="w-4 h-4" /> Anterior
+                  <ChevronLeft className="w-4 h-4" /> Previous
                 </button>
                 <span className="text-xs text-zinc-500">{page + 1} / {totalPages}</span>
                 <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1}
                   className="flex items-center gap-1.5 px-3 h-8 rounded-xl text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 disabled:opacity-30 transition-colors">
-                  Siguiente <ChevronRight className="w-4 h-4" />
+                  Next <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             )}
@@ -146,9 +146,9 @@ export function SolicitudesTab({ student, requests, onLogout, onReload }: Props)
         open={!!confirmId}
         onConfirm={() => { const id = confirmId!; setConfirmId(null); doCancel(id) }}
         onCancel={() => setConfirmId(null)}
-        title="Cancelar solicitud"
-        message="¿Seguro que quieres cancelar esta solicitud pendiente? Esta acción no se puede deshacer."
-        confirmText="Sí, cancelar"
+        title="Cancel Request"
+        message="Are you sure you want to cancel this pending request? This action cannot be undone."
+        confirmText="Yes, cancel"
         variant="red"
         loading={!!cancelling}
       />

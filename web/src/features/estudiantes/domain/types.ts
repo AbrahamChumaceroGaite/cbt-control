@@ -10,8 +10,7 @@ export interface StudentFormState {
 }
 
 export interface StudentFilters {
-  coinMin: number
-  coinMax: number | null
+  coinMax: number | null   // coinMin is always 0 (implicit)
 }
 
 export interface ImportRow {
@@ -28,6 +27,5 @@ export const EMPTY_FORM: StudentFormState = {
 }
 
 export const EMPTY_FILTERS: StudentFilters = {
-  coinMin: 0,
   coinMax: null,
 }

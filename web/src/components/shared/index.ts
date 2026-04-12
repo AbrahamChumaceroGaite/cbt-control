@@ -5,12 +5,10 @@ export { ToastContainer }         from './toast-container'
 
 // ─── Form helpers ─────────────────────────────────────────────────────────────
 export { FormField }              from './FormField'
-export { CourseSelect }           from './CourseSelect'
 
 // ─── Filters ─────────────────────────────────────────────────────────────────
 export { FilterPills }            from './FilterPills'
 export { FilterPopover }          from './FilterPopover'
-export { FilterSelect }           from './FilterSelect'
 
 // ─── Layout / navigation ─────────────────────────────────────────────────────
 export { SectionHeader }          from './SectionHeader'

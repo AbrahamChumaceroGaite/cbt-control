@@ -1,4 +1,4 @@
-export type StoreTab = 'acciones' | 'premios' | 'transacciones'
+export type StoreTab = 'acciones' | 'premios'
 
 export type TxFilter = 'all' | 'pending' | 'approved' | 'rejected'
 

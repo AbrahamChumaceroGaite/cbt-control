@@ -1,16 +1,14 @@
 'use client'
 import React, { useState }         from 'react'
-import { Zap, Gift, Landmark, ShoppingBag } from 'lucide-react'
+import { Zap, Gift, ShoppingBag } from 'lucide-react'
 import { AccionesSection }    from '@/features/acciones/ui/AccionesSection'
 import { RecompensasSection } from '@/features/recompensas/ui/RecompensasSection'
-import { TransaccionesSection } from './ui/TransaccionesSection'
 import { SectionHeader }      from '@/components/shared/SectionHeader'
 import type { StoreTab }      from './domain/types'
 
 const STORE_TABS: { id: StoreTab; label: string; icon: React.ElementType; desc: string }[] = [
-  { id: 'acciones',      label: 'Actions',      icon: Zap,      desc: 'Behaviours and scores'   },
-  { id: 'premios',       label: 'Rewards',       icon: Gift,     desc: 'Redeemable rewards'      },
-  { id: 'transacciones', label: 'Transactions',  icon: Landmark, desc: 'Coin transfers'          },
+  { id: 'acciones', label: 'Actions', icon: Zap,  desc: 'Behaviours and scores' },
+  { id: 'premios',  label: 'Rewards', icon: Gift, desc: 'Redeemable rewards'    },
 ]
 
 export function StoreSection() {
@@ -22,7 +20,7 @@ export function StoreSection() {
         icon={ShoppingBag}
         iconClass="text-amber-400"
         title="Store"
-        subtitle="Configure actions, rewards and manage coin transfers"
+        subtitle="Configure actions and rewards"
       />
 
       {/* Sub-navigation */}
@@ -40,7 +38,7 @@ export function StoreSection() {
                   : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60'
               }`}
             >
-              <Icon className={`w-4 h-4 ${active ? (t.id === 'transacciones' ? 'text-purple-400' : 'text-amber-400') : 'text-zinc-600 group-hover:text-zinc-400'}`} />
+              <Icon className={`w-4 h-4 ${active ? 'text-amber-400' : 'text-zinc-600 group-hover:text-zinc-400'}`} />
               <div className="text-left hidden sm:block">
                 <div className="leading-none">{t.label}</div>
                 <div className={`text-[10px] mt-0.5 leading-none font-normal ${active ? 'text-zinc-400' : 'text-zinc-600'}`}>{t.desc}</div>
@@ -50,9 +48,8 @@ export function StoreSection() {
         })}
       </div>
 
-      {activeTab === 'acciones'      && <AccionesSection />}
-      {activeTab === 'premios'       && <RecompensasSection />}
-      {activeTab === 'transacciones' && <TransaccionesSection />}
+      {activeTab === 'acciones' && <AccionesSection />}
+      {activeTab === 'premios'  && <RecompensasSection />}
     </div>
   )
 }

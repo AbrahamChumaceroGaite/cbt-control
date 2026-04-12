@@ -1,10 +1,10 @@
 'use client'
-import { Plus, Users } from 'lucide-react'
-import { Modal, Button, Input, Label, Combobox, Tooltip, Grid, EmptyState } from '@/components/ui'
+import { Plus, Users }                                  from 'lucide-react'
+import { Modal, Button, Input, Combobox, Grid, EmptyState } from '@/components/ui'
 import { SectionHeader }  from '@/components/shared/SectionHeader'
 import { Pagination }     from '@/components/shared/Pagination'
 import { FilterPopover }  from '@/components/shared/FilterPopover'
-import { FilterSelect }   from '@/components/shared/FilterSelect'
+import { FormField }      from '@/components/shared/FormField'
 import { UserCard }       from './UserCard'
 import { UserDrawer }     from './UserDrawer'
 import { useUsuarios }    from '../application/useUsuarios'
@@ -17,6 +17,11 @@ export function UsuariosSection() {
   const s = useUsuarios()
   const h = s.handlers
 
+  const courseFilterOpts = [
+    { value: '', label: 'All' },
+    ...s.courseOptions.map(c => ({ value: c, label: c })),
+  ]
+
   return (
     <>
       <div className="space-y-4 animate-in fade-in duration-300">
@@ -26,15 +31,27 @@ export function UsuariosSection() {
           search={s.search} onSearch={h.setSearch}
           filters={
             <FilterPopover active={s.filtersActive} onClear={h.clearFilters}>
-              <FilterSelect label="Role"   value={s.filters.role}   onChange={v => h.updateFilter('role',   v as typeof s.filters.role)}   options={ROLE_OPTS}   />
-              <FilterSelect label="Status" value={s.filters.status} onChange={v => h.updateFilter('status', v as typeof s.filters.status)} options={STATUS_OPTS} />
-              <FilterSelect label="Push"   value={s.filters.push}   onChange={v => h.updateFilter('push',   v as typeof s.filters.push)}   options={PUSH_OPTS}   />
+              <div className="space-y-1">
+                <span className="text-[10px] text-zinc-500 uppercase tracking-wide">Role</span>
+                <Combobox value={s.filters.role} onChange={v => h.updateFilter('role', v as typeof s.filters.role)}
+                  options={ROLE_OPTS as unknown as { value: string; label: string }[]} placeholder="All" />
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] text-zinc-500 uppercase tracking-wide">Status</span>
+                <Combobox value={s.filters.status} onChange={v => h.updateFilter('status', v as typeof s.filters.status)}
+                  options={STATUS_OPTS as unknown as { value: string; label: string }[]} placeholder="All" />
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] text-zinc-500 uppercase tracking-wide">Push</span>
+                <Combobox value={s.filters.push} onChange={v => h.updateFilter('push', v as typeof s.filters.push)}
+                  options={PUSH_OPTS as unknown as { value: string; label: string }[]} placeholder="All" />
+              </div>
               {s.courseOptions.length > 0 && (
-                <FilterSelect
-                  label="Course" value={s.filters.course}
-                  onChange={v => h.updateFilter('course', v)}
-                  options={[{ value: '', label: 'All' }, ...s.courseOptions.map(c => ({ value: c, label: c }))]}
-                />
+                <div className="space-y-1">
+                  <span className="text-[10px] text-zinc-500 uppercase tracking-wide">Course</span>
+                  <Combobox value={s.filters.course} onChange={v => h.updateFilter('course', v)}
+                    options={courseFilterOpts} placeholder="All courses" />
+                </div>
               )}
               <div className="space-y-1">
                 <span className="text-[10px] text-zinc-500 uppercase tracking-wide">Registered</span>
@@ -48,9 +65,9 @@ export function UsuariosSection() {
             </FilterPopover>
           }
           actions={
-            <Tooltip content="New user">
-              <Button size="sm" onClick={h.openCreate}><Plus className="w-4 h-4" /></Button>
-            </Tooltip>
+            <Button size="sm" onClick={h.openCreate}>
+              <Plus className="w-3.5 h-3.5" /> New User
+            </Button>
           }
         />
 
@@ -72,21 +89,26 @@ export function UsuariosSection() {
 
       <Modal open={s.modal} onClose={h.closeCreate} title="New User">
         <div className="space-y-4">
-          <div className="space-y-1.5"><Label>Code (login)</Label>
-            <Input value={s.form.code}     onChange={e => h.setForm(p => ({ ...p, code:     e.target.value }))} placeholder="e.g. s1a01 or admin" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <FormField label="Code (login)">
+              <Input value={s.form.code} onChange={e => h.setForm(p => ({ ...p, code: e.target.value }))} placeholder="e.g. s1a01 or admin" />
+            </FormField>
+            <FormField label="Role">
+              <Combobox
+                value={s.form.role}
+                onChange={v => h.setForm(p => ({ ...p, role: v }))}
+                options={[{ value: 'student', label: 'Student' }, { value: 'admin', label: 'Administrator' }]}
+                placeholder="Select role…"
+              />
+            </FormField>
           </div>
-          <div className="space-y-1.5"><Label>Role</Label>
-            <Combobox
-              value={s.form.role}
-              onChange={v => h.setForm(p => ({ ...p, role: v }))}
-              options={[{ value: 'student', label: 'Student' }, { value: 'admin', label: 'Administrator' }]}
-            />
-          </div>
-          <div className="space-y-1.5"><Label>Full Name</Label>
-            <Input value={s.form.fullName} onChange={e => h.setForm(p => ({ ...p, fullName: e.target.value }))} placeholder="Display name" />
-          </div>
-          <div className="space-y-1.5"><Label>Password</Label>
-            <Input type="password" value={s.form.password} onChange={e => h.setForm(p => ({ ...p, password: e.target.value }))} placeholder="••••••••" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <FormField label="Full Name">
+              <Input value={s.form.fullName} onChange={e => h.setForm(p => ({ ...p, fullName: e.target.value }))} placeholder="Display name" />
+            </FormField>
+            <FormField label="Password">
+              <Input type="password" value={s.form.password} onChange={e => h.setForm(p => ({ ...p, password: e.target.value }))} placeholder="••••••••" />
+            </FormField>
           </div>
         </div>
         <div className="flex gap-2 pt-4">

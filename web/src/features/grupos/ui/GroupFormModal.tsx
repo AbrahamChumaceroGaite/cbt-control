@@ -16,12 +16,12 @@ interface Props {
 
 export function GroupFormModal({ open, editing, form, students, setForm, toggleMember, onSave, onClose }: Props) {
   return (
-    <Modal open={open} onClose={onClose} title={editing ? 'Editar Grupo' : 'Nuevo Grupo'}>
+    <Modal open={open} onClose={onClose} title={editing ? 'Edit Group' : 'New Group'}>
       <div className="space-y-4">
-        <FormField label="Nombre del Grupo">
+        <FormField label="Group Name">
           <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
         </FormField>
-        <FormField label="Seleccionar Miembros">
+        <FormField label="Select Members">
           <div className="max-h-[250px] overflow-y-auto space-y-1 border border-zinc-700 rounded-lg p-2 bg-zinc-800/30">
             {students.map(s => (
               <label key={s.id} className="flex items-center gap-3 p-2 rounded hover:bg-zinc-800/50 cursor-pointer">
@@ -30,13 +30,13 @@ export function GroupFormModal({ open, editing, form, students, setForm, toggleM
               </label>
             ))}
             {students.length === 0 && (
-              <p className="text-sm text-zinc-500 p-2">No hay estudiantes en el curso.</p>
+              <p className="text-sm text-zinc-500 p-2">No students in this course.</p>
             )}
           </div>
         </FormField>
         <div className="flex gap-2 pt-2">
-          <Button variant="outline" onClick={onClose} className="flex-1">Cancelar</Button>
-          <Button onClick={onSave} className="flex-1">{editing ? 'Guardar' : 'Crear Grupo'}</Button>
+          <Button variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
+          <Button onClick={onSave} className="flex-1">{editing ? 'Save changes' : 'Create Group'}</Button>
         </div>
       </div>
     </Modal>

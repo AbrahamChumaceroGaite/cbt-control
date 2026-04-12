@@ -32,23 +32,23 @@ export function BankTab({ student, onLogout, onCoinsUpdate }: Props) {
             <Coins className="w-6 h-6 text-amber-400" />
           </div>
           <div className="relative z-10 flex-1">
-            <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-zinc-500">Tu Saldo</p>
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-zinc-500">Your Balance</p>
             <p className="text-3xl font-black text-amber-300 tracking-tight leading-none">
               {student.coins} <span className="text-sm font-bold text-amber-400/60">coins</span>
             </p>
           </div>
           <div className="relative z-10 text-right">
-            <p className="text-[10px] text-zinc-600">Impuesto</p>
+            <p className="text-[10px] text-zinc-600">Tax</p>
             <p className="text-xs font-bold text-zinc-400">1 coin / tx</p>
           </div>
         </section>
 
         {!loading && <WeeklyBar status={status} />}
 
-        <section className="rounded-2xl bg-zinc-900/80 border border-zinc-800 overflow-hidden">
+        <section className="rounded-2xl bg-zinc-900/80 border border-zinc-800">
           <div className="flex items-center gap-2 px-5 py-3.5 border-b border-zinc-800">
             <Send className="w-4 h-4 text-amber-400" />
-            <h2 className="text-xs font-extrabold uppercase tracking-[0.15em] text-zinc-300">Enviar Coins</h2>
+            <h2 className="text-xs font-extrabold uppercase tracking-[0.15em] text-zinc-300">Send Coins</h2>
           </div>
           <div className="p-5">
             <SendForm myCoins={student.coins} remaining={status.remaining} onSent={handleSent} />
@@ -58,7 +58,7 @@ export function BankTab({ student, onLogout, onCoinsUpdate }: Props) {
         <section className="rounded-2xl bg-zinc-900/80 border border-zinc-800 overflow-hidden">
           <div className="flex items-center gap-2 px-5 py-3.5 border-b border-zinc-800">
             <Clock className="w-4 h-4 text-zinc-500" />
-            <h2 className="text-xs font-extrabold uppercase tracking-[0.15em] text-zinc-300">Historial</h2>
+            <h2 className="text-xs font-extrabold uppercase tracking-[0.15em] text-zinc-300">History</h2>
           </div>
           <div className="p-4">
             {loading

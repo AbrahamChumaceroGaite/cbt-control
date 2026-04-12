@@ -16,16 +16,18 @@ export function EstudianteFormModal({ open, editing, form, setForm, onSave, onCl
     setForm(p => ({ ...p, [key]: val }))
 
   return (
-    <Modal open={open} onClose={onClose} title={editing ? 'Editar alumno' : 'Nuevo alumno'}>
+    <Modal open={open} onClose={onClose} title={editing ? 'Edit Student' : 'New Student'}>
       <div className="space-y-3">
-        <FormField label="Nombre completo">
-          <Input value={form.name} onChange={e => upd('name', e.target.value)} />
-        </FormField>
-        <FormField label="Código">
-          <Input value={form.code} onChange={e => upd('code', e.target.value)} />
-        </FormField>
-        <FormField label="Correo">
-          <Input type="email" value={form.email} onChange={e => upd('email', e.target.value)} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FormField label="Full Name">
+            <Input value={form.name} onChange={e => upd('name', e.target.value)} placeholder="Full name" />
+          </FormField>
+          <FormField label="Code">
+            <Input value={form.code} onChange={e => upd('code', e.target.value)} placeholder="e.g. s1a01" />
+          </FormField>
+        </div>
+        <FormField label="Email">
+          <Input type="email" value={form.email} onChange={e => upd('email', e.target.value)} placeholder="student@school.edu" />
         </FormField>
         {editing && (
           <FormField label="Coins">
@@ -34,8 +36,8 @@ export function EstudianteFormModal({ open, editing, form, setForm, onSave, onCl
         )}
       </div>
       <div className="flex gap-2 pt-4">
-        <Button variant="outline" onClick={onClose} className="flex-1">Cancelar</Button>
-        <Button onClick={onSave} className="flex-1">{editing ? 'Guardar' : 'Crear'}</Button>
+        <Button variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
+        <Button onClick={onSave} className="flex-1">{editing ? 'Save changes' : 'Create Student'}</Button>
       </div>
     </Modal>
   )

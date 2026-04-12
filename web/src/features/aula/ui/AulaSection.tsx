@@ -1,14 +1,13 @@
 'use client'
-import { Plus }           from 'lucide-react'
-import { Button, Grid }   from '@/components/ui'
-import { CourseSelect }   from '@/components/shared/CourseSelect'
-import { useAula }        from '../application/useAula'
-import { AwardModal }     from './AwardModal'
-import { ClaimModal }     from './ClaimModal'
-import { RewardsTimeline } from './RewardsTimeline'
-import { StudentRanking }  from './StudentRanking'
-import { RecentHistory }   from './RecentHistory'
-import type { RewardResponse } from '@control-aula/shared'
+import { Plus }                    from 'lucide-react'
+import { Button, Grid, Combobox }  from '@/components/ui'
+import { useAula }                 from '../application/useAula'
+import { AwardModal }              from './AwardModal'
+import { ClaimModal }              from './ClaimModal'
+import { RewardsTimeline }         from './RewardsTimeline'
+import { StudentRanking }          from './StudentRanking'
+import { RecentHistory }           from './RecentHistory'
+import type { RewardResponse }     from '@control-aula/shared'
 
 const TIMELINE_START: RewardResponse = {
   id: 'start', name: 'Course Start', coinsRequired: 0, icon: '🚀', isGlobal: true, isActive: true,
@@ -18,6 +17,7 @@ export function AulaSection() {
   const a = useAula()
 
   const timelineRewards = [TIMELINE_START, ...a.classRewards]
+  const courseOptions   = a.courses.map(c => ({ value: c.id, label: c.name }))
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -27,7 +27,13 @@ export function AulaSection() {
           <p className="text-zinc-400 text-sm mt-1">Track the progress of {a.course?.name ?? 'the class'} on the rewards timeline.</p>
         </div>
         <div className="flex items-center gap-2">
-          <CourseSelect courses={a.courses} value={a.courseId} onChange={a.setCourseId} />
+          <Combobox
+            value={a.courseId}
+            onChange={a.setCourseId}
+            options={courseOptions}
+            placeholder="Select course…"
+            className="w-44"
+          />
           <Button onClick={a.openAward} className="px-5 py-2.5 rounded-full shadow-lg shadow-blue-900/20">
             <Plus className="w-4 h-4 mr-2" /> Award Coins
           </Button>

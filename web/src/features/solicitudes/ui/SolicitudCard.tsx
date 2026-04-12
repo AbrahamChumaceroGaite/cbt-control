@@ -27,14 +27,14 @@ export function SolicitudCard({ solicitud: s, processing, onApprove, onReject }:
           <span className="text-amber-500">{s.reward.coinsRequired} coins</span>
         </div>
         <div className="text-xs text-zinc-600 mt-0.5">
-          {new Date(s.createdAt).toLocaleDateString('es-BO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-          {' '}<span className="text-zinc-700">·</span> Estudiante tiene {s.student.coins} coins
+          {new Date(s.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+          {' '}<span className="text-zinc-700">·</span> Student has {s.student.coins} coins
         </div>
       </div>
       {s.status === REQUEST_STATUS.PENDING && (
         <div className="flex gap-2 shrink-0">
-          <Button size="sm" onClick={onApprove} disabled={busy}>{busy ? '...' : 'Aprobar'}</Button>
-          <Button size="sm" variant="destructive" onClick={onReject} disabled={busy}>Rechazar</Button>
+          <Button size="sm" onClick={onApprove} disabled={busy}>{busy ? '...' : 'Approve'}</Button>
+          <Button size="sm" variant="destructive" onClick={onReject} disabled={busy}>Reject</Button>
         </div>
       )}
     </div>

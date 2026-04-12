@@ -17,12 +17,12 @@ export function RewardsTimeline({ timelineRewards, currentCoins, nextReward, log
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-2 relative z-10 gap-4">
         <div>
           <h3 className="text-xl font-bold text-white flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-amber-500" /> Gran Ruta de Recompensas
+            <Trophy className="w-5 h-5 text-amber-500" /> Reward Path
           </h3>
           <p className="text-sm font-medium mt-1 text-zinc-300">
             {nextReward
-              ? <span>Próximo desbloqueo: <strong className="text-emerald-400">{nextReward.icon} {nextReward.name}</strong> a los {nextReward.coinsRequired} coins</span>
-              : <strong className="text-emerald-400">¡Han superado todas las metas globales configuradas!</strong>}
+              ? <span>Next unlock: <strong className="text-emerald-400">{nextReward.icon} {nextReward.name}</strong> at {nextReward.coinsRequired} coins</span>
+              : <strong className="text-emerald-400">All global milestones have been reached!</strong>}
           </p>
         </div>
         <div className="text-right whitespace-nowrap bg-zinc-950 border border-zinc-800 px-4 py-2 rounded-xl shadow-inner">
@@ -67,7 +67,7 @@ export function RewardsTimeline({ timelineRewards, currentCoins, nextReward, log
                     )}>{r.name}</span>
                     {canClaim
                       ? <span className="text-[10px] text-amber-900 font-bold bg-amber-400 px-2 py-0.5 rounded-full uppercase tracking-wider animate-bounce mt-0.5 cursor-pointer"
-                          onClick={() => onClaim(r)}>Canjear</span>
+                          onClick={() => onClaim(r)}>Claim</span>
                       : <span className="text-[9px] sm:text-[10px] text-zinc-500 font-mono bg-zinc-950/80 px-2 py-0.5 rounded-full border border-zinc-800/80 tracking-widest">{r.coinsRequired} coins</span>}
                   </div>
                 </div>

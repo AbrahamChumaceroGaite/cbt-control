@@ -95,7 +95,7 @@ export function RecompensasTab({ student, rewards, requesting, onRequest, onLogo
         onCancel={() => setConfirmReward(null)}
         title={`Pedir: ${confirmReward?.name ?? ''}`}
         message={`Costo: ${confirmReward?.salePrice ?? 0} coins${(confirmReward?.coinsRequired ?? 0) > (confirmReward?.salePrice ?? 0) ? ` (descuento aplicado, precio original ${confirmReward?.coinsRequired})` : ''}. La solicitud será revisada por el administrador.`}
-        confirmText="Confirmar solicitud"
+        confirmText="Confirm request"
         loading={requesting === confirmReward?.id}
         icon={confirmReward ? <span className="text-4xl">{(confirmReward as RewardWithDiscount).icon}</span> : undefined}
       />
@@ -106,7 +106,7 @@ export function RecompensasTab({ student, rewards, requesting, onRequest, onLogo
         <section className="relative overflow-hidden rounded-2xl bg-zinc-900/80 p-5 flex items-center justify-between gap-4 mb-6">
           <div className="absolute -right-10 -top-10 w-44 h-44 bg-amber-500/10 blur-[80px] rounded-full pointer-events-none" />
           <div className="relative z-10 space-y-0.5">
-            <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-zinc-500">Balance Actual</p>
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-zinc-500">Current Balance</p>
             <h1 className="text-2xl font-extrabold text-amber-400 tracking-tight leading-none">{student.coins} coins</h1>
           </div>
           <div className="relative z-10 w-14 h-14 bg-amber-500/15 rounded-2xl flex items-center justify-center border border-amber-500/10 flex-shrink-0">
@@ -125,16 +125,16 @@ export function RecompensasTab({ student, rewards, requesting, onRequest, onLogo
         )}
 
         <div className="flex items-center gap-2 mb-6">
-          <SearchInput value={search} onChange={handleSearch} placeholder="Buscar premio…" className="flex-1" />
+          <SearchInput value={search} onChange={handleSearch} placeholder="Search reward…" className="flex-1" />
           {maxPrice > 0 && (
             <PricePopover maxPrice={maxPrice} value={maxCoins} onChange={handleSlider} onClear={clearSlider} />
           )}
         </div>
 
         <div className="flex items-center gap-4 mb-5">
-          <h2 className="text-xs font-extrabold uppercase tracking-[0.15em] text-zinc-400 whitespace-nowrap">Premios Disponibles</h2>
+          <h2 className="text-xs font-extrabold uppercase tracking-[0.15em] text-zinc-400 whitespace-nowrap">Available Rewards</h2>
           <div className="flex-1 h-px bg-zinc-800" />
-          {available.length > 0 && <span className="text-[10px] text-zinc-600">{available.length} premios</span>}
+          {available.length > 0 && <span className="text-[10px] text-zinc-600">{available.length} rewards</span>}
         </div>
 
         {available.length === 0 ? (
@@ -142,7 +142,7 @@ export function RecompensasTab({ student, rewards, requesting, onRequest, onLogo
             <div className="w-12 h-12 rounded-2xl bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center">
               <ShoppingCart className="w-5 h-5 text-zinc-600" />
             </div>
-            <p className="text-sm text-zinc-600">No hay recompensas disponibles</p>
+            <p className="text-sm text-zinc-600">No rewards available</p>
           </div>
         ) : (
           <>
@@ -184,7 +184,7 @@ export function RecompensasTab({ student, rewards, requesting, onRequest, onLogo
                           disabled variant="secondary"
                           className={`${isFeatured ? 'mt-2' : ''} w-full py-2 h-auto rounded-xl cursor-default`}
                         >
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Enviado
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Sent
                         </Button>
                       ) : (
                         <Button
@@ -194,7 +194,7 @@ export function RecompensasTab({ student, rewards, requesting, onRequest, onLogo
                           onClick={() => canAfford && !requesting && setConfirmReward({ ...r, salePrice: r.coinsRequired })}
                           className={`${isFeatured ? 'mt-2' : ''} w-full py-2 h-auto rounded-xl active:scale-95 ${!canAfford ? 'cursor-not-allowed' : ''}`}
                         >
-                          {canAfford ? 'Pedir' : 'Sin coins'}
+                          {canAfford ? 'Request' : 'Not enough coins'}
                         </Button>
                       )}
                     </div>
@@ -207,12 +207,12 @@ export function RecompensasTab({ student, rewards, requesting, onRequest, onLogo
               <div className="flex items-center justify-between py-2">
                 <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
                   className="flex items-center gap-1.5 px-3 h-8 rounded-xl text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 disabled:opacity-30 transition-colors">
-                  <ChevronLeft className="w-4 h-4" /> Anterior
+                  <ChevronLeft className="w-4 h-4" /> Previous
                 </button>
                 <span className="text-xs text-zinc-500">{page + 1} / {totalPages}</span>
                 <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1}
                   className="flex items-center gap-1.5 px-3 h-8 rounded-xl text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 disabled:opacity-30 transition-colors">
-                  Siguiente <ChevronRight className="w-4 h-4" />
+                  Next <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             )}

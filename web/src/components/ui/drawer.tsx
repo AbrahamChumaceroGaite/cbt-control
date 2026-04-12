@@ -1,20 +1,40 @@
 'use client'
-import * as React from 'react'
-import { X }      from 'lucide-react'
-import { cn }     from '@/lib/utils'
-import { Button } from './button'
+import * as React  from 'react'
+import { X }       from 'lucide-react'
+import { cva, type VariantProps } from 'class-variance-authority'
+import { cn }      from '@/lib/utils'
+import { Z }       from '@/config/scheme'
+import { Button }  from './button'
 
-interface DrawerProps {
+const panelVariants = cva(
+  'fixed top-0 h-full bg-zinc-950 flex flex-col transition-transform duration-300',
+  {
+    variants: {
+      size: {
+        sm:   'w-full sm:max-w-sm',
+        md:   'w-full sm:max-w-md',
+        lg:   'w-full sm:max-w-lg',
+      },
+      side: {
+        right: 'right-0 border-l border-zinc-800',
+        left:  'left-0 border-r border-zinc-800',
+      },
+    },
+    defaultVariants: { size: 'sm', side: 'right' },
+  }
+)
+
+export type DrawerSize = VariantProps<typeof panelVariants>['size']
+
+interface DrawerProps extends VariantProps<typeof panelVariants> {
   open:      boolean
   onClose:   () => void
   title?:    string
   children:  React.ReactNode
-  side?:     'left' | 'right'
   className?: string
 }
 
-export function Drawer({ open, onClose, title, children, side = 'right', className }: DrawerProps) {
-  // Trap ESC key
+export function Drawer({ open, onClose, title, children, size, side = 'right', className }: DrawerProps) {
   React.useEffect(() => {
     if (!open) return
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -26,18 +46,16 @@ export function Drawer({ open, onClose, title, children, side = 'right', classNa
 
   return (
     <>
-      {/* Backdrop — z-[var(--z-drawer)] as Tailwind JIT arbitrary value */}
+      {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[var(--z-drawer)]"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+        style={{ zIndex: Z.DRAWER }}
         onClick={onClose}
       />
       {/* Panel */}
       <div
-        className={cn(
-          'fixed top-0 h-full w-full max-w-sm bg-zinc-950 border-zinc-800 flex flex-col z-[var(--z-drawer)]',
-          side === 'right' ? 'right-0 border-l' : 'left-0 border-r',
-          className,
-        )}
+        className={cn(panelVariants({ size, side }), className)}
+        style={{ zIndex: Z.DRAWER + 1 }}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
           {title && <h2 className="text-base font-semibold text-white">{title}</h2>}

@@ -7,12 +7,12 @@ export function RecentHistory({ logs }: { logs: CoinLogResponse[] }) {
   return (
     <div className="card-base p-6 flex flex-col">
       <h3 className="panel-title flex items-center gap-2">
-        <TrendingUp className="w-[18px] h-[18px] text-rose-400" /> Historial Reciente
+        <TrendingUp className="w-[18px] h-[18px] text-rose-400" /> Recent History
       </h3>
-      <p className="panel-subtitle">Últimas acciones del curso.</p>
+      <p className="panel-subtitle">Latest classroom actions.</p>
       <div className="flex-1 space-y-2 mt-3 overflow-y-auto max-h-[360px] pr-1">
         {logs.length === 0 && (
-          <div className="text-zinc-500 text-sm text-center py-8">No se han registrado acciones.</div>
+          <div className="text-zinc-500 text-sm text-center py-8">No actions recorded yet.</div>
         )}
         {logs.slice(0, 15).map(l => {
           const sign  = COIN_SIGN[coinSignKey(l.coins)]
@@ -30,7 +30,7 @@ export function RecentHistory({ logs }: { logs: CoinLogResponse[] }) {
                 <span className={cn('font-medium', sign.text)}>
                   {l.coins > 0 ? '+' : ''}{l.coins} coins
                 </span>
-                <span className="text-zinc-500"> por </span>{l.reason}
+                <span className="text-zinc-500"> for </span>{l.reason}
               </p>
             </div>
           )
