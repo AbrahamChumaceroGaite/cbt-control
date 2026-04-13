@@ -255,7 +255,7 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-zinc-200 font-semibold truncate leading-tight">{log.action?.name ?? log.reason}</p>
                         <p className="text-[11px] text-zinc-600 mt-0.5">
-                          {new Date(log.createdAt).toLocaleDateString('es-BO', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          {new Date(log.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
                       <div className="text-right flex-shrink-0">

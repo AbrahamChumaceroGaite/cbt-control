@@ -91,12 +91,12 @@ export function useEstudiantes() {
         name:  String(row['NOMBRE'] ?? row['Nombre'] ?? ''),
         email: String(row['CORREO'] ?? row['Correo'] ?? ''),
       })).filter(s => s.name)
-      if (!parsed.length) throw new Error('No se encontraron columnas de NOMBRE válidas')
+      if (!parsed.length) throw new Error('No valid NAME columns found in the file')
       const { data, message } = await estudiantesService.import(currentCourse, parsed)
       showToast(message || `${data.count} estudiantes importados`)
       load(currentCourse)
     } catch (err: unknown) {
-      showToast(err instanceof Error ? `Error: ${err.message}` : 'Import error', false)
+      showToast(err instanceof Error ? err.message : 'Import error', false)
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = ''
     }

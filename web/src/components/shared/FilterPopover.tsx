@@ -28,7 +28,7 @@ export function FilterPopover({ active, onClear, children, className }: FilterPo
           className={cn('gap-1.5', active && 'ring-1 ring-amber-400/40')}
         >
           <SlidersHorizontal className="w-3.5 h-3.5" />
-          Filtros
+          Filters
           {active && <span className="w-1.5 h-1.5 rounded-full bg-amber-900" />}
         </Button>
       }
@@ -44,7 +44,7 @@ export function FilterPopover({ active, onClear, children, className }: FilterPo
             className="h-auto px-0 py-0 text-xs text-zinc-500 hover:text-zinc-300 hover:bg-transparent gap-1.5 mt-1"
           >
             <X className="w-3 h-3" />
-            Limpiar filtros
+            Clear filters
           </Button>
         )}
       </div>

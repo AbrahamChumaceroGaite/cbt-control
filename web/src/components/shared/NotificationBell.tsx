@@ -54,7 +54,7 @@ export function NotificationBell() {
 
   return (
     <div className="relative">
-      <button ref={triggerRef} onClick={() => setOpen(v => !v)} title="Notificaciones"
+      <button ref={triggerRef} onClick={() => setOpen(v => !v)} title="Notifications"
         className={`relative p-2 rounded-lg transition-colors ${open ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800'}`}>
         <Bell className={`w-4 h-4 ${unreadCount > 0 ? 'animate-[wiggle_0.6s_ease-in-out_1]' : ''}`} />
         {unreadCount > 0 && (
@@ -67,12 +67,12 @@ export function NotificationBell() {
         <div ref={panelRef} className="absolute right-0 top-[calc(100%+8px)] w-[calc(100vw-1rem)] max-w-[360px] max-h-[520px] flex flex-col rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl shadow-black/60 overflow-hidden" style={{ zIndex: Z.POPOVER }}>
           <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 flex-shrink-0">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-zinc-100">Notificaciones</span>
-              {unreadCount > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-bold">{unreadCount} nueva{unreadCount !== 1 ? 's' : ''}</span>}
+              <span className="text-sm font-semibold text-zinc-100">Notifications</span>
+              {unreadCount > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-bold">{unreadCount} new</span>}
             </div>
             <div className="flex items-center gap-0.5">
-              {items.some(n => !n.isRead) && <button onClick={markAllRead} title="Marcar todas como leídas" className="p-1.5 text-zinc-600 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"><CheckCheck className="w-3.5 h-3.5" /></button>}
-              {items.length > 0 && <button onClick={deleteAll} title="Eliminar todas" className="p-1.5 text-zinc-600 hover:text-red-400 hover:bg-red-950/20 rounded-lg transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>}
+              {items.some(n => !n.isRead) && <button onClick={markAllRead} title="Mark all as read" className="p-1.5 text-zinc-600 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"><CheckCheck className="w-3.5 h-3.5" /></button>}
+              {items.length > 0 && <button onClick={deleteAll} title="Delete all" className="p-1.5 text-zinc-600 hover:text-red-400 hover:bg-red-950/20 rounded-lg transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>}
               <button onClick={() => setOpen(false)} className="p-1.5 text-zinc-700 hover:text-zinc-400 hover:bg-zinc-800 rounded-lg transition-colors"><X className="w-3.5 h-3.5" /></button>
             </div>
           </div>
@@ -99,7 +99,7 @@ export function NotificationBell() {
                 <div className="w-10 h-10 rounded-xl bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center">
                   <Bell className="w-5 h-5 opacity-40" />
                 </div>
-                <span className="text-xs text-zinc-600">Sin notificaciones</span>
+                <span className="text-xs text-zinc-600">No notifications</span>
               </div>
             ) : (
               <>
@@ -110,7 +110,7 @@ export function NotificationBell() {
                     onClick={() => setVisibleCount(c => c + INBOX_PAGE)}
                     className="w-full py-2.5 h-auto text-zinc-500 hover:text-amber-400 hover:bg-zinc-900/40 border-t border-zinc-800/40 rounded-none"
                   >
-                    Cargar más ({items.length - visibleCount} restantes)
+                    Load more ({items.length - visibleCount} remaining)
                   </Button>
                 )}
               </>
@@ -119,7 +119,7 @@ export function NotificationBell() {
           {pushState === 'subscribed' && (
             <div className="flex items-center gap-1.5 px-4 py-2.5 border-t border-zinc-800/50 flex-shrink-0">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              <span className="text-[10px] text-zinc-600">Notificaciones push activas</span>
+              <span className="text-[10px] text-zinc-600">Push notifications active</span>
             </div>
           )}
         </div>

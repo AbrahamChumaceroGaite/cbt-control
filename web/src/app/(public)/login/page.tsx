@@ -116,7 +116,7 @@ function LoginForm() {
       const from = searchParams.get('from')
       router.push(data.user.role === 'admin' ? (from && from !== '/login' ? from : '/') : '/portal')
     } catch {
-      setError('Código o contraseña incorrectos')
+      setError('Invalid code or password')
     } finally {
       setLoading(false)
     }
@@ -199,11 +199,11 @@ function LoginForm() {
             <div className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg bg-zinc-700 transition-all duration-300 ease-out ${mode === 'student' ? 'left-1' : 'left-[calc(50%+0px)]'}`} />
             <button type="button" onClick={() => switchMode('student')}
               className={`relative z-10 flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors duration-200 ${mode === 'student' ? 'text-zinc-100' : 'text-zinc-500 hover:text-zinc-400'}`}>
-              Estudiante
+              Student
             </button>
             <button type="button" onClick={() => switchMode('admin')}
               className={`relative z-10 flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors duration-200 ${mode === 'admin' ? 'text-zinc-100' : 'text-zinc-500 hover:text-zinc-400'}`}>
-              Administrador
+              Admin
             </button>
           </div>
 
@@ -211,7 +211,7 @@ function LoginForm() {
             {/* Code field */}
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                {mode === 'student' ? 'Código de estudiante' : 'Usuario'}
+                {mode === 'student' ? 'Student Code' : 'Username'}
               </label>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-lg select-none">
@@ -221,7 +221,7 @@ function LoginForm() {
                   type="text"
                   value={code}
                   onChange={e => setCode(e.target.value)}
-                  placeholder={mode === 'student' ? 'ej. 178' : 'admin'}
+                  placeholder={mode === 'student' ? 'e.g. 178' : 'admin'}
                   className="input w-full pl-11 h-12 text-sm"
                   autoComplete="username"
                   autoFocus
@@ -229,14 +229,14 @@ function LoginForm() {
                 />
               </div>
               {mode === 'student' && (
-                <p className="text-xs text-zinc-600 pl-1">Tu código escolar numérico</p>
+                <p className="text-xs text-zinc-600 pl-1">Your numeric school code</p>
               )}
             </div>
 
             {/* Password field — admin only */}
             {mode === 'admin' && (
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider">Contraseña</label>
+                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider">Password</label>
                 <div className="relative">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-lg select-none">🔒</div>
                   <input
@@ -273,7 +273,7 @@ function LoginForm() {
                   style={{ background: 'linear-gradient(135deg, #fcd34d, #f59e0b)' }} />
               )}
               <span className="relative z-10">
-                {loading ? 'Verificando...' : mode === 'student' ? 'Ingresar al Portal' : 'Ingresar al Panel'}
+                {loading ? 'Verifying...' : mode === 'student' ? 'Enter Portal' : 'Enter Panel'}
               </span>
             </button>
           </form>

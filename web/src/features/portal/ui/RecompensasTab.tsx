@@ -93,8 +93,8 @@ export function RecompensasTab({ student, rewards, requesting, onRequest, onLogo
         open={!!confirmReward}
         onConfirm={doRequest}
         onCancel={() => setConfirmReward(null)}
-        title={`Pedir: ${confirmReward?.name ?? ''}`}
-        message={`Costo: ${confirmReward?.salePrice ?? 0} coins${(confirmReward?.coinsRequired ?? 0) > (confirmReward?.salePrice ?? 0) ? ` (descuento aplicado, precio original ${confirmReward?.coinsRequired})` : ''}. La solicitud será revisada por el administrador.`}
+        title={`Request: ${confirmReward?.name ?? ''}`}
+        message={`Cost: ${confirmReward?.salePrice ?? 0} coins${(confirmReward?.coinsRequired ?? 0) > (confirmReward?.salePrice ?? 0) ? ` (discount applied, original price ${confirmReward?.coinsRequired})` : ''}. The request will be reviewed by an admin.`}
         confirmText="Confirm request"
         loading={requesting === confirmReward?.id}
         icon={confirmReward ? <span className="text-4xl">{(confirmReward as RewardWithDiscount).icon}</span> : undefined}

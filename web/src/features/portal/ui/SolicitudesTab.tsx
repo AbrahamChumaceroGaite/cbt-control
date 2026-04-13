@@ -104,7 +104,7 @@ export function SolicitudesTab({ student, requests, onLogout, onReload }: Props)
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-zinc-200 truncate leading-tight">{req.reward?.name}</p>
                     <p className="text-[11px] text-zinc-600 mt-0.5">
-                      {new Date(req.createdAt).toLocaleDateString('es-BO', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      {new Date(req.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </p>
                     {req.notes && <p className="text-[11px] text-zinc-500 mt-1 italic line-clamp-1">&ldquo;{req.notes}&rdquo;</p>}
                   </div>

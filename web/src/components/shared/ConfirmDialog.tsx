@@ -18,8 +18,8 @@ interface Props {
 
 export function ConfirmDialog({
   open, onConfirm, onCancel, title, message,
-  confirmText = 'Confirmar',
-  cancelText  = 'Cancelar',
+  confirmText = 'Confirm',
+  cancelText  = 'Cancel',
   variant     = 'amber',
   loading     = false,
   icon,

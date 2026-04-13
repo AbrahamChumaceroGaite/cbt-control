@@ -99,7 +99,7 @@ export function SendForm({ myCoins, remaining, onSent }: Props) {
             onClick={send}
             className={`w-full rounded-xl active:scale-[0.98] ${canSend ? 'shadow-[0_0_20px_rgba(245,158,11,0.25)]' : 'cursor-not-allowed'}`}
           >
-            <Send className="w-4 h-4" /> Enviar solicitud
+            <Send className="w-4 h-4" /> Send request
           </Button>
         </>
       )}
