@@ -1,3 +1,5 @@
+import { AppException } from '../../../common/exceptions/app.exception'
+import { ErrorCode }    from '@control-aula/shared'
 import type { CourseStudentEntity, CourseCoinLogEntity } from './course-detail.types'
 
 export class CourseEntity {
@@ -34,10 +36,10 @@ export class CourseEntity {
 
   private validate(): void {
     if (!this.name || this.name.trim().length < 2)
-      throw new Error('El nombre del curso debe tener al menos 2 caracteres')
+      throw new AppException(ErrorCode.COURSE_NAME_TOO_SHORT)
     if (!this.level || this.level.trim().length === 0)
-      throw new Error('El nivel del curso es requerido')
+      throw new AppException(ErrorCode.COURSE_LEVEL_REQUIRED)
     if (!this.parallel || this.parallel.trim().length === 0)
-      throw new Error('El paralelo del curso es requerido')
+      throw new AppException(ErrorCode.COURSE_PARALLEL_REQUIRED)
   }
 }

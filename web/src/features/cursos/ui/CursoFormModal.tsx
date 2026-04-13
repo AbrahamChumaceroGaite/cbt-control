@@ -3,15 +3,16 @@ import { FormField }             from '@/components/shared/FormField'
 import type { CourseFormState, CourseViewModel } from '../domain/types'
 
 interface Props {
-  open:    boolean
-  editing: CourseViewModel | null
-  form:    CourseFormState
-  setForm: (fn: (p: CourseFormState) => CourseFormState) => void
-  onSave:  () => void
-  onClose: () => void
+  open:       boolean
+  editing:    CourseViewModel | null
+  form:       CourseFormState
+  formErrors: { name?: string; level?: string; parallel?: string }
+  setForm:    (fn: (p: CourseFormState) => CourseFormState) => void
+  onSave:     () => void
+  onClose:    () => void
 }
 
-export function CursoFormModal({ open, editing, form, setForm, onSave, onClose }: Props) {
+export function CursoFormModal({ open, editing, form, formErrors, setForm, onSave, onClose }: Props) {
   const upd = (key: keyof CourseFormState, val: string | number) =>
     setForm(p => ({ ...p, [key]: val }))
 
@@ -19,14 +20,14 @@ export function CursoFormModal({ open, editing, form, setForm, onSave, onClose }
     <Modal open={open} onClose={onClose} title={editing ? 'Edit Course' : 'New Course'}>
       <div className="space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <FormField label="Name (e.g. S2A)">
+          <FormField label="Name (e.g. S2A)" error={formErrors.name}>
             <Input value={form.name} onChange={e => upd('name', e.target.value)} placeholder="S2A" />
           </FormField>
-          <FormField label="Level">
+          <FormField label="Level" error={formErrors.level}>
             <Input value={form.level} onChange={e => upd('level', e.target.value)} placeholder="2nd" />
           </FormField>
         </div>
-        <FormField label="Group (Parallel)">
+        <FormField label="Group (Parallel)" error={formErrors.parallel}>
           <Input value={form.parallel} onChange={e => upd('parallel', e.target.value)} placeholder="A" />
         </FormField>
         {editing && (
