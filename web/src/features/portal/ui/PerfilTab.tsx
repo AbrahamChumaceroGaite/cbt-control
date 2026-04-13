@@ -15,6 +15,7 @@ import { NotificationBell }     from '@/components/shared/NotificationBell'
 import { usePerfilTab }         from '../application/usePerfilTab'
 import type { StudentData, IndividualReward, DateFilter } from '../domain/types'
 import { REQUEST_STATUS }                                               from '@/config/status'
+import { formatDateTime }                                               from '@/lib/utils'
 import { ACTION_CATEGORY, ACTION_CATEGORY_FALLBACK, TRAMOS, HERO_BANNER, TREND_HEX } from '@/config/scheme'
 
 const PAGE_SIZE = 5
@@ -255,7 +256,7 @@ export function PerfilTab({ student, rewards, onStudentUpdate, onLogout }: Props
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-zinc-200 font-semibold truncate leading-tight">{log.action?.name ?? log.reason}</p>
                         <p className="text-[11px] text-zinc-600 mt-0.5">
-                          {new Date(log.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          {formatDateTime(log.createdAt)}
                         </p>
                       </div>
                       <div className="text-right flex-shrink-0">

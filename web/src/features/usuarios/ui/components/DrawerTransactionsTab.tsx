@@ -1,5 +1,6 @@
 import { ArrowRight, Landmark } from 'lucide-react'
 import { Skeleton } from '@/components/ui'
+import { formatDate } from '@/lib/utils'
 import { STATUS_BADGE, STATUS_LABEL, TX_DIRECTION } from '@/config/scheme'
 import type { UserViewModel } from '../../domain/types'
 import type { CoinTransactionResponse } from '@control-aula/shared'
@@ -50,7 +51,7 @@ export function DrawerTransactionsTab({ user, transactions, loading }: Props) {
               <p className="text-xs font-semibold text-zinc-200 truncate">
                 {isFrom ? `→ ${other.name}` : `← ${other.name}`}
               </p>
-              <p className="text-[10px] text-zinc-600">{new Date(tx.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+              <p className="text-[10px] text-zinc-600">{formatDate(tx.createdAt)}</p>
             </div>
             <div className="text-right flex-shrink-0 space-y-1">
               <p className={`text-sm font-black ${dir.text}`}>

@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Coins, Send } from 'lucide-react'
 import { StatusBadge }     from '@/components/ui'
 import { FilterPills }     from '@/components/shared/FilterPills'
 import { TX_DIRECTION }    from '@/config/scheme'
+import { formatDate }      from '@/lib/utils'
 import type { CoinTransactionResponse, HistoryFilter } from '../domain/types'
 
 const TX_FILTER_OPTIONS: { value: HistoryFilter; label: string }[] = [
@@ -56,7 +57,7 @@ export function TxHistory({ txs, myStudentId }: Props) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-zinc-200 truncate">{isSent ? `→ ${other.name}` : `← ${other.name}`}</p>
-                    <p className="text-[10px] text-zinc-600">{other.courseName} · {new Date(tx.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short' })}</p>
+                    <p className="text-[10px] text-zinc-600">{other.courseName} · {formatDate(tx.createdAt)}</p>
                     {tx.notes && <p className="text-[10px] text-zinc-500 truncate mt-0.5 italic">&ldquo;{tx.notes}&rdquo;</p>}
                   </div>
                   <div className="text-right flex-shrink-0 space-y-1">

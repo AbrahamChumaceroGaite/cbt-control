@@ -4,19 +4,23 @@ services:
       context: .
       dockerfile: api/Dockerfile
     expose:
-      - "4001"
+      - "${API_PORT:-4001}"
     env_file:
       - ./api/.env
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=file:/app/data/prod.db
-      - PORT=4001
-      - WEB_ORIGIN=https://control-cbt.prod.dtt.tja.ucb.edu.bo
+      - DATABASE_URL=${DATABASE_URL:-file:/app/data/prod.db}
+      - PORT=${API_PORT:-4001}
+      - WEB_ORIGIN=${WEB_ORIGIN}
+      - TZ=America/La_Paz
     volumes:
       - sqlite_data:/app/data
+      - uploads:/app/uploads
+      - logs:/app/logs
+      - backups:/app/backups
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:4001/api/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:${API_PORT:-4001}/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -27,12 +31,13 @@ services:
       context: .
       dockerfile: web/Dockerfile
       args:
-        - API_URL=http://api:4001
+        - API_URL=http://api:${API_PORT:-4001}
     ports:
       - "${WEB_PORT:-3001}:3001"
     environment:
       - NODE_ENV=production
-      - API_URL=http://api:4001
+      - API_URL=http://api:${API_PORT:-4001}
+      - TZ=America/La_Paz
     depends_on:
       api:
         condition: service_healthy
@@ -40,3 +45,6 @@ services:
 
 volumes:
   sqlite_data:
+  uploads:
+  logs:
+  backups:
