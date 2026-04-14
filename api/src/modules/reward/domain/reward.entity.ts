@@ -1,3 +1,6 @@
+import { AppException } from '../../../common/exceptions/app.exception'
+import { ErrorCode }    from '@control-aula/shared'
+
 export class RewardEntity {
   readonly id:             string
   readonly name:           string
@@ -35,10 +38,10 @@ export class RewardEntity {
 
   private validate(): void {
     if (!this.name || this.name.trim().length < 2)
-      throw new Error('El nombre de la recompensa debe tener al menos 2 caracteres')
+      throw new AppException(ErrorCode.REWARD_NAME_TOO_SHORT)
     if (this.coinsRequired <= 0)
-      throw new Error('Los coins requeridos deben ser mayores a cero')
+      throw new AppException(ErrorCode.REWARD_COINS_ZERO)
     if (this.discount < 0 || this.discount > 100)
-      throw new Error('El descuento debe estar entre 0 y 100')
+      throw new AppException(ErrorCode.REWARD_DISCOUNT_INVALID)
   }
 }

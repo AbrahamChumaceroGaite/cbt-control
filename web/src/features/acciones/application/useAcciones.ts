@@ -7,6 +7,7 @@ import { usePagination }                             from '@/hooks/usePagination
 import { useDebounce }                               from '@/hooks/useDebounce'
 import { EMPTY_FORM, EMPTY_FILTERS }                 from '../domain/types'
 import type { ActionViewModel, ActionFormState, ActionFilters } from '../domain/types'
+import { ErrorCode, ERROR_MESSAGES }                 from '@control-aula/shared'
 
 export function useAcciones() {
   const { showToast }                                            = useToast()
@@ -20,6 +21,7 @@ export function useAcciones() {
   const [search,          setSearch]          = useState('')
   const [filters,         setFilters]         = useState<ActionFilters>(EMPTY_FILTERS)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [formErrors,      setFormErrors]      = useState<{ name?: string; coins?: string }>({})
 
   const debouncedSearch = useDebounce(search)
 
@@ -46,7 +48,11 @@ export function useAcciones() {
   }, [])
 
   const save = useCallback(async () => {
-    if (!form.name.trim()) { showToast('Action name is required', false); return }
+    setFormErrors({})
+    if (!form.name.trim())
+      return setFormErrors({ name: ERROR_MESSAGES[ErrorCode.ACTION_NAME_TOO_SHORT] })
+    if (form.coins === 0)
+      return setFormErrors({ coins: ERROR_MESSAGES[ErrorCode.ACTION_COINS_ZERO] })
     try {
       const { message } = editing
         ? await accionesService.update(editing.id, ActionMapper.toDto(form))
@@ -100,6 +106,7 @@ export function useAcciones() {
     modal,
     editing,
     form,
+    formErrors,
     search,
     filters,
     filtersActive,

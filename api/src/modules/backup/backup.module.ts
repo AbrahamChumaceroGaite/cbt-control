@@ -8,5 +8,6 @@ import { PrismaModule }     from '../../infrastructure/prisma/prisma.module'
   imports:     [AuthModule, PrismaModule],
   controllers: [BackupController],
   providers:   [BackupService],
+  exports:     [BackupService],
 })
 export class BackupModule {}

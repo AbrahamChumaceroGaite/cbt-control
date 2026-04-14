@@ -36,7 +36,7 @@ interface Props {
 export function TrajectoryChart({ logs, currentCoins }: Props) {
   const ordered = [...logs].reverse()
   if (ordered.length < 3) return (
-    <p className="text-xs text-zinc-600 text-center py-4">Sin suficientes datos</p>
+    <p className="text-xs text-zinc-600 text-center py-4">Not enough data</p>
   )
 
   const cumul  = ordered.map(l => l.coins).reduce<number[]>((a, d) => { a.push((a.at(-1) ?? 0) + d); return a }, [])
@@ -69,7 +69,7 @@ export function TrajectoryChart({ logs, currentCoins }: Props) {
             {diff > 0 ? '+' : ''}{diff} coins
           </span>
         </div>
-        <span className="text-[10px] text-zinc-600">{ordered.length} eventos</span>
+        <span className="text-[10px] text-zinc-600">{ordered.length} events</span>
       </div>
       <ResponsiveContainer width="100%" height={120}>
         <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>

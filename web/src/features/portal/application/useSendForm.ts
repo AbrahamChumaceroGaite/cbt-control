@@ -76,7 +76,7 @@ export function useSendForm({ myCoins, remaining, onSent }: UseSendFormOptions):
       setTimeout(() => { setState('idle'); setRecipient(null); setAmount(1); setNotes('') }, 2500)
       if (data) onSent(data)
     } catch (err: unknown) {
-      setErrMsg(err instanceof Error ? err.message : 'Error al enviar')
+      setErrMsg(err instanceof Error ? err.message : 'Error sending coins')
       setState('error')
       setTimeout(() => setState('idle'), TOAST_MS)
     }

@@ -17,8 +17,8 @@ const rewardTypeBadgeVariants = cva(
 type RewardTypeBadgeVariants = VariantProps<typeof rewardTypeBadgeVariants>
 
 const LABELS: Record<NonNullable<RewardTypeBadgeVariants['type']>, string> = {
-  class:      'Grupal (Clase)',
-  individual: 'Individual (Alumno)',
+  class:      'Class Reward',
+  individual: 'Individual Reward',
 }
 
 interface Props extends RewardTypeBadgeVariants {

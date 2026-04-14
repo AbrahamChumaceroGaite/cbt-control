@@ -7,6 +7,7 @@ import { usePagination }                             from '@/hooks/usePagination
 import { useDebounce }                               from '@/hooks/useDebounce'
 import { EMPTY_FORM }                                from '../domain/types'
 import type { CourseViewModel, CourseFormState } from '../domain/types'
+import { ErrorCode, ERROR_MESSAGES }            from '@control-aula/shared'
 
 export function useCursos() {
   const { showToast }                                          = useToast()
@@ -19,6 +20,7 @@ export function useCursos() {
   const [form,            setForm]            = useState<CourseFormState>(EMPTY_FORM)
   const [search,          setSearch]          = useState('')
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [formErrors,      setFormErrors]      = useState<{ name?: string; level?: string; parallel?: string }>({})
 
   const debouncedSearch = useDebounce(search)
 
@@ -45,7 +47,13 @@ export function useCursos() {
   }, [])
 
   const save = useCallback(async () => {
-    if (!form.name.trim()) { showToast('Course name is required', false); return }
+    setFormErrors({})
+    if (!form.name.trim())
+      return setFormErrors({ name: ERROR_MESSAGES[ErrorCode.COURSE_NAME_TOO_SHORT] })
+    if (!form.level.trim())
+      return setFormErrors({ level: ERROR_MESSAGES[ErrorCode.COURSE_LEVEL_REQUIRED] })
+    if (!form.parallel.trim())
+      return setFormErrors({ parallel: ERROR_MESSAGES[ErrorCode.COURSE_PARALLEL_REQUIRED] })
     try {
       const { message } = editing
         ? await cursosService.update(editing.id, CourseMapper.toDto(form))
@@ -90,6 +98,7 @@ export function useCursos() {
     modal,
     editing,
     form,
+    formErrors,
     search,
     confirmDeleteId,
     page, pageSize, setPage, setPageSize,

@@ -7,6 +7,7 @@ import { usePagination }                             from '@/hooks/usePagination
 import { useDebounce }                               from '@/hooks/useDebounce'
 import { EMPTY_FORM, EMPTY_FILTERS }                 from '../domain/types'
 import type { RewardViewModel, RewardFormState, RewardFilters, RewardType } from '../domain/types'
+import { ErrorCode, ERROR_MESSAGES }                 from '@control-aula/shared'
 
 export function useRecompensas() {
   const { showToast }                                            = useToast()
@@ -20,6 +21,7 @@ export function useRecompensas() {
   const [search,          setSearch]          = useState('')
   const [filters,         setFilters]         = useState<RewardFilters>(EMPTY_FILTERS)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [formErrors,      setFormErrors]      = useState<{ name?: string; coinsRequired?: string }>({})
 
   const debouncedSearch = useDebounce(search)
 
@@ -51,7 +53,11 @@ export function useRecompensas() {
   }, [])
 
   const save = useCallback(async () => {
-    if (!form.name.trim()) { showToast('Reward name is required', false); return }
+    setFormErrors({})
+    if (!form.name.trim())
+      return setFormErrors({ name: ERROR_MESSAGES[ErrorCode.REWARD_NAME_TOO_SHORT] })
+    if (form.coinsRequired <= 0)
+      return setFormErrors({ coinsRequired: ERROR_MESSAGES[ErrorCode.REWARD_COINS_ZERO] })
     try {
       const { message } = editing
         ? await recompensasService.update(editing.id, RewardMapper.toDto(form))
@@ -103,6 +109,7 @@ export function useRecompensas() {
     modal,
     editing,
     form,
+    formErrors,
     search,
     filters,
     filtersActive,

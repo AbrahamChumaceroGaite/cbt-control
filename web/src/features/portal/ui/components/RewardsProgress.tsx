@@ -44,7 +44,7 @@ export function RewardsProgress({ coins, rewards, pendingIds }: Props) {
 
   if (!sorted.length) return (
     <p className="text-xs text-zinc-500 text-center py-4">
-      {rewards.length > 0 ? '¡Ya puedes canjear todos tus premios disponibles!' : 'Sin premios configurados'}
+      {rewards.length > 0 ? 'You can already redeem all available rewards!' : 'No rewards configured'}
     </p>
   )
 
@@ -72,7 +72,7 @@ export function RewardsProgress({ coins, rewards, pendingIds }: Props) {
               </div>
               <div className="flex justify-between text-[10px] text-zinc-600">
                 <span>{coins} / {r.coinsRequired} coins</span>
-                <span>Faltan {r.coinsRequired - coins}</span>
+                <span>{r.coinsRequired - coins} to go</span>
               </div>
             </div>
           )
@@ -81,7 +81,7 @@ export function RewardsProgress({ coins, rewards, pendingIds }: Props) {
 
       <div className="mt-5 pt-4 border-t border-zinc-800/50">
         <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500 mb-2 flex items-center gap-1.5">
-          <Clock className="w-3 h-3" /> Se resetea en
+          <Clock className="w-3 h-3" /> Resets in
         </p>
         <span className="font-mono text-2xl font-black text-amber-400 tracking-widest tabular-nums">{countdown}</span>
       </div>

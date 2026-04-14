@@ -5,12 +5,14 @@ import * as bcrypt                         from 'bcryptjs'
 import { UserRepository }                  from '../../domain/user.repository'
 import type { SessionPayload }             from '../../domain/user.entity'
 import { LoginCommand }                    from './login.command'
+import { LogService }                      from '../../../../common/logging/log.service'
 
 @CommandHandler(LoginCommand)
 export class LoginHandler implements ICommandHandler<LoginCommand, { token: string; user: SessionPayload }> {
   constructor(
     private readonly repo: UserRepository,
     private readonly jwt:  JwtService,
+    private readonly log:  LogService,
   ) {}
 
   async execute({ dto }: LoginCommand): Promise<{ token: string; user: SessionPayload }> {
@@ -21,7 +23,10 @@ export class LoginHandler implements ICommandHandler<LoginCommand, { token: stri
     // Admins must supply an explicit password.
     const attempt = dto.password ?? dto.code
     const valid   = await bcrypt.compare(attempt, user.passwordHash)
-    if (!valid) throw new UnauthorizedException('Credenciales inválidas')
+    if (!valid) {
+      this.log.impact('auth.login', { userId: user.id, result: 'fail', meta: { reason: 'invalid_credentials' } })
+      throw new UnauthorizedException('Credenciales inválidas')
+    }
 
     const payload: SessionPayload = {
       userId:    user.id,
@@ -32,6 +37,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand, { token: stri
     }
 
     const token = this.jwt.sign(payload)
+    this.log.module('auth.login', { userId: user.id, result: 'success' })
     return { token, user: payload }
   }
 }

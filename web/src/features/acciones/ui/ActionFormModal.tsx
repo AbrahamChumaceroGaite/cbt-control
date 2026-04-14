@@ -4,12 +4,13 @@ import { ACTION_CATEGORIES }            from '../domain/types'
 import type { ActionFormState, ActionViewModel } from '../domain/types'
 
 interface Props {
-  open:    boolean
-  editing: ActionViewModel | null
-  form:    ActionFormState
-  setForm: (fn: (p: ActionFormState) => ActionFormState) => void
-  onSave:  () => void
-  onClose: () => void
+  open:       boolean
+  editing:    ActionViewModel | null
+  form:       ActionFormState
+  formErrors: { name?: string; coins?: string }
+  setForm:    (fn: (p: ActionFormState) => ActionFormState) => void
+  onSave:     () => void
+  onClose:    () => void
 }
 
 const CHECKBOX_FIELDS: { key: keyof ActionFormState; label: string }[] = [
@@ -18,17 +19,17 @@ const CHECKBOX_FIELDS: { key: keyof ActionFormState; label: string }[] = [
   { key: 'isActive',       label: 'Active (Visible in app)'       },
 ]
 
-export function ActionFormModal({ open, editing, form, setForm, onSave, onClose }: Props) {
+export function ActionFormModal({ open, editing, form, formErrors, setForm, onSave, onClose }: Props) {
   const upd = (key: keyof ActionFormState, val: unknown) => setForm(p => ({ ...p, [key]: val }))
 
   return (
     <Modal open={open} onClose={onClose} title={editing ? 'Edit Action' : 'New Action'}>
       <div className="space-y-4">
-        <FormField label="Descriptive Name">
+        <FormField label="Descriptive Name" error={formErrors.name}>
           <Input value={form.name} onChange={e => upd('name', e.target.value)} />
         </FormField>
         <div className="grid grid-cols-2 gap-4">
-          <FormField label="Coins">
+          <FormField label="Coins" error={formErrors.coins}>
             <Input type="number" value={form.coins}
               onChange={e => upd('coins', parseInt(e.target.value) || 0)} />
           </FormField>

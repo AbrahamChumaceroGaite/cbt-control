@@ -19,6 +19,7 @@ import { BankModule }    from './modules/bank/bank.module'
 import { PushModule }    from './modules/push/push.module'
 import { InboxModule }    from './modules/inbox/inbox.module'
 import { SocketModule }  from './infrastructure/socket/socket.module'
+import { LogModule }     from './common/logging/log.module'
 
 @Module({
   controllers: [AppController],
@@ -26,6 +27,7 @@ import { SocketModule }  from './infrastructure/socket/socket.module'
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
     PrismaModule,
+    LogModule,
     SocketModule,
     PushModule,
     InboxModule,

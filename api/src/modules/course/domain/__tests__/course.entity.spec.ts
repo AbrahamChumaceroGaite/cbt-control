@@ -24,17 +24,17 @@ describe('CourseEntity', () => {
   describe('validate() — name', () => {
     it('throws when name is empty', () => {
       expect(() => new CourseEntity({ ...validProps, name: '' }))
-        .toThrow('El nombre del curso debe tener al menos 2 caracteres')
+        .toThrow('Course name must be at least 2 characters')
     })
 
     it('throws when name has only one character', () => {
       expect(() => new CourseEntity({ ...validProps, name: 'X' }))
-        .toThrow('El nombre del curso debe tener al menos 2 caracteres')
+        .toThrow('Course name must be at least 2 characters')
     })
 
     it('throws when name is only whitespace', () => {
       expect(() => new CourseEntity({ ...validProps, name: '  ' }))
-        .toThrow('El nombre del curso debe tener al menos 2 caracteres')
+        .toThrow('Course name must be at least 2 characters')
     })
 
     it('accepts name with exactly 2 characters', () => {
@@ -45,24 +45,24 @@ describe('CourseEntity', () => {
   describe('validate() — level', () => {
     it('throws when level is empty', () => {
       expect(() => new CourseEntity({ ...validProps, level: '' }))
-        .toThrow('El nivel del curso es requerido')
+        .toThrow('Course level is required')
     })
 
     it('throws when level is only whitespace', () => {
       expect(() => new CourseEntity({ ...validProps, level: '  ' }))
-        .toThrow('El nivel del curso es requerido')
+        .toThrow('Course level is required')
     })
   })
 
   describe('validate() — parallel', () => {
     it('throws when parallel is empty', () => {
       expect(() => new CourseEntity({ ...validProps, parallel: '' }))
-        .toThrow('El paralelo del curso es requerido')
+        .toThrow('Course parallel is required')
     })
 
     it('throws when parallel is only whitespace', () => {
       expect(() => new CourseEntity({ ...validProps, parallel: '   ' }))
-        .toThrow('El paralelo del curso es requerido')
+        .toThrow('Course parallel is required')
     })
   })
 })

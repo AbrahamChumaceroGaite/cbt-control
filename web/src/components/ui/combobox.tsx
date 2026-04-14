@@ -76,7 +76,7 @@ export function Combobox({
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full min-w-[160px] rounded-xl border border-zinc-700 bg-zinc-900 shadow-2xl shadow-black/60 overflow-hidden">
+        <div className="absolute z-[var(--z-dropdown)] mt-1 w-full min-w-[160px] rounded-xl border border-zinc-700 bg-zinc-900 shadow-2xl shadow-black/60 overflow-hidden">
           <div className="p-1.5 border-b border-zinc-800">
             <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-zinc-800/80">
               <Search className="w-3 h-3 text-zinc-500 flex-shrink-0" />
