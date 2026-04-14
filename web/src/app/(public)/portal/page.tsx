@@ -54,9 +54,9 @@ export default function PortalPage() {
         open={logoutModalOpen}
         onConfirm={logout}
         onCancel={() => setLogoutModalOpen(false)}
-        title="¿Cerrar sesión?"
-        message="Se cerrará tu sesión en este dispositivo."
-        confirmText="Cerrar sesión"
+        title="Sign out?"
+        message="Your session will be closed on this device."
+        confirmText="Sign out"
         variant="red"
         icon={
           <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">

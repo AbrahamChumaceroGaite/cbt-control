@@ -21,13 +21,13 @@ export function EstudianteRow({ student: s, onEdit, onDelete }: Props) {
       </td>
       <td className="px-6 py-4 text-right">
         <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-          <Tooltip content="Editar alumno">
+          <Tooltip content="Edit student">
             <button onClick={onEdit}
               className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-md transition-colors">
               <Pencil className="w-3.5 h-3.5" />
             </button>
           </Tooltip>
-          <Tooltip content="Eliminar alumno">
+          <Tooltip content="Delete student">
             <button onClick={onDelete}
               className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-950/30 rounded-md transition-colors">
               <Trash2 className="w-3.5 h-3.5" />

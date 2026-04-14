@@ -6,6 +6,7 @@ import { NotificationService }                     from '../../../push/applicati
 import { BankMapper }                              from '../bank.mapper'
 import type { CoinTransactionResponse }            from '@control-aula/shared'
 import { CreateTransactionCommand }                from './create-transaction.command'
+import { LogService }                             from '../../../../common/logging/log.service'
 
 const WEEKLY_LIMIT = 3
 const TAX          = 1
@@ -16,6 +17,7 @@ export class CreateTransactionHandler implements ICommandHandler<CreateTransacti
     private readonly repo:    BankRepository,
     private readonly prisma:  PrismaService,
     private readonly notify:  NotificationService,
+    private readonly log:     LogService,
   ) {}
 
   async execute({ fromStudentId, dto }: CreateTransactionCommand): Promise<CoinTransactionResponse> {
@@ -71,6 +73,7 @@ export class CreateTransactionHandler implements ICommandHandler<CreateTransacti
     })
 
     if (!full) throw new Error(`Transaction ${transaction.id} not found after creation`)
+    this.log.module('bank.createTransaction', { userId: fromStudentId, result: 'success', meta: { txId: transaction.id, amount, toStudentId } })
     return BankMapper.toResponse(full)
   }
 }

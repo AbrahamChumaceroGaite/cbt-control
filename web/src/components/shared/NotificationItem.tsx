@@ -27,11 +27,11 @@ export function NotificationItem({ item, severity, onMarkRead, onDelete }: Props
       </div>
       <div className="flex-shrink-0 flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
         {!item.isRead && (
-          <button onClick={() => onMarkRead(item.id)} title="Leída" className="p-1 text-zinc-600 hover:text-zinc-200 hover:bg-zinc-800 rounded transition-colors">
+          <button onClick={() => onMarkRead(item.id)} title="Read" className="p-1 text-zinc-600 hover:text-zinc-200 hover:bg-zinc-800 rounded transition-colors">
             <Check className="w-3 h-3" />
           </button>
         )}
-        <button onClick={() => onDelete(item.id)} title="Eliminar" className="p-1 text-zinc-600 hover:text-red-400 hover:bg-red-950/20 rounded transition-colors">
+        <button onClick={() => onDelete(item.id)} title="Delete" className="p-1 text-zinc-600 hover:text-red-400 hover:bg-red-950/20 rounded transition-colors">
           <X className="w-3 h-3" />
         </button>
       </div>

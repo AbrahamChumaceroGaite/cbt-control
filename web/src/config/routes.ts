@@ -9,9 +9,10 @@ export const APP_ROUTES = {
 // Services MUST import from here. No '/api/...' strings anywhere else.
 export const API_ROUTES = {
   AUTH: {
-    LOGIN:  '/api/auth/login',
-    LOGOUT: '/api/auth/logout',
-    ME:     '/api/auth/me',
+    LOGIN:   '/api/auth/login',
+    LOGOUT:  '/api/auth/logout',
+    ME:      '/api/auth/me',
+    REFRESH: '/api/auth/refresh',
   },
   ACTIONS: {
     BASE:  '/api/acciones',

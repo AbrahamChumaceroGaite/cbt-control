@@ -28,13 +28,16 @@ const mockRepo = {
 const mockNotify = {
   notifyAdminsNewRequest: vi.fn().mockResolvedValue(undefined),
 }
+const mockLog = {
+  module: vi.fn(),
+}
 
 beforeEach(() => vi.clearAllMocks())
 
 describe('RequestRewardHandler', () => {
   let handler: RequestRewardHandler
 
-  beforeEach(() => { handler = new RequestRewardHandler(mockRepo as never, mockNotify as never) })
+  beforeEach(() => { handler = new RequestRewardHandler(mockRepo as never, mockNotify as never, mockLog as never) })
 
   it('calls repo.requestReward and returns the result', async () => {
     mockRepo.requestReward.mockResolvedValue({ id: 'req1', status: 'pending' })

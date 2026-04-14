@@ -1,5 +1,6 @@
 import { Body, Controller, Get, HttpCode, Post, Res, UseGuards } from '@nestjs/common'
 import { CommandBus, QueryBus }  from '@nestjs/cqrs'
+import { JwtService }            from '@nestjs/jwt'
 import type { Response }         from 'express'
 import { JwtAuthGuard }          from '../../../common/guards/jwt-auth.guard'
 import { ResponseMessage }       from '../../../common/decorators/response-message.decorator'
@@ -12,8 +13,9 @@ import { LoginDto }              from '../application/commands/login.dto'
 @Controller('auth')
 export class AuthController {
   constructor(
-    private readonly qb: QueryBus,
-    private readonly cb: CommandBus,
+    private readonly qb:  QueryBus,
+    private readonly cb:  CommandBus,
+    private readonly jwt: JwtService,
   ) {}
 
   @Post('login')
@@ -23,6 +25,16 @@ export class AuthController {
     const result = await this.cb.execute(new LoginCommand(dto))
     res.cookie(COOKIE_NAME, result.token, COOKIE_OPTS)
     return { user: result.user }
+  }
+
+  @Post('refresh')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  @ResponseMessage('Token renewed')
+  refresh(@CurrentUser() user: SessionPayload, @Res({ passthrough: true }) res: Response) {
+    const token = this.jwt.sign(user)
+    res.cookie(COOKIE_NAME, token, COOKIE_OPTS)
+    return { user }
   }
 
   @Post('logout')

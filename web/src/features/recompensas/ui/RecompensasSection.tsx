@@ -71,7 +71,8 @@ export function RecompensasSection() {
       </div>
 
       <RewardFormModal open={s.modal} editing={s.editing} form={s.form}
-        setForm={h.setForm} changeType={h.changeType} onSave={h.save} onClose={h.closeModal} />
+        formErrors={s.formErrors} setForm={h.setForm} changeType={h.changeType}
+        onSave={h.save} onClose={h.closeModal} />
 
       <ConfirmDialog open={!!s.confirmDeleteId} onConfirm={h.doDelete} onCancel={h.cancelDelete}
         title="Delete reward"

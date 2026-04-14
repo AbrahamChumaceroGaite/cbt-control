@@ -1,7 +1,7 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter }            from 'next/navigation'
-import { authService }          from '@/services/auth.service'
+import { dashboardService }     from '../infrastructure/dashboard.service'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { useSocketEvent }       from '@/hooks/useSocketEvent'
 import { WS }                   from '@/ws/events'
@@ -16,7 +16,7 @@ export function useDashboard() {
   const { unsubscribeForLogout } = usePushNotifications()
 
   useEffect(() => {
-    authService.me().then(d => {
+    dashboardService.getProfile().then(d => {
       if (d?.fullName) setAdminName(d.fullName)
       else if (d?.code) setAdminName(d.code)
     }).catch(() => {})
@@ -28,7 +28,7 @@ export function useDashboard() {
 
   const logout = useCallback(async () => {
     await unsubscribeForLogout()
-    await authService.logout()
+    await dashboardService.logout()
     router.push(APP_ROUTES.LOGIN)
   }, [unsubscribeForLogout, router])
 

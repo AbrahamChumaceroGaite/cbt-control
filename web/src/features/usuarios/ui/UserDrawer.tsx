@@ -138,7 +138,7 @@ export function UserDrawer({ user, onClose, onUpdated }: Props) {
       {/* Edit modal */}
       <Modal open={d.editModal} onClose={h.closeEdit} title="Edit user">
         <div className="space-y-4">
-          <FormField label="Full Name">
+          <FormField label="Full Name" error={d.formErrors.fullName}>
             <Input value={d.form.fullName} onChange={e => h.setForm(p => ({ ...p, fullName: e.target.value }))} placeholder="Display name" />
           </FormField>
           <FormField label="New password (leave empty to keep current)">

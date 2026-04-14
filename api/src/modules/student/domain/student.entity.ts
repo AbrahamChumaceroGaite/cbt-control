@@ -1,3 +1,6 @@
+import { AppException } from '../../../common/exceptions/app.exception'
+import { ErrorCode }    from '@control-aula/shared'
+
 export interface StudentTramoEntity { tramo: string; awardedAt: Date }
 
 export class StudentEntity {
@@ -36,10 +39,10 @@ export class StudentEntity {
 
   private validate(): void {
     if (!this.name || this.name.trim().length === 0)
-      throw new Error('El nombre del estudiante es requerido')
+      throw new AppException(ErrorCode.STUDENT_NAME_REQUIRED)
     if (!this.courseId || this.courseId.trim().length === 0)
-      throw new Error('El curso del estudiante es requerido')
+      throw new AppException(ErrorCode.STUDENT_COURSE_REQUIRED)
     if (this.coins < 0)
-      throw new Error('Los coins del estudiante no pueden ser negativos')
+      throw new AppException(ErrorCode.STUDENT_COINS_NEGATIVE)
   }
 }

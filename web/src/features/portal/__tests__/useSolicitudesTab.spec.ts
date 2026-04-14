@@ -32,7 +32,7 @@ describe('useSolicitudesTab', () => {
       await act(() => result.current.doCancel('sol1'))
 
       expect(mockService.cancelRedemption).toHaveBeenCalledWith('sol1')
-      expect(mockShowToast).toHaveBeenCalledWith('Solicitud cancelada')
+      expect(mockShowToast).toHaveBeenCalledWith('Request cancelled')
       expect(onReload).toHaveBeenCalledTimes(1)
     })
 

@@ -7,6 +7,7 @@ interface Props {
   open:         boolean
   editing:      GroupViewModel | null
   form:         GroupFormState
+  formErrors:   { name?: string }
   students:     StudentResponse[]
   setForm:      (fn: (p: GroupFormState) => GroupFormState) => void
   toggleMember: (id: string) => void
@@ -14,11 +15,11 @@ interface Props {
   onClose:      () => void
 }
 
-export function GroupFormModal({ open, editing, form, students, setForm, toggleMember, onSave, onClose }: Props) {
+export function GroupFormModal({ open, editing, form, formErrors, students, setForm, toggleMember, onSave, onClose }: Props) {
   return (
     <Modal open={open} onClose={onClose} title={editing ? 'Edit Group' : 'New Group'}>
       <div className="space-y-4">
-        <FormField label="Group Name">
+        <FormField label="Group Name" error={formErrors.name}>
           <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
         </FormField>
         <FormField label="Select Members">

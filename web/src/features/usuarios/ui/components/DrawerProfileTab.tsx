@@ -1,4 +1,5 @@
 import { BellDot, Bell, GraduationCap, Calendar, Hash } from 'lucide-react'
+import { formatDate }         from '@/lib/utils'
 import type { UserViewModel } from '../../domain/types'
 
 export function DrawerProfileTab({ user }: { user: UserViewModel }) {
@@ -7,7 +8,7 @@ export function DrawerProfileTab({ user }: { user: UserViewModel }) {
       <div className="space-y-3">
         {([
           { icon: Hash,     label: 'Code',       value: user.code },
-          { icon: Calendar, label: 'Registered',  value: new Date(user.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }) },
+          { icon: Calendar, label: 'Registered',  value: formatDate(user.createdAt) },
         ] as const).map(({ icon: Icon, label, value }) => (
           <div key={label} className="flex items-center gap-3 py-2.5 border-b border-zinc-800/50">
             <Icon className="w-3.5 h-3.5 text-zinc-600 flex-shrink-0" />

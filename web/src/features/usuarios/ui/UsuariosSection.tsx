@@ -90,7 +90,7 @@ export function UsuariosSection() {
       <Modal open={s.modal} onClose={h.closeCreate} title="New User">
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <FormField label="Code (login)">
+            <FormField label="Code (login)" error={s.formErrors.code}>
               <Input value={s.form.code} onChange={e => h.setForm(p => ({ ...p, code: e.target.value }))} placeholder="e.g. s1a01 or admin" />
             </FormField>
             <FormField label="Role">
@@ -103,7 +103,7 @@ export function UsuariosSection() {
             </FormField>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <FormField label="Full Name">
+            <FormField label="Full Name" error={s.formErrors.fullName}>
               <Input value={s.form.fullName} onChange={e => h.setForm(p => ({ ...p, fullName: e.target.value }))} placeholder="Display name" />
             </FormField>
             <FormField label="Password">

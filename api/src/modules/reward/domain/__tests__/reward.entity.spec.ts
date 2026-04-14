@@ -28,17 +28,17 @@ describe('RewardEntity', () => {
   describe('validate() — name', () => {
     it('throws when name is empty', () => {
       expect(() => new RewardEntity({ ...validProps, name: '' }))
-        .toThrow('El nombre de la recompensa debe tener al menos 2 caracteres')
+        .toThrow('Reward name must be at least 2 characters')
     })
 
     it('throws when name has only one character', () => {
       expect(() => new RewardEntity({ ...validProps, name: 'X' }))
-        .toThrow('El nombre de la recompensa debe tener al menos 2 caracteres')
+        .toThrow('Reward name must be at least 2 characters')
     })
 
     it('throws when name is only whitespace', () => {
       expect(() => new RewardEntity({ ...validProps, name: '  ' }))
-        .toThrow('El nombre de la recompensa debe tener al menos 2 caracteres')
+        .toThrow('Reward name must be at least 2 characters')
     })
 
     it('accepts name with exactly 2 characters', () => {
@@ -49,12 +49,12 @@ describe('RewardEntity', () => {
   describe('validate() — coinsRequired', () => {
     it('throws when coinsRequired is zero', () => {
       expect(() => new RewardEntity({ ...validProps, coinsRequired: 0 }))
-        .toThrow('Los coins requeridos deben ser mayores a cero')
+        .toThrow('Required coins must be greater than zero')
     })
 
     it('throws when coinsRequired is negative', () => {
       expect(() => new RewardEntity({ ...validProps, coinsRequired: -10 }))
-        .toThrow('Los coins requeridos deben ser mayores a cero')
+        .toThrow('Required coins must be greater than zero')
     })
 
     it('accepts positive coinsRequired', () => {
@@ -65,12 +65,12 @@ describe('RewardEntity', () => {
   describe('validate() — discount', () => {
     it('throws when discount is negative', () => {
       expect(() => new RewardEntity({ ...validProps, discount: -1 }))
-        .toThrow('El descuento debe estar entre 0 y 100')
+        .toThrow('Discount must be between 0 and 100')
     })
 
     it('throws when discount exceeds 100', () => {
       expect(() => new RewardEntity({ ...validProps, discount: 101 }))
-        .toThrow('El descuento debe estar entre 0 y 100')
+        .toThrow('Discount must be between 0 and 100')
     })
 
     it('accepts discount of 0', () => {

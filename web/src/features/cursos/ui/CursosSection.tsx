@@ -41,7 +41,7 @@ export function CursosSection() {
       </div>
 
       <CursoFormModal open={s.modal} editing={s.editing} form={s.form}
-        setForm={h.setForm} onSave={h.save} onClose={h.closeModal} />
+        formErrors={s.formErrors} setForm={h.setForm} onSave={h.save} onClose={h.closeModal} />
 
       <ConfirmDialog open={!!s.confirmDeleteId} onConfirm={h.doDelete} onCancel={h.cancelDelete}
         title="Delete course"

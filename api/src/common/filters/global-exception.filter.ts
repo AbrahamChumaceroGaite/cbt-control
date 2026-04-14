@@ -30,20 +30,20 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
 
     if (exception instanceof Prisma.PrismaClientValidationError) {
-      return [HttpStatus.BAD_REQUEST, 'Datos inválidos']
+      return [HttpStatus.BAD_REQUEST, 'Invalid data provided']
     }
 
-    return [HttpStatus.INTERNAL_SERVER_ERROR, 'Error interno del servidor']
+    return [HttpStatus.INTERNAL_SERVER_ERROR, 'Internal server error']
   }
 
   private mapPrismaKnown(e: Prisma.PrismaClientKnownRequestError): [number, string] {
     switch (e.code) {
-      case 'P2002': return [HttpStatus.CONFLICT,   'Ya existe un registro con ese valor']
-      case 'P2025': return [HttpStatus.NOT_FOUND,  'Registro no encontrado']
-      case 'P2003': return [HttpStatus.CONFLICT,   'No se puede eliminar: tiene registros asociados']
-      case 'P2014': return [HttpStatus.CONFLICT,   'Violación de relación entre registros']
-      case 'P2016': return [HttpStatus.NOT_FOUND,  'Registro no encontrado']
-      default:      return [HttpStatus.BAD_REQUEST, 'Error al procesar la operación']
+      case 'P2002': return [HttpStatus.CONFLICT,   'A record with this value already exists']
+      case 'P2025': return [HttpStatus.NOT_FOUND,  'Record not found']
+      case 'P2003': return [HttpStatus.CONFLICT,   'Cannot delete: record has associated data']
+      case 'P2014': return [HttpStatus.CONFLICT,   'Relation violation between records']
+      case 'P2016': return [HttpStatus.NOT_FOUND,  'Record not found']
+      default:      return [HttpStatus.BAD_REQUEST, 'Error processing the operation']
     }
   }
 }

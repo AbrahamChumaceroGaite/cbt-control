@@ -6,6 +6,7 @@ import { useToast }            from '@/hooks/useToast'
 import type { UserViewModel, UserUpdateForm, NotificationItem } from '../domain/types'
 import type { CoinTransactionResponse }   from '@control-aula/shared'
 import { EMPTY_UPDATE_FORM }              from '../domain/types'
+import { ErrorCode, ERROR_MESSAGES }      from '@control-aula/shared'
 
 export type DrawerSection = 'profile' | 'notifications' | 'transactions'
 
@@ -21,6 +22,7 @@ export function useUserDrawer(user: UserViewModel | null, onUpdated: () => void,
   const [loadingTxs,     setLoadingTxs]    = useState(false)
   const [saving,         setSaving]        = useState(false)
   const [confirmDelete,  setConfirmDelete] = useState(false)
+  const [formErrors,     setFormErrors]    = useState<{ fullName?: string }>({})
 
   // Reset when user changes
   useEffect(() => {
@@ -53,6 +55,9 @@ export function useUserDrawer(user: UserViewModel | null, onUpdated: () => void,
 
   const save = useCallback(async () => {
     if (!user) return
+    setFormErrors({})
+    if (!form.fullName.trim())
+      return setFormErrors({ fullName: ERROR_MESSAGES[ErrorCode.USER_NAME_REQUIRED] })
     setSaving(true)
     try {
       const { message } = await usuariosService.update(user.id, UserMapper.toUpdateBody(form))
@@ -91,7 +96,7 @@ export function useUserDrawer(user: UserViewModel | null, onUpdated: () => void,
   }, [user, onClose, onUpdated, showToast])
 
   return {
-    section, editModal, form, notifications, loadingNotifs,
+    section, editModal, form, formErrors, notifications, loadingNotifs,
     transactions, loadingTxs, saving, confirmDelete,
     handlers: {
       setSection,

@@ -22,7 +22,7 @@ export function CursoCard({ course: c, onEdit, onDelete }: Props) {
           {c.level} — Par. {c.parallel}
         </div>
         <div className="mt-4 text-sm text-zinc-400 flex items-center gap-1">
-          <Users className="w-3.5 h-3.5" /> {c.studentCount ?? 0} estudiantes
+          <Users className="w-3.5 h-3.5" /> {c.studentCount ?? 0} students
         </div>
       </div>
       <CardActions onEdit={onEdit} onDelete={onDelete} />

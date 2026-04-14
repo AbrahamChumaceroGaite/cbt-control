@@ -85,7 +85,7 @@ describe('useGrupos', () => {
       await act(() => result.current.handlers.save())
 
       expect(mockService.create).not.toHaveBeenCalled()
-      expect(mockShowToast).toHaveBeenCalledWith('Group name is required', false)
+      expect(result.current.formErrors.name).toBe('Group name must be at least 2 characters')
     })
   })
 

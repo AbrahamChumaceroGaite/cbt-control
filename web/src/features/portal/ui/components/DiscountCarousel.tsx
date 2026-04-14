@@ -36,7 +36,7 @@ export function DiscountCarousel({ deals, coins, requesting, onAskConfirm, redem
           <Zap className="w-3 h-3 text-rose-400" />
           <span className="text-[10px] font-extrabold uppercase tracking-[0.15em] text-rose-400">Flash Deals</span>
         </div>
-        <span className="text-[10px] text-zinc-600">Cambian automáticamente cada 2 días</span>
+        <span className="text-[10px] text-zinc-600">Auto-rotate every 2 days</span>
         <div className="flex-1 h-px bg-zinc-800" />
         <div className="flex items-center gap-1">
           {deals.map((_, i) => (
@@ -63,7 +63,7 @@ export function DiscountCarousel({ deals, coins, requesting, onAskConfirm, redem
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-extrabold uppercase tracking-[0.15em] px-2 py-1 rounded-lg border"
               style={{ color: theme.accent, borderColor: `${theme.accent}30`, background: `${theme.accent}10` }}>
-              Premio Individual
+              Individual Reward
             </span>
           </div>
 
@@ -87,12 +87,12 @@ export function DiscountCarousel({ deals, coins, requesting, onAskConfirm, redem
                 <span className="text-sm text-white/40 line-through">{deal.coinsRequired}</span>
               </div>
               <p className="text-[11px] mt-1" style={{ color: theme.accent }}>
-                Ahorras {savings} coin{savings !== 1 ? 's' : ''}
+                Save {savings} coin{savings !== 1 ? 's' : ''}
               </p>
             </div>
             {pending ? (
               <div className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-800/80 text-zinc-400 text-xs font-bold flex-shrink-0">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Enviado
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Sent
               </div>
             ) : (
               <Button
@@ -104,7 +104,7 @@ export function DiscountCarousel({ deals, coins, requesting, onAskConfirm, redem
                   ? { background: theme.accent, color: '#000', boxShadow: `0 0 20px ${theme.accent}40` }
                   : { background: 'rgba(39,39,42,0.8)', color: '#71717a' }}
               >
-                {canAfford ? 'Pedir ahora' : 'Sin coins'}
+                {canAfford ? 'Request now' : 'Not enough coins'}
               </Button>
             )}
           </div>
@@ -118,7 +118,7 @@ export function DiscountCarousel({ deals, coins, requesting, onAskConfirm, redem
                 }} />
             </div>
             {!canAfford && (
-              <p className="text-[10px] text-white/40 mt-1">Te faltan {deal.salePrice - coins} coins</p>
+              <p className="text-[10px] text-white/40 mt-1">You need {deal.salePrice - coins} more coins</p>
             )}
           </div>
         </div>

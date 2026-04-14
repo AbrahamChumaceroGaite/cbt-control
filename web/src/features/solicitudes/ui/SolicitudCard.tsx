@@ -1,5 +1,6 @@
 import { Button, StatusBadge }             from '@/components/ui'
 import { REQUEST_STATUS }                  from '@/config/status'
+import { formatDateTime }                  from '@/lib/utils'
 import type { SolicitudViewModel }         from '../domain/types'
 
 interface Props {
@@ -27,7 +28,7 @@ export function SolicitudCard({ solicitud: s, processing, onApprove, onReject }:
           <span className="text-amber-500">{s.reward.coinsRequired} coins</span>
         </div>
         <div className="text-xs text-zinc-600 mt-0.5">
-          {new Date(s.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+          {formatDateTime(s.createdAt)}
           {' '}<span className="text-zinc-700">·</span> Student has {s.student.coins} coins
         </div>
       </div>
