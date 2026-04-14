@@ -13,6 +13,7 @@ services:
       - PORT=${API_PORT:-4001}
       - WEB_ORIGIN=${WEB_ORIGIN}
       - TZ=America/La_Paz
+      - REDIS_URL=redis://redis:6379
     volumes:
       - sqlite_data:/app/data
       - uploads:/app/uploads
@@ -25,6 +26,15 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    expose:
+      - "6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes
 
   web:
     build:
@@ -41,10 +51,13 @@ services:
     depends_on:
       api:
         condition: service_healthy
+      redis:
+        condition: service_started
     restart: unless-stopped
 
 volumes:
   sqlite_data:
+  redis_data:
   uploads:
   logs:
   backups:
