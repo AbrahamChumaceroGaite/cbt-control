@@ -3,6 +3,7 @@ import { CheckCircle2, Send, User, X, XCircle } from 'lucide-react'
 import { Button }           from '@/components/ui'
 import { useSendForm }      from '../application/useSendForm'
 import { RecipientPicker }  from './RecipientPicker'
+import { AmountStepper }    from './components/AmountStepper'
 import { BANK_TX_LIMIT }   from '@/config/ui'
 import type { CoinTransactionResponse } from '../domain/types'
 
@@ -65,22 +66,7 @@ export function SendForm({ myCoins, remaining, onSent }: Props) {
         <>
           <div>
             <label className="block text-[10px] font-extrabold uppercase tracking-[0.15em] text-zinc-500 mb-2">Amount</label>
-            <div className="flex items-center gap-3">
-              <Button variant="secondary" size="sm" className="w-10 h-10 text-lg font-bold" onClick={() => setAmount(Math.max(1, amount - 1))}>−</Button>
-              <input type="number" min={1} value={amount} onChange={e => setAmount(Math.max(1, parseInt(e.target.value) || 1))}
-                className="flex-1 h-10 rounded-lg bg-zinc-800/80 border border-zinc-700 text-center text-lg font-black text-amber-300 focus:outline-none focus:border-amber-500/50 transition-colors" />
-              <Button variant="secondary" size="sm" className="w-10 h-10 text-lg font-bold" onClick={() => setAmount(amount + 1)}>+</Button>
-            </div>
-          </div>
-          <div className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-3 space-y-1.5 text-xs">
-            <div className="flex justify-between text-zinc-400"><span>Amount</span><span className="font-bold text-zinc-200">{amount} coins</span></div>
-            <div className="flex justify-between text-zinc-500"><span>Tax</span><span className="font-semibold text-zinc-400">1 coin</span></div>
-            <div className="h-px bg-zinc-800" />
-            <div className="flex justify-between font-bold">
-              <span className="text-zinc-300">Total to deduct</span>
-              <span className={total > myCoins ? 'text-red-400' : 'text-amber-400'}>{total} coins</span>
-            </div>
-            <div className="flex justify-between text-zinc-600"><span>Your balance</span><span>{myCoins} coins</span></div>
+            <AmountStepper amount={amount} total={total} myCoins={myCoins} onChange={setAmount} />
           </div>
           <div>
             <label className="block text-[10px] font-extrabold uppercase tracking-[0.15em] text-zinc-500 mb-2">Note (optional)</label>
