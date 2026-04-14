@@ -4,14 +4,14 @@ import type { IndividualReward } from '../../domain/types'
 
 const makeReward = (id: string, coins: number, discount = 0): IndividualReward => ({
   id,
-  name: `Reward ${id}`,
-  description: '',
-  icon: '⭐',
+  name:          `Reward ${id}`,
+  description:   '',
+  icon:          '⭐',
   coinsRequired: coins,
   discount,
-  discountEndsAt: null,
-  type: 'individual',
-  isGlobal: false,
+  type:          'individual',
+  isGlobal:      false,
+  isActive:      true,
 })
 
 describe('getDeals', () => {
