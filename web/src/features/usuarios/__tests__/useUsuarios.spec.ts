@@ -87,6 +87,7 @@ describe('useUsuarios', () => {
       await waitFor(() => expect(result.current.paginated).toHaveLength(1))
 
       act(() => { result.current.handlers.openCreate() })
+      act(() => { result.current.handlers.setForm({ code: 'T003', password: 'pass', role: 'teacher', fullName: 'Error User' }) })
       await act(() => result.current.handlers.create())
 
       expect(mockShowToast).toHaveBeenCalledWith('Create failed', false)

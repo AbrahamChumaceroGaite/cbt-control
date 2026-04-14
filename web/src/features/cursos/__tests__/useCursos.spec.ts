@@ -83,7 +83,7 @@ describe('useCursos', () => {
       await act(() => result.current.handlers.save())
 
       expect(mockService.create).not.toHaveBeenCalled()
-      expect(mockShowToast).toHaveBeenCalledWith('Course name is required', false)
+      expect(result.current.formErrors.name).toBe('Course name must be at least 2 characters')
     })
   })
 

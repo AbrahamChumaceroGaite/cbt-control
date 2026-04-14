@@ -26,17 +26,17 @@ describe('ActionEntity', () => {
   describe('validate() — name', () => {
     it('throws when name is empty', () => {
       expect(() => new ActionEntity({ ...validProps, name: '' }))
-        .toThrow('El nombre de la acción debe tener al menos 2 caracteres')
+        .toThrow('Action name must be at least 2 characters')
     })
 
     it('throws when name has only one character', () => {
       expect(() => new ActionEntity({ ...validProps, name: 'X' }))
-        .toThrow('El nombre de la acción debe tener al menos 2 caracteres')
+        .toThrow('Action name must be at least 2 characters')
     })
 
     it('throws when name is only whitespace', () => {
       expect(() => new ActionEntity({ ...validProps, name: '  ' }))
-        .toThrow('El nombre de la acción debe tener al menos 2 caracteres')
+        .toThrow('Action name must be at least 2 characters')
     })
 
     it('accepts name with exactly 2 characters', () => {
@@ -47,7 +47,7 @@ describe('ActionEntity', () => {
   describe('validate() — coins', () => {
     it('throws when coins is zero', () => {
       expect(() => new ActionEntity({ ...validProps, coins: 0 }))
-        .toThrow('Los coins de la acción no pueden ser cero')
+        .toThrow('Action coins cannot be zero')
     })
 
     it('accepts negative coins (penalty actions)', () => {
@@ -62,7 +62,7 @@ describe('ActionEntity', () => {
   describe('validate() — scope', () => {
     it('throws when neither affectsClass nor affectsStudent is true', () => {
       expect(() => new ActionEntity({ ...validProps, affectsClass: false, affectsStudent: false }))
-        .toThrow('La acción debe afectar al menos a la clase o al estudiante')
+        .toThrow('Action must apply to class or student')
     })
 
     it('accepts actions that only affect the class', () => {

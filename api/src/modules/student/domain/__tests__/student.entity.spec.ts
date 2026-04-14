@@ -24,12 +24,12 @@ describe('StudentEntity', () => {
   describe('validate() — name', () => {
     it('throws when name is empty', () => {
       expect(() => new StudentEntity({ ...validProps, name: '' }))
-        .toThrow('El nombre del estudiante es requerido')
+        .toThrow('Student name is required')
     })
 
     it('throws when name is only whitespace', () => {
       expect(() => new StudentEntity({ ...validProps, name: '   ' }))
-        .toThrow('El nombre del estudiante es requerido')
+        .toThrow('Student name is required')
     })
 
     it('accepts a valid name', () => {
@@ -40,19 +40,19 @@ describe('StudentEntity', () => {
   describe('validate() — courseId', () => {
     it('throws when courseId is empty', () => {
       expect(() => new StudentEntity({ ...validProps, courseId: '' }))
-        .toThrow('El curso del estudiante es requerido')
+        .toThrow('Student course is required')
     })
 
     it('throws when courseId is only whitespace', () => {
       expect(() => new StudentEntity({ ...validProps, courseId: '  ' }))
-        .toThrow('El curso del estudiante es requerido')
+        .toThrow('Student course is required')
     })
   })
 
   describe('validate() — coins', () => {
     it('throws when coins is negative', () => {
       expect(() => new StudentEntity({ ...validProps, coins: -1 }))
-        .toThrow('Los coins del estudiante no pueden ser negativos')
+        .toThrow('Student coins cannot be negative')
     })
 
     it('accepts zero coins', () => {

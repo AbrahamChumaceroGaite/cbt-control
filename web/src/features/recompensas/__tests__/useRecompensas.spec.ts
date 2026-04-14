@@ -86,7 +86,7 @@ describe('useRecompensas', () => {
       await act(() => result.current.handlers.save())
 
       expect(mockService.create).not.toHaveBeenCalled()
-      expect(mockShowToast).toHaveBeenCalledWith('Reward name is required', false)
+      expect(result.current.formErrors.name).toBe('Reward name must be at least 2 characters')
     })
   })
 
