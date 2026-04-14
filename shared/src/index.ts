@@ -7,3 +7,5 @@ export type { GroupResponse, GroupMember, GroupInput }     from './types/group.t
 export type { PortalStudentResponse }                      from './types/portal.types'
 export type { CoinTransactionResponse, WeeklyBankStatus, StudentSearchResult, CreateTransactionInput, ProcessTransactionInput } from './types/bank.types'
 export type { UserResponse, UserRole, UserDetailResponse, UserCreateInput, SessionPayload } from './types/user.types'
+export { ErrorCode }      from './types/error-codes'
+export { ERROR_MESSAGES } from './constants/error-messages'

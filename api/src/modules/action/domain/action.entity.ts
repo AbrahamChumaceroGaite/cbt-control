@@ -1,3 +1,6 @@
+import { AppException }     from '../../../common/exceptions/app.exception'
+import { ErrorCode }        from '@control-aula/shared'
+
 export class ActionEntity {
   readonly id:             string
   readonly name:           string
@@ -34,10 +37,10 @@ export class ActionEntity {
 
   private validate(): void {
     if (!this.name || this.name.trim().length < 2)
-      throw new Error('El nombre de la acción debe tener al menos 2 caracteres')
+      throw new AppException(ErrorCode.ACTION_NAME_TOO_SHORT)
     if (this.coins === 0)
-      throw new Error('Los coins de la acción no pueden ser cero')
+      throw new AppException(ErrorCode.ACTION_COINS_ZERO)
     if (!this.affectsClass && !this.affectsStudent)
-      throw new Error('La acción debe afectar al menos a la clase o al estudiante')
+      throw new AppException(ErrorCode.ACTION_NO_SCOPE)
   }
 }

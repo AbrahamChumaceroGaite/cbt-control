@@ -4,16 +4,17 @@ import { REWARD_TYPES, REWARD_ICONS }   from '../domain/types'
 import type { RewardFormState, RewardViewModel, RewardType } from '../domain/types'
 
 interface Props {
-  open:       boolean
-  editing:    RewardViewModel | null
-  form:       RewardFormState
-  setForm:    (fn: (p: RewardFormState) => RewardFormState) => void
-  changeType: (t: RewardType) => void
-  onSave:     () => void
-  onClose:    () => void
+  open:         boolean
+  editing:      RewardViewModel | null
+  form:         RewardFormState
+  formErrors:   { name?: string; coinsRequired?: string }
+  setForm:      (fn: (p: RewardFormState) => RewardFormState) => void
+  changeType:   (t: RewardType) => void
+  onSave:       () => void
+  onClose:      () => void
 }
 
-export function RewardFormModal({ open, editing, form, setForm, changeType, onSave, onClose }: Props) {
+export function RewardFormModal({ open, editing, form, formErrors, setForm, changeType, onSave, onClose }: Props) {
   const upd = (key: keyof RewardFormState, val: unknown) => setForm(p => ({ ...p, [key]: val }))
 
   const finalPrice = form.discount > 0
@@ -23,14 +24,14 @@ export function RewardFormModal({ open, editing, form, setForm, changeType, onSa
   return (
     <Modal open={open} onClose={onClose} title={editing ? 'Edit Reward' : 'New Reward'}>
       <div className="space-y-4">
-        <FormField label="Name / Title">
+        <FormField label="Name / Title" error={formErrors.name}>
           <Input value={form.name} onChange={e => upd('name', e.target.value)} />
         </FormField>
         <FormField label="Description">
           <Input value={form.description} onChange={e => upd('description', e.target.value)} />
         </FormField>
         <div className="grid grid-cols-2 gap-4">
-          <FormField label="Cost in Coins">
+          <FormField label="Cost in Coins" error={formErrors.coinsRequired}>
             <Input type="number" value={form.coinsRequired} onChange={e => upd('coinsRequired', parseInt(e.target.value) || 0)} />
           </FormField>
           <FormField label="Icon">

@@ -7,6 +7,7 @@ import { usePagination }    from '@/hooks/usePagination'
 import { useDebounce }      from '@/hooks/useDebounce'
 import type { UserViewModel, UserCreateForm, UserFilters } from '../domain/types'
 import { EMPTY_CREATE_FORM, EMPTY_FILTERS } from '../domain/types'
+import { ErrorCode, ERROR_MESSAGES }        from '@control-aula/shared'
 
 export function useUsuarios() {
   const { showToast }                             = useToast()
@@ -18,6 +19,7 @@ export function useUsuarios() {
   const [search,      setSearch]      = useState('')
   const [filters,     setFilters]     = useState<UserFilters>(EMPTY_FILTERS)
   const [selected,    setSelected]    = useState<UserViewModel | null>(null)
+  const [formErrors,  setFormErrors]  = useState<{ code?: string; fullName?: string }>({})
 
   const debouncedSearch = useDebounce(search)
 
@@ -72,6 +74,11 @@ export function useUsuarios() {
   // ── Actions ───────────────────────────────────────────────────────────────
 
   const create = useCallback(async () => {
+    setFormErrors({})
+    if (!form.code.trim())
+      return setFormErrors({ code: ERROR_MESSAGES[ErrorCode.USER_CODE_REQUIRED] })
+    if (!form.fullName.trim())
+      return setFormErrors({ fullName: ERROR_MESSAGES[ErrorCode.USER_NAME_REQUIRED] })
     try {
       const { message } = await usuariosService.create(UserMapper.toCreateDto(form))
       showToast(message)
@@ -92,7 +99,7 @@ export function useUsuarios() {
 
   return {
     paginated, filtered, filters, filtersActive, courseOptions,
-    modal, form, search, page, pageSize, selected,
+    modal, form, formErrors, search, page, pageSize, selected,
     setPage, setPageSize,
     handlers: {
       openCreate:    () => { setForm(EMPTY_CREATE_FORM); setModal(true) },

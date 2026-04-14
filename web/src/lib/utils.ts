@@ -30,10 +30,20 @@ export function timeAgo(date: string | Date): string {
 
 /**
  * Formats a date as a localised readable string (e.g. "Apr 7, 2026").
+ * Always rendered in America/La_Paz timezone.
  */
 export function formatDate(date: string | Date, locale = 'en-US'): string {
   const d = typeof date === 'string' ? new Date(date) : date
-  return d.toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' })
+  return d.toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'America/La_Paz' })
+}
+
+/**
+ * Formats a date+time as a localised readable string (e.g. "Apr 7, 2026, 03:30 PM").
+ * Always rendered in America/La_Paz timezone.
+ */
+export function formatDateTime(date: string | Date, locale = 'en-US'): string {
+  const d = typeof date === 'string' ? new Date(date) : date
+  return d.toLocaleString(locale, { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/La_Paz' })
 }
 
 // ── Numbers ───────────────────────────────────────────────────────────────────

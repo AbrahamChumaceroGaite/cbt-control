@@ -6,6 +6,7 @@ import { useToast }                                  from '@/hooks/useToast'
 import { usePagination }                             from '@/hooks/usePagination'
 import { EMPTY_FORM }                                from '../domain/types'
 import type { GroupViewModel, GroupFormState } from '../domain/types'
+import { ErrorCode, ERROR_MESSAGES }           from '@control-aula/shared'
 import type { CourseResponse, StudentResponse } from '@control-aula/shared'
 
 export function useGrupos() {
@@ -21,6 +22,7 @@ export function useGrupos() {
   const [editing,         setEditing]         = useState<GroupViewModel | null>(null)
   const [form,            setForm]            = useState<GroupFormState>(EMPTY_FORM)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [formErrors,      setFormErrors]      = useState<{ name?: string }>({})
 
   // Load courses once — picks first course as default
   useEffect(() => {
@@ -67,7 +69,9 @@ export function useGrupos() {
   }, [])
 
   const save = useCallback(async () => {
-    if (!form.name.trim()) { showToast('Group name is required', false); return }
+    setFormErrors({})
+    if (!form.name.trim())
+      return setFormErrors({ name: ERROR_MESSAGES[ErrorCode.GROUP_NAME_TOO_SHORT] })
     try {
       const dto = GroupMapper.toDto(form, currentCourse)
       const { message } = editing
@@ -103,7 +107,7 @@ export function useGrupos() {
     items: paginated,
     totalItems: items.length,
     courses, students, currentCourse,
-    loading, modal, editing, form,
+    loading, modal, editing, form, formErrors,
     confirmDeleteId,
     page, pageSize, setPage, setPageSize,
     totalPages: totalPages(items.length),

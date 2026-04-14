@@ -22,17 +22,17 @@ describe('GroupEntity', () => {
   describe('validate() — name', () => {
     it('throws when name is empty', () => {
       expect(() => new GroupEntity({ ...validProps, name: '' }))
-        .toThrow('El nombre del grupo debe tener al menos 2 caracteres')
+        .toThrow('Group name must be at least 2 characters')
     })
 
     it('throws when name has only one character', () => {
       expect(() => new GroupEntity({ ...validProps, name: 'X' }))
-        .toThrow('El nombre del grupo debe tener al menos 2 caracteres')
+        .toThrow('Group name must be at least 2 characters')
     })
 
     it('throws when name is only whitespace', () => {
       expect(() => new GroupEntity({ ...validProps, name: '  ' }))
-        .toThrow('El nombre del grupo debe tener al menos 2 caracteres')
+        .toThrow('Group name must be at least 2 characters')
     })
 
     it('accepts name with exactly 2 characters', () => {
@@ -43,12 +43,12 @@ describe('GroupEntity', () => {
   describe('validate() — courseId', () => {
     it('throws when courseId is empty', () => {
       expect(() => new GroupEntity({ ...validProps, courseId: '' }))
-        .toThrow('El curso del grupo es requerido')
+        .toThrow('Group course is required')
     })
 
     it('throws when courseId is only whitespace', () => {
       expect(() => new GroupEntity({ ...validProps, courseId: '   ' }))
-        .toThrow('El curso del grupo es requerido')
+        .toThrow('Group course is required')
     })
   })
 })

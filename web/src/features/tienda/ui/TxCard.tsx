@@ -1,6 +1,7 @@
 'use client'
 import { CheckCircle2, XCircle, ArrowRight } from 'lucide-react'
 import { StatusBadge, Button }  from '@/components/ui'
+import { formatDateTime }       from '@/lib/utils'
 import { TRANSACTION_STATUS }   from '@/config/status'
 import type { CoinTransactionResponse } from '@control-aula/shared'
 import type { NoteModalState } from '../domain/types'
@@ -36,7 +37,7 @@ export function TxCard({ tx, processing, onOpenModal }: Props) {
       <div className="flex-1 min-w-0">
         <p className="text-xs font-semibold text-zinc-200 truncate">{tx.fromStudent.name} → {tx.toStudent.name}</p>
         <p className="text-[10px] text-zinc-500">
-          {tx.fromStudent.courseName} · {new Date(tx.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+          {tx.fromStudent.courseName} · {formatDateTime(tx.createdAt)}
         </p>
         {tx.notes      && <p className="text-[10px] text-zinc-500 italic truncate">&ldquo;{tx.notes}&rdquo;</p>}
         {tx.adminNotes && <p className="text-[10px] text-zinc-600 truncate">Admin: {tx.adminNotes}</p>}

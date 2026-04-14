@@ -6,10 +6,10 @@ export function CardActions({ onEdit, onDelete }: { onEdit: () => void; onDelete
   return (
     <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center gap-3 backdrop-blur-sm bg-zinc-950/70">
       <Button variant="secondary" size="sm" onClick={onEdit}>
-        <Pencil className="w-3.5 h-3.5" /> Editar
+        <Pencil className="w-3.5 h-3.5" /> Edit
       </Button>
       <Button variant="destructive" size="sm" onClick={onDelete}>
-        <Trash2 className="w-3.5 h-3.5" /> Eliminar
+        <Trash2 className="w-3.5 h-3.5" /> Delete
       </Button>
     </div>
   )

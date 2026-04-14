@@ -23,12 +23,15 @@ const mockPrisma = {
 const mockNotify = {
   notifyAdminsNewTransaction: vi.fn().mockResolvedValue(undefined),
 }
+const mockLog = {
+  module: vi.fn(),
+}
 
 let handler: CreateTransactionHandler
 
 beforeEach(() => {
   vi.clearAllMocks()
-  handler = new CreateTransactionHandler(mockRepo as never, mockPrisma as never, mockNotify as never)
+  handler = new CreateTransactionHandler(mockRepo as never, mockPrisma as never, mockNotify as never, mockLog as never)
 })
 
 describe('CreateTransactionHandler', () => {

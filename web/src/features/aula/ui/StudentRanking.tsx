@@ -13,9 +13,9 @@ export function StudentRanking({ students, individualRewards, onClaim }: Student
   return (
     <div className="lg:col-span-2 card-base p-6">
       <h3 className="panel-title flex items-center gap-2 mb-1">
-        <Users className="w-[18px] h-[18px] text-indigo-400" /> Ranking de Estudiantes
+        <Users className="w-[18px] h-[18px] text-indigo-400" /> Student Ranking
       </h3>
-      <p className="panel-subtitle mb-4">Coins individuales · Haz clic en un premio dorado para canjearlo.</p>
+      <p className="panel-subtitle mb-4">Individual coins · Click a gold reward to redeem it.</p>
       <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
         {[...students].sort((a, b) => b.coins - a.coins).map((s, i) => {
           const nextInd = individualRewards.find(r => r.coinsRequired > s.coins)
@@ -24,7 +24,7 @@ export function StudentRanking({ students, individualRewards, onClaim }: Student
               <RankBadge position={i + 1} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-zinc-100 truncate">{s.name}</p>
-                {nextInd && <p className="text-[10px] text-zinc-500 truncate">Próximo: {nextInd.icon} {nextInd.name} ({nextInd.coinsRequired} coins)</p>}
+                {nextInd && <p className="text-[10px] text-zinc-500 truncate">Next: {nextInd.icon} {nextInd.name} ({nextInd.coinsRequired} coins)</p>}
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
                 {individualRewards.slice(0, 6).map(r => {

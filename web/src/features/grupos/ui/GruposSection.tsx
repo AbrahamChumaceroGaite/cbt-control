@@ -51,8 +51,8 @@ export function GruposSection() {
       </div>
 
       <GroupFormModal open={s.modal} editing={s.editing} form={s.form}
-        students={s.students} setForm={h.setForm} toggleMember={h.toggleMember}
-        onSave={h.save} onClose={h.closeModal} />
+        formErrors={s.formErrors} students={s.students} setForm={h.setForm}
+        toggleMember={h.toggleMember} onSave={h.save} onClose={h.closeModal} />
 
       <ConfirmDialog open={!!s.confirmDeleteId} onConfirm={h.doDelete} onCancel={h.cancelDelete}
         title="Delete group"

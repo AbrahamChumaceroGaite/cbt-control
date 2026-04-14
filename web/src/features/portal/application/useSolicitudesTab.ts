@@ -11,10 +11,10 @@ export function useSolicitudesTab(onReload: () => void) {
     setCancelling(confirmId)
     try {
       await portalService.cancelRedemption(confirmId)
-      showToast('Solicitud cancelada')
+      showToast('Request cancelled')
       onReload()
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : 'Error al cancelar', false)
+      showToast(err instanceof Error ? err.message : 'Error cancelling request', false)
     } finally { setCancelling(null) }
   }
 
