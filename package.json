@@ -1,14 +1,16 @@
 {
   "name": "cbt-control-aula",
   "private": true,
-  "workspaces": ["shared", "api", "web"],
+  "workspaces": ["shared", "api", "web", "api-games"],
   "scripts": {
-    "build":        "npm run build -w shared && npm run build -w api && npm run build -w web",
-    "build:shared": "npm run build -w shared",
-    "build:api":    "npm run build -w api",
-    "build:web":    "npm run build -w web",
-    "dev:api":      "npm run dev -w api",
-    "dev:web":      "npm run dev -w web"
+    "build":            "npm run build -w shared && npm run build -w api && npm run build -w web",
+    "build:shared":     "npm run build -w shared",
+    "build:api":        "npm run build -w api",
+    "build:web":        "npm run build -w web",
+    "build:api-games":  "npm run build -w api-games",
+    "dev:api":          "npm run dev -w api",
+    "dev:web":          "npm run dev -w web",
+    "dev:api-games":    "npm run dev -w api-games"
   },
   "devDependencies": {
     "eslint": "^8.57.1"

@@ -9,3 +9,15 @@ export type { CoinTransactionResponse, WeeklyBankStatus, StudentSearchResult, Cr
 export type { UserResponse, UserRole, UserDetailResponse, UserCreateInput, SessionPayload } from './types/user.types'
 export { ErrorCode }      from './types/error-codes'
 export { ERROR_MESSAGES } from './constants/error-messages'
+export type {
+  LevelFormation, LevelSpecialEvent, LevelConfig,
+  GameResponse, GameCreateInput, GameUpdateInput,
+  LevelResponse,
+  PlayerProfileResponse,
+  SessionOutcome, GameSessionResponse, StartSessionInput,
+  SessionEventType, SessionEventInput, EndSessionInput,
+  LeaderboardEntryResponse,
+  AchievementConditionType, AchievementResponse,
+  InternalGrantCoinsRequest, InternalSpendCoinsRequest,
+  InternalStudentResponse, InternalCoinOpResponse,
+} from './types/games.types'
