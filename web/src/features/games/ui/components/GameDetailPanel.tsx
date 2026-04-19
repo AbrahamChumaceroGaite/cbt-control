@@ -1,4 +1,4 @@
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Play } from 'lucide-react'
 import { Spinner }         from '@/components/ui/spinner'
 import { TierTable }       from './TierTable'
 import type { GameViewModel, LevelViewModel } from '../../domain/types'
@@ -8,9 +8,10 @@ interface Props {
   levels:        LevelViewModel[]
   levelsLoading: boolean
   onBack:        () => void
+  onPlay:        () => void
 }
 
-export function GameDetailPanel({ game: g, levels, levelsLoading, onBack }: Props) {
+export function GameDetailPanel({ game: g, levels, levelsLoading, onBack, onPlay }: Props) {
   return (
     <div className="animate-in fade-in duration-200">
       <button
@@ -50,9 +51,15 @@ export function GameDetailPanel({ game: g, levels, levelsLoading, onBack }: Prop
         : <TierTable levels={levels} />
       }
 
-      <p className="mt-6 text-xs text-zinc-600 text-center">
-        Gameplay coming soon — Tank Invaders integration in progress.
-      </p>
+      <div className="mt-6 flex justify-center">
+        <button
+          onClick={onPlay}
+          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-colors"
+        >
+          <Play className="w-4 h-4 fill-white" />
+          Play Now
+        </button>
+      </div>
     </div>
   )
 }

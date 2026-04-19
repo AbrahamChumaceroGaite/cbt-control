@@ -88,7 +88,7 @@ describe('useGames', () => {
   })
 
   describe('clearSelection()', () => {
-    it('clears selectedGame and levels', async () => {
+    it('clears selectedGame, levels, and playing', async () => {
       const { result } = renderHook(() => useGames())
       await waitFor(() => expect(result.current.loading).toBe(false))
 
@@ -97,9 +97,28 @@ describe('useGames', () => {
       })
       expect(result.current.selectedGame).not.toBeNull()
 
+      act(() => result.current.handlers.startPlaying())
+      expect(result.current.playing).toBe(true)
+
       act(() => result.current.handlers.clearSelection())
       expect(result.current.selectedGame).toBeNull()
       expect(result.current.levels).toHaveLength(0)
+      expect(result.current.playing).toBe(false)
+    })
+  })
+
+  describe('startPlaying() / stopPlaying()', () => {
+    it('sets playing to true on startPlaying', () => {
+      const { result } = renderHook(() => useGames())
+      act(() => result.current.handlers.startPlaying())
+      expect(result.current.playing).toBe(true)
+    })
+
+    it('sets playing to false on stopPlaying', () => {
+      const { result } = renderHook(() => useGames())
+      act(() => result.current.handlers.startPlaying())
+      act(() => result.current.handlers.stopPlaying())
+      expect(result.current.playing).toBe(false)
     })
   })
 })
