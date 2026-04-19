@@ -15,6 +15,10 @@ COPY web    ./web
 RUN mkdir -p /app/web/public
 ARG API_URL=http://api:4001
 ENV API_URL=$API_URL
+# GAMES_API_URL must be a build arg — Next.js bakes rewrite destinations into
+# .next/routes-manifest.json at build time; runtime env vars are too late.
+ARG GAMES_API_URL=http://api-games:4003
+ENV GAMES_API_URL=$GAMES_API_URL
 # NEXT_PUBLIC_* se hornean en el bundle durante el build — debe venir como build arg
 ARG NEXT_PUBLIC_API_URL=http://localhost:4001
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
