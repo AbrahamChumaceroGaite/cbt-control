@@ -1,0 +1,38 @@
+name: CI — api-games
+
+on:
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - 'api-games/**'
+      - 'shared/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/ci-api-games.yml'
+  push:
+    branches: [develop]
+    paths:
+      - 'api-games/**'
+      - 'shared/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/ci-api-games.yml'
+
+jobs:
+  api-games:
+    name: api-games — test · typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+
+      # shared must be compiled first — each job runs on a fresh runner
+      - name: Build shared types
+        run: npm run build -w shared
+
+      - name: api-games — tests
+        run: node_modules/.bin/vitest run --config api-games/vitest.config.ts
