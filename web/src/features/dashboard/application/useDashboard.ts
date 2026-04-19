@@ -10,7 +10,14 @@ import type { AppTab } from '../domain/types'
 
 export function useDashboard() {
   const router = useRouter()
-  const [tab,                setTab]                = useState<AppTab>('aula')
+  const [tab,                setTabState]           = useState<AppTab>(() => {
+    if (typeof window === 'undefined') return 'aula'
+    return (localStorage.getItem('dashboard_tab') as AppTab) ?? 'aula'
+  })
+  const setTab = (t: AppTab) => {
+    setTabState(t)
+    localStorage.setItem('dashboard_tab', t)
+  }
   const [adminName,          setAdminName]          = useState('CBT')
   const [pendingSolicitudes, setPendingSolicitudes] = useState(0)
   const { unsubscribeForLogout } = usePushNotifications()
