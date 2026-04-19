@@ -103,6 +103,39 @@ async function main() {
   await prisma.level.createMany({ data: levelData })
 
   console.log(`Created ${LEVELS.length} levels for ${game.title}.`)
+
+  // ── DOOM ──────────────────────────────────────────────────────────────────
+  // DOOM runs via js-dos in the browser. The level system does not apply —
+  // the game manages its own progression (4 episodes × 9 maps).
+  // Coins are awarded per play session rather than per in-game level.
+  console.log('Seeding DOOM...')
+  await prisma.game.upsert({
+    where:  { slug: 'doom' },
+    update: {
+      title:             'DOOM',
+      description:       'The classic 1993 first-person shooter. Fight through demon-infested levels across four episodes. Save data persists in your browser.',
+      iconEmoji:         '💀',
+      isActive:          true,
+      maxLevels:         36,
+      coinsPerLevelBase: 8,
+      coinsPerLevelStep: 1,
+      bonusCoins:        5,
+      continueCost:      0,
+    },
+    create: {
+      slug:              'doom',
+      title:             'DOOM',
+      description:       'The classic 1993 first-person shooter. Fight through demon-infested levels across four episodes. Save data persists in your browser.',
+      iconEmoji:         '💀',
+      isActive:          true,
+      maxLevels:         36,
+      coinsPerLevelBase: 8,
+      coinsPerLevelStep: 1,
+      bonusCoins:        5,
+      continueCost:      0,
+    },
+  })
+  console.log('DOOM seeded.')
   console.log('Seed complete.')
 }
 

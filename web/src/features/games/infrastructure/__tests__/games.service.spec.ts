@@ -8,6 +8,7 @@ vi.mock('@/config/routes', () => ({
       BASE:    '/api-games/games',
       BY_SLUG: (slug: string)   => `/api-games/games/${slug}`,
       LEVELS:  (gameId: string) => `/api-games/games/${gameId}/levels`,
+      UPDATE:  (id: string)     => `/api-games/games/${id}`,
     },
   },
 }))
@@ -61,6 +62,22 @@ describe('gamesService', () => {
       const result = await gamesService.getLevels('g1')
       expect(mockApi).toHaveBeenCalledWith('/api-games/games/g1/levels')
       expect(result).toEqual([fakeLevel])
+    })
+  })
+
+  describe('update()', () => {
+    it('calls PATCH /api-games/games/:id with dto and returns data', async () => {
+      mockApi.mockResolvedValueOnce({ data: fakeGame, message: 'OK' })
+      const dto = { title: 'New Title', isActive: false }
+      const result = await gamesService.update('g1', dto)
+      expect(mockApi).toHaveBeenCalledWith(
+        '/api-games/games/g1',
+        expect.objectContaining({
+          method: 'PATCH',
+          body:   JSON.stringify(dto),
+        }),
+      )
+      expect(result).toEqual(fakeGame)
     })
   })
 })

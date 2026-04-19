@@ -21,3 +21,17 @@ export type GameViewModel = GameResponse & {
 export type LevelViewModel = LevelResponse & {
   tier: LevelTier
 }
+
+// ─── Edit form ────────────────────────────────────────────────────────────────
+export type EditGameForm = {
+  title:             string
+  description:       string
+  iconEmoji:         string
+  coverUrl:          string
+  isActive:          boolean
+  coinsPerLevelBase: number
+  coinsPerLevelStep: number
+  bonusCoins:        number
+  continueCost:      number
+  maxLevels:         number
+}
