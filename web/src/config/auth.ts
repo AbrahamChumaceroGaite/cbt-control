@@ -9,4 +9,5 @@ export const STUDENT_ALLOWED_PATHS = [
   '/api/notifications',
   '/api/push',
   '/api/bank',
+  '/api-games',
 ] as const

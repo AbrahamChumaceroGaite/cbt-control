@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Tank Invaders</title>
+  <link rel="stylesheet" href="styles/game.css" />
+</head>
+<body>
+  <div id="game-wrapper">
+    <canvas id="game-canvas"></canvas>
+  </div>
+
+  <div id="touch-controls" aria-label="Game controls">
+    <div id="dpad">
+      <button id="btn-left"  class="dpad-btn" aria-label="Move left">&#9664;</button>
+      <button id="btn-right" class="dpad-btn" aria-label="Move right">&#9654;</button>
+    </div>
+    <button id="btn-fire" class="fire-btn" aria-label="Fire">FIRE</button>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

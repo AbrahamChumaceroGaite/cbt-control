@@ -5,9 +5,19 @@ import { Grid }              from '@/components/ui/grid'
 import { useGames }          from '../application/useGames'
 import { GameCard }          from './components/GameCard'
 import { GameDetailPanel }   from './components/GameDetailPanel'
+import { GamePlayer }        from './components/GamePlayer'
 
 export function GamesSection() {
-  const { games, loading, selectedGame, levels, levelsLoading, handlers } = useGames()
+  const { games, loading, selectedGame, levels, levelsLoading, playing, handlers } = useGames()
+
+  if (playing && selectedGame) {
+    return (
+      <GamePlayer
+        game={selectedGame}
+        onClose={handlers.stopPlaying}
+      />
+    )
+  }
 
   if (selectedGame) {
     return (
@@ -17,6 +27,7 @@ export function GamesSection() {
           levels={levels}
           levelsLoading={levelsLoading}
           onBack={handlers.clearSelection}
+          onPlay={handlers.startPlaying}
         />
       </div>
     )
