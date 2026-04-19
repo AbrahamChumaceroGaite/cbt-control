@@ -36,6 +36,33 @@ services:
     restart: unless-stopped
     command: redis-server --appendonly yes
 
+  api-games:
+    build:
+      context: .
+      dockerfile: api-games/Dockerfile
+    expose:
+      - "${GAMES_PORT:-4003}"
+    env_file:
+      - ./api-games/.env
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${GAMES_DATABASE_URL:-file:/app/data/academic.db}
+      - PORT=${GAMES_PORT:-4003}
+      - CORE_API_URL=http://api:${API_PORT:-4001}
+      - TZ=America/La_Paz
+    volumes:
+      - games_data:/app/data
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:${GAMES_PORT:-4003}/api/games"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
   web:
     build:
       context: .
@@ -47,9 +74,12 @@ services:
     environment:
       - NODE_ENV=production
       - API_URL=http://api:${API_PORT:-4001}
+      - GAMES_API_URL=http://api-games:${GAMES_PORT:-4003}
       - TZ=America/La_Paz
     depends_on:
       api:
+        condition: service_healthy
+      api-games:
         condition: service_healthy
       redis:
         condition: service_started
@@ -57,6 +87,7 @@ services:
 
 volumes:
   sqlite_data:
+  games_data:
   redis_data:
   uploads:
   logs:
