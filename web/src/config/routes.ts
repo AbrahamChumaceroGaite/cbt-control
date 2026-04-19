@@ -78,4 +78,9 @@ export const API_ROUTES = {
     DOWNLOAD: '/api/backup',
     RESTORE:  '/api/backup/restore',
   },
+  GAMES: {
+    BASE:    '/api-games/games',
+    BY_SLUG: (slug: string)   => `/api-games/games/${slug}`,
+    LEVELS:  (gameId: string) => `/api-games/games/${gameId}/levels`,
+  },
 } as const
