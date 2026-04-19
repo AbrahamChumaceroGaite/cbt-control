@@ -41,7 +41,12 @@ export function useGames() {
   const clearSelection = useCallback(() => {
     setSelectedGame(null)
     setLevels([])
+    setPlaying(false)
   }, [])
+
+  const [playing, setPlaying] = useState(false)
+  const startPlaying = useCallback(() => setPlaying(true),  [])
+  const stopPlaying  = useCallback(() => setPlaying(false), [])
 
   useEffect(() => { load() }, [load])
 
@@ -51,6 +56,7 @@ export function useGames() {
     selectedGame,
     levels,
     levelsLoading,
-    handlers: { selectGame, clearSelection },
+    playing,
+    handlers: { selectGame, clearSelection, startPlaying, stopPlaying },
   }
 }
