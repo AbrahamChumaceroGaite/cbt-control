@@ -61,7 +61,7 @@ export function DashboardPage() {
         {tab === 'grupos'      && <GruposSection />}
         {tab === 'tienda'      && <StoreSection />}
         {tab === 'solicitudes' && <SolicitudesSection onCountChange={setPendingSolicitudes} />}
-        {tab === 'games'       && <GamesSection />}
+        {tab === 'games'       && <GamesSection isAdmin />}
         {tab === 'admin'       && <AdminSection />}
       </main>
 

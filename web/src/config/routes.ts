@@ -82,5 +82,6 @@ export const API_ROUTES = {
     BASE:    '/api-games/games',
     BY_SLUG: (slug: string)   => `/api-games/games/${slug}`,
     LEVELS:  (gameId: string) => `/api-games/games/${gameId}/levels`,
+    UPDATE:  (id: string)     => `/api-games/games/${id}`,
   },
 } as const

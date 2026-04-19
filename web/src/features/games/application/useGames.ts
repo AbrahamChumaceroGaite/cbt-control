@@ -3,7 +3,13 @@ import { useCallback, useEffect, useState } from 'react'
 import { gamesService }  from '../infrastructure/games.service'
 import { GamesMapper }   from './games.mapper'
 import { useToast }      from '@/hooks/useToast'
-import type { GameViewModel, LevelViewModel } from '../domain/types'
+import type { EditGameForm, GameViewModel, LevelViewModel } from '../domain/types'
+
+const DEFAULT_FORM: EditGameForm = {
+  title: '', description: '', iconEmoji: '🎮', coverUrl: '',
+  isActive: true, coinsPerLevelBase: 5, coinsPerLevelStep: 2,
+  bonusCoins: 4, continueCost: 2, maxLevels: 30,
+}
 
 export function useGames() {
   const { showToast }                            = useToast()
@@ -12,6 +18,10 @@ export function useGames() {
   const [selectedGame,  setSelectedGame]  = useState<GameViewModel | null>(null)
   const [levels,        setLevels]        = useState<LevelViewModel[]>([])
   const [levelsLoading, setLevelsLoading] = useState(false)
+  const [playing,       setPlaying]       = useState(false)
+  const [editing,       setEditing]       = useState<GameViewModel | null>(null)
+  const [editForm,      setEditForm]      = useState<EditGameForm>(DEFAULT_FORM)
+  const [saving,        setSaving]        = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -44,19 +54,54 @@ export function useGames() {
     setPlaying(false)
   }, [])
 
-  const [playing, setPlaying] = useState(false)
   const startPlaying = useCallback(() => setPlaying(true),  [])
   const stopPlaying  = useCallback(() => setPlaying(false), [])
+
+  const openEdit = useCallback((game: GameViewModel) => {
+    setEditing(game)
+    setEditForm(GamesMapper.toEditForm(game))
+  }, [])
+
+  const closeEdit = useCallback(() => setEditing(null), [])
+
+  const saveEdit = useCallback(async () => {
+    if (!editing) return
+    setSaving(true)
+    try {
+      const updated = await gamesService.update(editing.id, {
+        title:             editForm.title,
+        description:       editForm.description,
+        iconEmoji:         editForm.iconEmoji,
+        coverUrl:          editForm.coverUrl,
+        isActive:          editForm.isActive,
+        coinsPerLevelBase: editForm.coinsPerLevelBase,
+        coinsPerLevelStep: editForm.coinsPerLevelStep,
+        bonusCoins:        editForm.bonusCoins,
+        continueCost:      editForm.continueCost,
+        maxLevels:         editForm.maxLevels,
+      })
+      const vm = GamesMapper.toViewModel(updated)
+      setGames(gs => gs.map(g => g.id === vm.id ? vm : g))
+      if (selectedGame?.id === vm.id) setSelectedGame(vm)
+      showToast('Game updated')
+      closeEdit()
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Error updating game', false)
+    } finally {
+      setSaving(false)
+    }
+  }, [editing, editForm, selectedGame, showToast, closeEdit])
 
   useEffect(() => { load() }, [load])
 
   return {
-    games,
-    loading,
-    selectedGame,
-    levels,
-    levelsLoading,
-    playing,
-    handlers: { selectGame, clearSelection, startPlaying, stopPlaying },
+    games, loading, selectedGame, levels, levelsLoading,
+    playing, editing, editForm, saving,
+    handlers: {
+      selectGame, clearSelection,
+      startPlaying, stopPlaying,
+      openEdit, closeEdit, saveEdit,
+      setEditForm,
+    },
   }
 }

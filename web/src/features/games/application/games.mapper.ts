@@ -1,5 +1,5 @@
 import type { GameResponse, LevelResponse } from '@control-aula/shared'
-import type { GameViewModel, LevelTier, LevelViewModel } from '../domain/types'
+import type { EditGameForm, GameViewModel, LevelTier, LevelViewModel } from '../domain/types'
 
 export function getTier(level: number): LevelTier {
   if (level <= 5)  return 'Tutorial'
@@ -20,5 +20,20 @@ export const GamesMapper = {
 
   toLevelViewModel(dto: LevelResponse): LevelViewModel {
     return { ...dto, tier: getTier(dto.number) }
+  },
+
+  toEditForm(game: GameViewModel): EditGameForm {
+    return {
+      title:             game.title,
+      description:       game.description,
+      iconEmoji:         game.iconEmoji,
+      coverUrl:          game.coverUrl,
+      isActive:          game.isActive,
+      coinsPerLevelBase: game.coinsPerLevelBase,
+      coinsPerLevelStep: game.coinsPerLevelStep,
+      bonusCoins:        game.bonusCoins,
+      continueCost:      game.continueCost,
+      maxLevels:         game.maxLevels,
+    }
   },
 }
