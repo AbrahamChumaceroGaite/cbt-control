@@ -34,10 +34,18 @@ export function usePortal(): UsePortalReturn {
 
   const [student,         setStudent]         = useState<StudentData | null>(null)
   const [rewards,         setRewards]         = useState<IndividualReward[]>([])
-  const [tab,             setTab]             = useState<PortalTab>('perfil')
+  const [tab,             setTabState]        = useState<PortalTab>(() => {
+    if (typeof window === 'undefined') return 'perfil'
+    return (localStorage.getItem('portal_tab') as PortalTab) ?? 'perfil'
+  })
   const [loading,         setLoading]         = useState(true)
   const [requesting,      setRequesting]      = useState<string | null>(null)
   const [logoutModalOpen, setLogoutModalOpen] = useState(false)
+
+  const setTab = (t: PortalTab) => {
+    setTabState(t)
+    localStorage.setItem('portal_tab', t)
+  }
 
   useEffect(() => {
     Promise.all([

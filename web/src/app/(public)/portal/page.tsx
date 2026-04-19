@@ -1,8 +1,10 @@
 'use client'
-import { Gift, ClipboardList, History, Landmark, Gamepad2, LogOut } from 'lucide-react'
+import { Gift, ClipboardList, History, Landmark, Gamepad2, LogOut, Coins } from 'lucide-react'
 import { usePortal }         from '@/features/portal/application/usePortal'
 import { FloatingNav }       from '@/components/shared/FloatingNav'
 import { ConfirmDialog }     from '@/components/shared/ConfirmDialog'
+import { NotificationBell }  from '@/components/shared/NotificationBell'
+import { Avatar }            from '@/components/ui'
 import { PortalSkeleton }    from '@/features/portal/ui/PortalSkeleton'
 import { PerfilTab }         from '@/features/portal/ui/PerfilTab'
 import { RecompensasTab }    from '@/features/portal/ui/RecompensasTab'
@@ -45,8 +47,32 @@ export default function PortalPage() {
         {tab === 'solicitudes' && <SolicitudesTab student={student} requests={student.redemptionRequests} onLogout={onLogout} onReload={reloadStudent} />}
         {tab === 'bank'        && <BankTab        student={student} onLogout={onLogout} onCoinsUpdate={onCoinsUpdate} />}
         {tab === 'games'       && (
-          <div className="px-4 pt-4 pb-24">
-            <GamesSection />
+          <div className="pb-24">
+            <header className="sticky top-0 z-20 px-4 py-3 flex items-center justify-between bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800/60">
+              <div className="flex items-center gap-2">
+                <Avatar name={student.name} size="sm" className="rounded-lg" />
+                <div>
+                  <div className="text-sm font-semibold text-zinc-100 leading-none">{student.name}</div>
+                  <div className="flex items-center gap-1 text-[10px] text-amber-400 mt-0.5 font-medium">
+                    <Coins className="w-3 h-3" />
+                    {student.coins}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <NotificationBell />
+                <button
+                  onClick={onLogout}
+                  title="Sign out"
+                  className="p-2 rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            </header>
+            <div className="px-4 pt-4">
+              <GamesSection />
+            </div>
           </div>
         )}
       </main>
