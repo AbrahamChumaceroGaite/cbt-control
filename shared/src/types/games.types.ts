@@ -25,8 +25,8 @@ export type GameResponse = {
   id:                string
   slug:              string     // 'tank-invaders'
   title:             string
-  description:       string | null
-  coverUrl:          string | null
+  description:       string
+  coverUrl:          string
   iconEmoji:         string
   isActive:          boolean
   maxLevels:         number
@@ -55,15 +55,10 @@ export type GameUpdateInput = Partial<Omit<GameCreateInput, 'slug'>>
 
 // ─── Level ────────────────────────────────────────────────────────────────────
 export type LevelResponse = {
-  id:           string
-  gameId:       string
-  number:       number
-  title:        string
-  description:  string | null
-  coinsReward:  number
-  bonusTarget:  number
-  bonusTimeSec: number
-  config:       LevelConfig
+  id:     string
+  gameId: string
+  number: number
+  config: LevelConfig
 }
 
 // ─── Player profile ───────────────────────────────────────────────────────────
