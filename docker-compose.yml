@@ -69,6 +69,7 @@ services:
       dockerfile: web/Dockerfile
       args:
         - API_URL=http://api:${API_PORT:-4001}
+        - GAMES_API_URL=http://api-games:${GAMES_PORT:-4003}
     ports:
       - "${WEB_PORT:-3001}:3001"
     environment:
