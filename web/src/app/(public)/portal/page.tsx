@@ -1,5 +1,5 @@
 'use client'
-import { Gift, ClipboardList, History, Landmark, LogOut } from 'lucide-react'
+import { Gift, ClipboardList, History, Landmark, Gamepad2, LogOut } from 'lucide-react'
 import { usePortal }         from '@/features/portal/application/usePortal'
 import { FloatingNav }       from '@/components/shared/FloatingNav'
 import { ConfirmDialog }     from '@/components/shared/ConfirmDialog'
@@ -8,6 +8,7 @@ import { PerfilTab }         from '@/features/portal/ui/PerfilTab'
 import { RecompensasTab }    from '@/features/portal/ui/RecompensasTab'
 import { SolicitudesTab }    from '@/features/portal/ui/SolicitudesTab'
 import { BankTab }           from '@/features/portal/ui/BankTab'
+import { GamesSection }      from '@/features/games/ui/GamesSection'
 import type { PortalTab }    from '@/features/portal/domain/types'
 
 const NAV_TABS: { id: PortalTab; icon: React.ElementType; label: string }[] = [
@@ -15,6 +16,7 @@ const NAV_TABS: { id: PortalTab; icon: React.ElementType; label: string }[] = [
   { id: 'recompensas', icon: Gift,         label: 'Premios'     },
   { id: 'solicitudes', icon: ClipboardList, label: 'Solicitudes' },
   { id: 'bank',        icon: Landmark,     label: 'Bank'        },
+  { id: 'games',       icon: Gamepad2,     label: 'Games'       },
 ]
 
 export default function PortalPage() {
@@ -42,6 +44,11 @@ export default function PortalPage() {
         {tab === 'recompensas' && <RecompensasTab student={student} rewards={rewards} requesting={requesting} onRequest={requestReward} onLogout={onLogout} />}
         {tab === 'solicitudes' && <SolicitudesTab student={student} requests={student.redemptionRequests} onLogout={onLogout} onReload={reloadStudent} />}
         {tab === 'bank'        && <BankTab        student={student} onLogout={onLogout} onCoinsUpdate={onCoinsUpdate} />}
+        {tab === 'games'       && (
+          <div className="px-4 pt-4 pb-24">
+            <GamesSection />
+          </div>
+        )}
       </main>
 
       <FloatingNav
