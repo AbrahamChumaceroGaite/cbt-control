@@ -24,7 +24,7 @@ export class CourseController {
   }
 
   @Get(':id')
-  getById(@Param('id', ParseUUIDPipe) id: string) {
+  getById(@Param('id') id: string) {
     return this.qb.execute(new GetCourseByIdQuery(id))
   }
 

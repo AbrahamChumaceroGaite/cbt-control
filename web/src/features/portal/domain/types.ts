@@ -1,6 +1,6 @@
 import type { RewardResponse } from '@control-aula/shared'
 
-export type PortalTab = 'perfil' | 'recompensas' | 'solicitudes' | 'bank'
+export type PortalTab = 'perfil' | 'recompensas' | 'solicitudes' | 'bank' | 'games'
 
 // UI state types
 export type SendState     = 'idle' | 'sending' | 'success' | 'error'
