@@ -73,7 +73,7 @@ export function GamePlayer({ game, onClose, onLevel }: Props) {
 
       <iframe
         ref={iframeRef}
-        src="/games/tank-invaders/"
+        src={`/games/${game.slug}/index.html`}
         className="flex-1 w-full border-none"
         title={game.title}
         allow="autoplay"

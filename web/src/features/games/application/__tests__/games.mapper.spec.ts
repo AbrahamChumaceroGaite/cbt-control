@@ -67,4 +67,27 @@ describe('GamesMapper', () => {
       expect(GamesMapper.toLevelViewModel(makeLevel(28)).tier).toBe('Inferno')
     })
   })
+
+  describe('toEditForm()', () => {
+    it('maps all editable fields from a GameViewModel', () => {
+      const vm = GamesMapper.toViewModel(fakeGame)
+      const form = GamesMapper.toEditForm(vm)
+      expect(form.title).toBe('Tank Invaders')
+      expect(form.description).toBe('desc')
+      expect(form.iconEmoji).toBe('🎮')
+      expect(form.coverUrl).toBe('')
+      expect(form.isActive).toBe(true)
+      expect(form.coinsPerLevelBase).toBe(5)
+      expect(form.coinsPerLevelStep).toBe(2)
+      expect(form.bonusCoins).toBe(4)
+      expect(form.continueCost).toBe(2)
+      expect(form.maxLevels).toBe(30)
+    })
+
+    it('does not include computed fields like coinsAtMaxLevel', () => {
+      const vm = GamesMapper.toViewModel(fakeGame)
+      const form = GamesMapper.toEditForm(vm)
+      expect('coinsAtMaxLevel' in form).toBe(false)
+    })
+  })
 })

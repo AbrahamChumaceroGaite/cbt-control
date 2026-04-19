@@ -1,4 +1,4 @@
-import { ArrowLeft, Play } from 'lucide-react'
+import { ArrowLeft, Play, Pencil } from 'lucide-react'
 import { Spinner }         from '@/components/ui/spinner'
 import { TierTable }       from './TierTable'
 import type { GameViewModel, LevelViewModel } from '../../domain/types'
@@ -9,9 +9,10 @@ interface Props {
   levelsLoading: boolean
   onBack:        () => void
   onPlay:        () => void
+  onEdit?:       () => void
 }
 
-export function GameDetailPanel({ game: g, levels, levelsLoading, onBack, onPlay }: Props) {
+export function GameDetailPanel({ game: g, levels, levelsLoading, onBack, onPlay, onEdit }: Props) {
   return (
     <div className="animate-in fade-in duration-200">
       <button
@@ -51,7 +52,7 @@ export function GameDetailPanel({ game: g, levels, levelsLoading, onBack, onPlay
         : <TierTable levels={levels} />
       }
 
-      <div className="mt-6 flex justify-center">
+      <div className="mt-6 flex items-center justify-center gap-3">
         <button
           onClick={onPlay}
           className="flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-colors"
@@ -59,6 +60,15 @@ export function GameDetailPanel({ game: g, levels, levelsLoading, onBack, onPlay
           <Play className="w-4 h-4 fill-white" />
           Play Now
         </button>
+        {onEdit && (
+          <button
+            onClick={onEdit}
+            className="flex items-center gap-2 px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-sm transition-colors border border-zinc-700"
+          >
+            <Pencil className="w-4 h-4" />
+            Edit
+          </button>
+        )}
       </div>
     </div>
   )

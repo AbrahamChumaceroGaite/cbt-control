@@ -7,6 +7,7 @@ vi.mock('../../infrastructure/games.service', () => ({
     getAll:    vi.fn(),
     getBySlug: vi.fn(),
     getLevels: vi.fn(),
+    update:    vi.fn(),
   },
 }))
 
@@ -119,6 +120,70 @@ describe('useGames', () => {
       act(() => result.current.handlers.startPlaying())
       act(() => result.current.handlers.stopPlaying())
       expect(result.current.playing).toBe(false)
+    })
+  })
+
+  describe('openEdit() / closeEdit()', () => {
+    it('sets editing to the game and populates editForm', async () => {
+      const { result } = renderHook(() => useGames())
+      await waitFor(() => expect(result.current.loading).toBe(false))
+
+      act(() => result.current.handlers.openEdit(result.current.games[0]))
+
+      expect(result.current.editing?.id).toBe('g1')
+      expect(result.current.editForm.title).toBe('Tank Invaders')
+      expect(result.current.editForm.coinsPerLevelBase).toBe(5)
+    })
+
+    it('clears editing on closeEdit', async () => {
+      const { result } = renderHook(() => useGames())
+      await waitFor(() => expect(result.current.loading).toBe(false))
+
+      act(() => result.current.handlers.openEdit(result.current.games[0]))
+      act(() => result.current.handlers.closeEdit())
+
+      expect(result.current.editing).toBeNull()
+    })
+  })
+
+  describe('saveEdit()', () => {
+    it('calls update, updates games list, and shows success toast', async () => {
+      const updatedGame: GameResponse = { ...fakeGame, title: 'Updated Title' }
+      mockService.update.mockResolvedValueOnce(updatedGame)
+
+      const { result } = renderHook(() => useGames())
+      await waitFor(() => expect(result.current.loading).toBe(false))
+
+      act(() => result.current.handlers.openEdit(result.current.games[0]))
+
+      await act(async () => { await result.current.handlers.saveEdit() })
+
+      expect(mockService.update).toHaveBeenCalledWith('g1', expect.objectContaining({ title: 'Tank Invaders' }))
+      expect(result.current.games[0].title).toBe('Updated Title')
+      expect(mockShowToast).toHaveBeenCalledWith('Game updated')
+      expect(result.current.editing).toBeNull()
+    })
+
+    it('shows error toast when update fails', async () => {
+      mockService.update.mockRejectedValueOnce(new Error('Save failed'))
+
+      const { result } = renderHook(() => useGames())
+      await waitFor(() => expect(result.current.loading).toBe(false))
+
+      act(() => result.current.handlers.openEdit(result.current.games[0]))
+
+      await act(async () => { await result.current.handlers.saveEdit() })
+
+      expect(mockShowToast).toHaveBeenCalledWith('Save failed', false)
+    })
+
+    it('does nothing when editing is null', async () => {
+      const { result } = renderHook(() => useGames())
+      await waitFor(() => expect(result.current.loading).toBe(false))
+
+      await act(async () => { await result.current.handlers.saveEdit() })
+
+      expect(mockService.update).not.toHaveBeenCalled()
     })
   })
 })
