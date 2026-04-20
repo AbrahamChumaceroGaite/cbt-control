@@ -79,9 +79,11 @@ export const API_ROUTES = {
     RESTORE:  '/api/backup/restore',
   },
   GAMES: {
-    BASE:    '/api-games/games',
-    BY_SLUG: (slug: string)   => `/api-games/games/${slug}`,
-    LEVELS:  (gameId: string) => `/api-games/games/${gameId}/levels`,
-    UPDATE:  (id: string)     => `/api-games/games/${id}`,
+    BASE:           '/api-games/games',
+    BY_SLUG:        (slug: string)   => `/api-games/games/${slug}`,
+    LEVELS:         (gameId: string) => `/api-games/games/${gameId}/levels`,
+    UPDATE:         (id: string)     => `/api-games/games/${id}`,
+    LEVEL_COMPLETE: '/api-games/sessions/level-complete',
+    CONTINUE:       '/api-games/sessions/continue',
   },
 } as const

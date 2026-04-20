@@ -22,6 +22,14 @@ export type LevelViewModel = LevelResponse & {
   tier: LevelTier
 }
 
+// ─── Session ──────────────────────────────────────────────────────────────────
+/** Coins earned after a level complete — shown in overlay */
+export type CoinsEarned = {
+  amount:     number
+  newBalance: number
+  level:      number
+}
+
 // ─── Edit form ────────────────────────────────────────────────────────────────
 export type EditGameForm = {
   title:             string
