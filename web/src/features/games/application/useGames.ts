@@ -2,7 +2,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { gamesService }  from '../infrastructure/games.service'
 import { GamesMapper }   from './games.mapper'
+import { useGameSession } from './useGameSession'
 import { useToast }      from '@/hooks/useToast'
+import { useAuthStore }  from '@/store/auth.store'
 import type { EditGameForm, GameViewModel, LevelViewModel } from '../domain/types'
 
 const DEFAULT_FORM: EditGameForm = {
@@ -13,6 +15,9 @@ const DEFAULT_FORM: EditGameForm = {
 
 export function useGames() {
   const { showToast }                            = useToast()
+  const user                                     = useAuthStore(s => s.user)
+  const userId                                   = user?.userId ?? ''
+
   const [games,         setGames]         = useState<GameViewModel[]>([])
   const [loading,       setLoading]       = useState(true)
   const [selectedGame,  setSelectedGame]  = useState<GameViewModel | null>(null)
@@ -22,6 +27,8 @@ export function useGames() {
   const [editing,       setEditing]       = useState<GameViewModel | null>(null)
   const [editForm,      setEditForm]      = useState<EditGameForm>(DEFAULT_FORM)
   const [saving,        setSaving]        = useState(false)
+
+  const session = useGameSession(selectedGame, userId)
 
   const load = useCallback(async () => {
     try {
@@ -54,7 +61,11 @@ export function useGames() {
     setPlaying(false)
   }, [])
 
-  const startPlaying = useCallback(() => setPlaying(true),  [])
+  const startPlaying = useCallback(() => {
+    if (selectedGame) session.resumeLevel(selectedGame.slug)
+    setPlaying(true)
+  }, [selectedGame, session])
+
   const stopPlaying  = useCallback(() => setPlaying(false), [])
 
   const openEdit = useCallback((game: GameViewModel) => {
@@ -69,16 +80,11 @@ export function useGames() {
     setSaving(true)
     try {
       const updated = await gamesService.update(editing.id, {
-        title:             editForm.title,
-        description:       editForm.description,
-        iconEmoji:         editForm.iconEmoji,
-        coverUrl:          editForm.coverUrl,
-        isActive:          editForm.isActive,
-        coinsPerLevelBase: editForm.coinsPerLevelBase,
-        coinsPerLevelStep: editForm.coinsPerLevelStep,
-        bonusCoins:        editForm.bonusCoins,
-        continueCost:      editForm.continueCost,
-        maxLevels:         editForm.maxLevels,
+        title: editForm.title, description: editForm.description,
+        iconEmoji: editForm.iconEmoji, coverUrl: editForm.coverUrl,
+        isActive: editForm.isActive, coinsPerLevelBase: editForm.coinsPerLevelBase,
+        coinsPerLevelStep: editForm.coinsPerLevelStep, bonusCoins: editForm.bonusCoins,
+        continueCost: editForm.continueCost, maxLevels: editForm.maxLevels,
       })
       const vm = GamesMapper.toViewModel(updated)
       setGames(gs => gs.map(g => g.id === vm.id ? vm : g))
@@ -96,7 +102,7 @@ export function useGames() {
 
   return {
     games, loading, selectedGame, levels, levelsLoading,
-    playing, editing, editForm, saving,
+    playing, editing, editForm, saving, session,
     handlers: {
       selectGame, clearSelection,
       startPlaying, stopPlaying,

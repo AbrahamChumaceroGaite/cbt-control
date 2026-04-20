@@ -4,15 +4,21 @@ import type { GameResponse, LevelResponse }       from '@control-aula/shared'
 
 vi.mock('../../infrastructure/games.service', () => ({
   gamesService: {
-    getAll:    vi.fn(),
-    getBySlug: vi.fn(),
-    getLevels: vi.fn(),
-    update:    vi.fn(),
+    getAll:         vi.fn(),
+    getBySlug:      vi.fn(),
+    getLevels:      vi.fn(),
+    update:         vi.fn(),
+    completeLevel:  vi.fn(),
+    useContinue:    vi.fn(),
   },
 }))
 
 vi.mock('@/hooks/useToast', () => ({
   useToast: () => ({ showToast: mockShowToast }),
+}))
+
+vi.mock('@/store/auth.store', () => ({
+  useAuthStore: (sel: (s: { user: null }) => null) => sel({ user: null }),
 }))
 
 import { useGames }      from '../useGames'

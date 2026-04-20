@@ -15,22 +15,24 @@
 <body>
   <div id="dos"></div>
   <script>
-    // autoSave: true persists the DOS filesystem to IndexedDB (OPFS emulation).
-    // Save games survive browser sessions on the same origin.
-    const ci = Dos(document.getElementById('dos'), {
-      url:             'https://cdn.dos.zone/custom/dos/doom.jsdos',
-      autoStart:       true,
-      autoSave:        true,
-      mouseCapture:    true,
-      mouseSensitivity: 0.4,
-      theme:           'dark',
-    });
+    // Wrapped in IIFE to avoid any variable conflicts with js-dos internals.
+    // autoSave: true persists the DOS filesystem to IndexedDB — saves survive browser sessions.
+    (function () {
+      var emulator = Dos(document.getElementById('dos'), {
+        url:              'https://cdn.dos.zone/custom/dos/doom.jsdos',
+        autoStart:        true,
+        autoSave:         true,
+        mouseCapture:     true,
+        mouseSensitivity: 0.4,
+        theme:            'dark',
+      });
 
-    ci.events().onMessage = function(type) {
-      if (type === 'ci-ready') {
-        window.parent.postMessage({ type: 'SESSION_START' }, '*');
-      }
-    };
+      emulator.events().onMessage = function (type) {
+        if (type === 'ci-ready') {
+          window.parent.postMessage({ type: 'SESSION_START' }, '*');
+        }
+      };
+    })();
   </script>
 </body>
 </html>

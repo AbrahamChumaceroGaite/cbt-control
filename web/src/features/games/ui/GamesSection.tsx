@@ -13,11 +13,18 @@ interface Props { isAdmin?: boolean }
 export function GamesSection({ isAdmin }: Props) {
   const {
     games, loading, selectedGame, levels, levelsLoading,
-    playing, editing, editForm, saving, handlers,
+    playing, editing, editForm, saving, session, handlers,
   } = useGames()
 
   if (playing && selectedGame) {
-    return <GamePlayer game={selectedGame} onClose={handlers.stopPlaying} />
+    return (
+      <GamePlayer
+        game={selectedGame}
+        levels={levels}
+        session={session}
+        onClose={handlers.stopPlaying}
+      />
+    )
   }
 
   return (

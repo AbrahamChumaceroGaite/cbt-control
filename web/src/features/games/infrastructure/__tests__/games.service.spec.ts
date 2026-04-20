@@ -5,10 +5,12 @@ vi.mock('@/lib/api', () => ({ api: vi.fn() }))
 vi.mock('@/config/routes', () => ({
   API_ROUTES: {
     GAMES: {
-      BASE:    '/api-games/games',
-      BY_SLUG: (slug: string)   => `/api-games/games/${slug}`,
-      LEVELS:  (gameId: string) => `/api-games/games/${gameId}/levels`,
-      UPDATE:  (id: string)     => `/api-games/games/${id}`,
+      BASE:           '/api-games/games',
+      BY_SLUG:        (slug: string)   => `/api-games/games/${slug}`,
+      LEVELS:         (gameId: string) => `/api-games/games/${gameId}/levels`,
+      UPDATE:         (id: string)     => `/api-games/games/${id}`,
+      LEVEL_COMPLETE: '/api-games/sessions/level-complete',
+      CONTINUE:       '/api-games/sessions/continue',
     },
   },
 }))
@@ -72,12 +74,41 @@ describe('gamesService', () => {
       const result = await gamesService.update('g1', dto)
       expect(mockApi).toHaveBeenCalledWith(
         '/api-games/games/g1',
-        expect.objectContaining({
-          method: 'PATCH',
-          body:   JSON.stringify(dto),
-        }),
+        expect.objectContaining({ method: 'PATCH', body: JSON.stringify(dto) }),
       )
       expect(result).toEqual(fakeGame)
+    })
+  })
+
+  describe('completeLevel()', () => {
+    it('calls POST /api-games/sessions/level-complete and returns data', async () => {
+      const payload = { coinsEarned: 7, newBalance: 42, alreadyApplied: false }
+      mockApi.mockResolvedValueOnce({ data: payload, message: 'OK' })
+      const result = await gamesService.completeLevel('tank-invaders', 3, 500, 'key-1')
+      expect(mockApi).toHaveBeenCalledWith(
+        '/api-games/sessions/level-complete',
+        expect.objectContaining({
+          method: 'POST',
+          body:   JSON.stringify({ gameSlug: 'tank-invaders', levelNumber: 3, score: 500, idempotencyKey: 'key-1' }),
+        }),
+      )
+      expect(result).toEqual(payload)
+    })
+  })
+
+  describe('useContinue()', () => {
+    it('calls POST /api-games/sessions/continue and returns data', async () => {
+      const payload = { coinsSpent: 2, newBalance: 40 }
+      mockApi.mockResolvedValueOnce({ data: payload, message: 'OK' })
+      const result = await gamesService.useContinue('tank-invaders', 'key-2')
+      expect(mockApi).toHaveBeenCalledWith(
+        '/api-games/sessions/continue',
+        expect.objectContaining({
+          method: 'POST',
+          body:   JSON.stringify({ gameSlug: 'tank-invaders', idempotencyKey: 'key-2' }),
+        }),
+      )
+      expect(result).toEqual(payload)
     })
   })
 })
