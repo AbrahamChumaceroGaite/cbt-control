@@ -6,6 +6,7 @@ import { PrismaModule }         from './infrastructure/prisma/prisma.module'
 import { CoreClientModule }     from './core-client/core-client.module'
 import { GameModule }           from './modules/game/game.module'
 import { LevelModule }          from './modules/level/level.module'
+import { SessionModule }        from './modules/session/session.module'
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { LevelModule }          from './modules/level/level.module'
     CoreClientModule,
     GameModule,
     LevelModule,
+    SessionModule,
   ],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },

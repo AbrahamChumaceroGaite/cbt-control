@@ -40,6 +40,14 @@ export class Game {
   start() {
     this._loop = this._loop.bind(this);
     this._rafId = requestAnimationFrame(this._loop);
+
+    // Listen for CONTINUE_GRANTED from parent (when player spends coins to continue)
+    window.addEventListener('message', (ev) => {
+      if (ev.data?.type === 'CONTINUE_GRANTED' && this.state === 'GAME_OVER') {
+        this.player = new PlayerTank();
+        this._startLevel();
+      }
+    });
   }
 
   stop() {
@@ -161,7 +169,9 @@ export class Game {
   }
 
   _updateGameOver() {
-    if (this.input.consumeFire()) {
+    // When running inside an iframe, the parent handles continue/quit via
+    // postMessage (CONTINUE_GRANTED). Fire-to-restart only works standalone.
+    if (window.parent === window && this.input.consumeFire()) {
       this.score.reset();
       this.level = 1;
       this.levelSys.reset();
@@ -196,9 +206,12 @@ export class Game {
 
   _startGame() {
     this.player = new PlayerTank();
-    this.level  = 1;
+    // Read ?level=N from URL — allows parent to resume from a saved level
+    const params     = new URLSearchParams(window.location.search);
+    const startLevel = parseInt(params.get('level') ?? '1', 10);
+    this.level       = (startLevel >= 1 && startLevel <= 99) ? startLevel : 1;
     this.levelSys.reset();
-    window.parent.postMessage({ type: 'SESSION_START' }, '*');
+    window.parent.postMessage({ type: 'SESSION_START', level: this.level }, '*');
     this._startLevel();
   }
 
