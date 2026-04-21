@@ -4,21 +4,42 @@ import * as Minio                           from 'minio'
 
 @Injectable()
 export class StorageService implements OnModuleInit {
-  private readonly client:    Minio.Client
+  /** Reaches MinIO over the internal Docker network — used for bucket ops. */
+  private readonly client:       Minio.Client
+  /**
+   * Uses MINIO_PUBLIC_URL as endpoint so presigned PUT URLs contain a hostname
+   * the browser can actually reach (not the internal `minio:9000` alias).
+   * Signature V4 signs the Host header, so the client used for presigning MUST
+   * share the same hostname the browser will use when uploading.
+   */
+  private readonly presignClient: Minio.Client
   private readonly bucket:    string
   private readonly publicUrl: string
   private readonly logger = new Logger(StorageService.name)
 
   constructor(private readonly config: ConfigService) {
-    this.client = new Minio.Client({
-      endPoint:  config.get<string>('MINIO_ENDPOINT', 'localhost'),
-      port:      parseInt(config.get<string>('MINIO_PORT', '9000')),
-      useSSL:    config.get<string>('MINIO_USE_SSL', 'false') === 'true',
-      accessKey: config.get<string>('MINIO_ACCESS_KEY', 'minioadmin'),
-      secretKey: config.get<string>('MINIO_SECRET_KEY', 'minioadmin'),
+    const endpoint  = config.get<string>('MINIO_ENDPOINT', 'localhost')
+    const port      = parseInt(config.get<string>('MINIO_PORT', '9000'))
+    const useSSL    = config.get<string>('MINIO_USE_SSL', 'false') === 'true'
+    const accessKey = config.get<string>('MINIO_ACCESS_KEY', 'minioadmin')
+    const secretKey = config.get<string>('MINIO_SECRET_KEY', 'minioadmin')
+
+    // Internal client — for bucket existence checks, policy writes, deletes
+    this.client = new Minio.Client({ endPoint: endpoint, port, useSSL, accessKey, secretKey })
+
+    // Presign client — endpoint is what the browser calls, not the Docker alias
+    this.publicUrl = config.get<string>('MINIO_PUBLIC_URL', `http://${endpoint}:${port}`)
+    const pub      = new URL(this.publicUrl)
+    const pubPort  = pub.port ? parseInt(pub.port) : (pub.protocol === 'https:' ? 443 : 80)
+    this.presignClient = new Minio.Client({
+      endPoint:  pub.hostname,
+      port:      pubPort,
+      useSSL:    pub.protocol === 'https:',
+      accessKey,
+      secretKey,
     })
-    this.bucket    = config.get<string>('MINIO_BUCKET', 'cbt-games')
-    this.publicUrl = config.get<string>('MINIO_PUBLIC_URL', 'http://localhost:9000')
+
+    this.bucket = config.get<string>('MINIO_BUCKET', 'cbt-games')
   }
 
   async onModuleInit(): Promise<void> {
@@ -47,10 +68,10 @@ export class StorageService implements OnModuleInit {
 
   /**
    * Returns a presigned PUT URL valid for 15 minutes.
-   * The browser uploads the file directly to MinIO using this URL.
+   * URL hostname matches MINIO_PUBLIC_URL so the browser can reach it directly.
    */
   async presignedUploadUrl(objectName: string): Promise<string> {
-    return this.client.presignedPutObject(this.bucket, objectName, 900)
+    return this.presignClient.presignedPutObject(this.bucket, objectName, 900)
   }
 
   /** Public HTTP URL for the browser to fetch the file from MinIO. */
