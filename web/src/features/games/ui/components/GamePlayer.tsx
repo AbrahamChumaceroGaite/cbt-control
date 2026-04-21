@@ -78,9 +78,18 @@ export function GamePlayer({ game, levels, session, onClose }: Props) {
     if (ok) iframeRef.current?.contentWindow?.postMessage({ type: 'CONTINUE_GRANTED' }, '*')
   }
 
-  const src = hasLevels
-    ? `/games/${game.slug}/index.html?level=${session.startLevel}`
-    : `/games/${game.slug}/index.html`
+  const src = (() => {
+    // EmulatorJS-based games load from MinIO via a generic emulator page
+    if (game.emulatorCore) {
+      const p = new URLSearchParams({ core: game.emulatorCore })
+      if (game.gameFileUrl) p.set('gameUrl', game.gameFileUrl)
+      if (game.biosFileUrl) p.set('biosUrl', game.biosFileUrl)
+      return `/games/emulator/index.html?${p.toString()}`
+    }
+    return hasLevels
+      ? `/games/${game.slug}/index.html?level=${session.startLevel}`
+      : `/games/${game.slug}/index.html`
+  })()
 
   const content = (
     // createPortal renders directly in document.body — bypasses all stacking contexts

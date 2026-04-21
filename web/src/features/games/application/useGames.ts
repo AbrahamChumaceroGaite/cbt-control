@@ -1,16 +1,18 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
-import { gamesService }  from '../infrastructure/games.service'
-import { GamesMapper }   from './games.mapper'
+import { gamesService }   from '../infrastructure/games.service'
+import { GamesMapper }    from './games.mapper'
 import { useGameSession } from './useGameSession'
-import { useToast }      from '@/hooks/useToast'
-import { useAuthStore }  from '@/store/auth.store'
+import { useGameUpload }  from './useGameUpload'
+import { useToast }       from '@/hooks/useToast'
+import { useAuthStore }   from '@/store/auth.store'
 import type { EditGameForm, GameViewModel, LevelViewModel } from '../domain/types'
 
 const DEFAULT_FORM: EditGameForm = {
   title: '', description: '', iconEmoji: '🎮', coverUrl: '',
   isActive: true, coinsPerLevelBase: 5, coinsPerLevelStep: 2,
   bonusCoins: 4, continueCost: 2, maxLevels: 30,
+  emulatorCore: '', gameFileUrl: '', biosFileUrl: '',
 }
 
 export function useGames() {
@@ -29,6 +31,14 @@ export function useGames() {
   const [saving,        setSaving]        = useState(false)
 
   const session = useGameSession(selectedGame, userId)
+
+  const handleGameUpdated = useCallback((updated: GameViewModel) => {
+    setGames(gs => gs.map(g => g.id === updated.id ? updated : g))
+    if (selectedGame?.id === updated.id) setSelectedGame(updated)
+    if (editing?.id === updated.id)      setEditing(updated)
+  }, [selectedGame, editing])
+
+  const upload  = useGameUpload(handleGameUpdated)
 
   const load = useCallback(async () => {
     try {
@@ -85,6 +95,7 @@ export function useGames() {
         isActive: editForm.isActive, coinsPerLevelBase: editForm.coinsPerLevelBase,
         coinsPerLevelStep: editForm.coinsPerLevelStep, bonusCoins: editForm.bonusCoins,
         continueCost: editForm.continueCost, maxLevels: editForm.maxLevels,
+        emulatorCore: editForm.emulatorCore || null,
       })
       const vm = GamesMapper.toViewModel(updated)
       setGames(gs => gs.map(g => g.id === vm.id ? vm : g))
@@ -102,7 +113,7 @@ export function useGames() {
 
   return {
     games, loading, selectedGame, levels, levelsLoading,
-    playing, editing, editForm, saving, session,
+    playing, editing, editForm, saving, session, upload,
     handlers: {
       selectGame, clearSelection,
       startPlaying, stopPlaying,

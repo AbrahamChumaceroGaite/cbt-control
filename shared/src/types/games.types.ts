@@ -29,12 +29,16 @@ export type GameResponse = {
   coverUrl:          string
   iconEmoji:         string
   isActive:          boolean
-  maxLevels:         number
+  maxLevels:         number     // 0 = no level system (emulator games)
   coinsPerLevelBase: number
   coinsPerLevelStep: number
   bonusCoins:        number
   continueCost:      number
   createdAt:         string
+  // EmulatorJS fields — null for native-JS games
+  emulatorCore:  string | null  // e.g. 'psx', 'n64', 'gba'
+  gameFileUrl:   string | null  // MinIO public URL for the ROM/CUE
+  biosFileUrl:   string | null  // MinIO public URL for the BIOS
 }
 
 export type GameCreateInput = {
@@ -49,6 +53,9 @@ export type GameCreateInput = {
   coinsPerLevelStep?: number
   bonusCoins?:        number
   continueCost?:      number
+  emulatorCore?:      string | null
+  gameFileUrl?:       string | null
+  biosFileUrl?:       string | null
 }
 
 export type GameUpdateInput = Partial<Omit<GameCreateInput, 'slug'>>

@@ -34,6 +34,9 @@ export const GamesMapper = {
       bonusCoins:        game.bonusCoins,
       continueCost:      game.continueCost,
       maxLevels:         game.maxLevels,
+      emulatorCore:      game.emulatorCore  ?? '',
+      gameFileUrl:       game.gameFileUrl   ?? '',
+      biosFileUrl:       game.biosFileUrl   ?? '',
     }
   },
 }

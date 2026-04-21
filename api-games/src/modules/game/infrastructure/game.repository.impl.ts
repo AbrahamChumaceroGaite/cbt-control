@@ -17,6 +17,9 @@ const SELECT = {
   bonusCoins:        true,
   continueCost:      true,
   createdAt:         true,
+  emulatorCore:      true,
+  gameFileUrl:       true,
+  biosFileUrl:       true,
 } as const
 
 type GameRecord = {
@@ -24,6 +27,7 @@ type GameRecord = {
   coverUrl: string; iconEmoji: string; isActive: boolean; maxLevels: number
   coinsPerLevelBase: number; coinsPerLevelStep: number; bonusCoins: number
   continueCost: number; createdAt: Date
+  emulatorCore: string | null; gameFileUrl: string | null; biosFileUrl: string | null
 }
 
 function toEntity(r: GameRecord): GameEntity {
@@ -67,6 +71,9 @@ export class GameRepositoryImpl implements GameRepository {
         coinsPerLevelStep: entity.coinsPerLevelStep,
         bonusCoins:        entity.bonusCoins,
         continueCost:      entity.continueCost,
+        emulatorCore:      entity.emulatorCore,
+        gameFileUrl:       entity.gameFileUrl,
+        biosFileUrl:       entity.biosFileUrl,
       },
       select: SELECT,
     })
@@ -88,6 +95,9 @@ export class GameRepositoryImpl implements GameRepository {
         coinsPerLevelStep: entity.coinsPerLevelStep,
         bonusCoins:        entity.bonusCoins,
         continueCost:      entity.continueCost,
+        emulatorCore:      entity.emulatorCore,
+        gameFileUrl:       entity.gameFileUrl,
+        biosFileUrl:       entity.biosFileUrl,
       },
       select: SELECT,
     })

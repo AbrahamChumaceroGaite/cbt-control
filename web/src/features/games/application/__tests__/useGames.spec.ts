@@ -4,12 +4,14 @@ import type { GameResponse, LevelResponse }       from '@control-aula/shared'
 
 vi.mock('../../infrastructure/games.service', () => ({
   gamesService: {
-    getAll:         vi.fn(),
-    getBySlug:      vi.fn(),
-    getLevels:      vi.fn(),
-    update:         vi.fn(),
-    completeLevel:  vi.fn(),
-    useContinue:    vi.fn(),
+    getAll:          vi.fn(),
+    getBySlug:       vi.fn(),
+    getLevels:       vi.fn(),
+    update:          vi.fn(),
+    getUploadUrl:    vi.fn(),
+    uploadToStorage: vi.fn(),
+    completeLevel:   vi.fn(),
+    useContinue:     vi.fn(),
   },
 }))
 
@@ -32,6 +34,7 @@ const fakeGame: GameResponse = {
   description: 'desc', coverUrl: '', iconEmoji: '🎮', isActive: true,
   maxLevels: 30, coinsPerLevelBase: 5, coinsPerLevelStep: 2,
   bonusCoins: 4, continueCost: 2, createdAt: '2026-01-01',
+  emulatorCore: null, gameFileUrl: null, biosFileUrl: null,
 }
 
 const fakeLevel: LevelResponse = {

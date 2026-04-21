@@ -2,6 +2,7 @@ import { Module }               from '@nestjs/common'
 import { CqrsModule }           from '@nestjs/cqrs'
 import { JwtModule }            from '@nestjs/jwt'
 import { ConfigModule, ConfigService } from '@nestjs/config'
+import { StorageModule }        from '../../infrastructure/storage/storage.module'
 import { GameController }       from './presentation/game.controller'
 import { GameRepositoryImpl }   from './infrastructure/game.repository.impl'
 import { GAME_REPOSITORY }      from './domain/game.repository'
@@ -22,6 +23,7 @@ const HANDLERS = [
 @Module({
   imports: [
     CqrsModule,
+    StorageModule,
     JwtModule.registerAsync({
       imports:    [ConfigModule],
       inject:     [ConfigService],

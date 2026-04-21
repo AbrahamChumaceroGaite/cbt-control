@@ -7,6 +7,7 @@ const fakeGame: GameResponse = {
   description: 'desc', coverUrl: '', iconEmoji: '🎮', isActive: true,
   maxLevels: 30, coinsPerLevelBase: 5, coinsPerLevelStep: 2,
   bonusCoins: 4, continueCost: 2, createdAt: '2026-01-01',
+  emulatorCore: null, gameFileUrl: null, biosFileUrl: null,
 }
 
 const makeLevel = (number: number): LevelResponse => ({

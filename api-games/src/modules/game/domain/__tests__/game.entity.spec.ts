@@ -46,9 +46,9 @@ describe('GameEntity', () => {
         .toThrow(BadRequestException)
     })
 
-    it('throws when maxLevels is 0', () => {
-      expect(() => GameEntity.create({ ...validDto, maxLevels: 0 }))
-        .toThrow(BadRequestException)
+    it('accepts maxLevels=0 for emulator/free-roam games', () => {
+      const entity = GameEntity.create({ ...validDto, maxLevels: 0 })
+      expect(entity.maxLevels).toBe(0)
     })
 
     it('throws when maxLevels exceeds 100', () => {
