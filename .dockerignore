@@ -5,3 +5,15 @@ node_modules
 **/*.tsbuildinfo
 .git
 *.log
+
+# Game binary files — served from MinIO in production, never bundled in the image
+web/public/games/**/*.bin
+web/public/games/**/*.BIN
+web/public/games/**/*.iso
+web/public/games/**/*.ISO
+web/public/games/**/*.img
+web/public/games/**/*.IMG
+web/public/games/**/*.chd
+web/public/games/**/*.CHD
+web/public/games/**/*.cue
+cbt-games/

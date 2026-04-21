@@ -13,17 +13,29 @@ jobs:
   deploy:
     name: Deploy DEV
     runs-on: ubuntu-latest
-    # Only deploy when CI passes (ci.yml must finish first on the same commit)
     environment: development
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Build and push Docker images
+    steps:
+      - name: Setup SSH key
         run: |
-          echo "Deploy step — configure per your hosting provider."
-          echo "Typical steps:"
-          echo "  1. docker build -t ghcr.io/org/cbt-api:dev ./api"
-          echo "  2. docker push ghcr.io/org/cbt-api:dev"
-          echo "  3. Trigger remote deploy (ssh, webhook, etc.)"
-        # Replace the above echo commands with real deploy commands once
-        # the hosting infrastructure is configured.
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy to dev server
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+              "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+              "set -e
+               cd ${{ secrets.DEPLOY_PATH }}
+               git pull origin develop
+               docker compose build
+               docker compose up -d --remove-orphans
+               docker image prune -f"
+
+      - name: Verify services healthy
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+              "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+              "sleep 10 && docker compose -f ${{ secrets.DEPLOY_PATH }}/docker-compose.yml ps"
