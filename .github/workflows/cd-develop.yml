@@ -4,52 +4,14 @@ on:
   push:
     branches: [develop]
 
-# Only one deploy at a time — cancel in-flight if new push arrives
 concurrency:
   group: deploy-develop
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  notify:
     name: Deploy DEV
     runs-on: ubuntu-latest
-    environment: development
-
     steps:
-      - name: Deploy to dev server
-        env:
-          SSH_KEY:     ${{ secrets.SSH_KEY }}
-          SSH_HOST:    ${{ secrets.SSH_HOST }}
-          SSH_USER:    ${{ secrets.SSH_USER }}
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-        run: |
-          if [ -z "$SSH_HOST" ] || [ -z "$SSH_KEY" ]; then
-            echo "::warning::SSH secrets not configured — skipping deploy (add SSH_HOST, SSH_USER, SSH_KEY, DEPLOY_PATH to the 'development' environment)"
-            exit 0
-          fi
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
-          ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" "
-            set -e
-            cd $DEPLOY_PATH
-            git pull origin develop
-            docker compose build
-            docker compose up -d --remove-orphans
-            docker image prune -f
-          "
-
-      - name: Verify services healthy
-        env:
-          SSH_KEY:     ${{ secrets.SSH_KEY }}
-          SSH_HOST:    ${{ secrets.SSH_HOST }}
-          SSH_USER:    ${{ secrets.SSH_USER }}
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-        run: |
-          if [ -z "$SSH_HOST" ] || [ -z "$SSH_KEY" ]; then
-            exit 0
-          fi
-          sleep 15
-          ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" \
-            "docker compose -f $DEPLOY_PATH/docker-compose.yml ps"
+      - name: Deployment handled by Coolify
+        run: echo "Push to develop received — Coolify picks up from here if configured for this branch."
