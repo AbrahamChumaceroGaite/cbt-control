@@ -51,4 +51,16 @@ export class CreateGameDto {
   @IsInt()
   @Min(0)
   continueCost?: number
+
+  @IsOptional()
+  @IsString()
+  emulatorCore?: string | null
+
+  @IsOptional()
+  @IsString()
+  gameFileUrl?: string | null
+
+  @IsOptional()
+  @IsString()
+  biosFileUrl?: string | null
 }

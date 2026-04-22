@@ -15,6 +15,9 @@ export class GameEntity {
     readonly bonusCoins:        number,
     readonly continueCost:      number,
     readonly createdAt:         Date,
+    readonly emulatorCore:      string | null,
+    readonly gameFileUrl:       string | null,
+    readonly biosFileUrl:       string | null,
   ) {}
 
   static create(dto: {
@@ -31,6 +34,9 @@ export class GameEntity {
     bonusCoins?:        number
     continueCost?:      number
     createdAt?:         Date
+    emulatorCore?:      string | null
+    gameFileUrl?:       string | null
+    biosFileUrl?:       string | null
   }): GameEntity {
     if (!dto.title || dto.title.trim().length < 2)
       throw new BadRequestException('Game title must be at least 2 characters')
@@ -41,9 +47,10 @@ export class GameEntity {
     if (!/^[a-z0-9-]+$/.test(dto.slug.trim()))
       throw new BadRequestException('Game slug must be lowercase letters, numbers, and hyphens only')
 
+    // maxLevels=0 is valid for emulator/free-roam games with no level system
     const maxLevels = dto.maxLevels ?? 30
-    if (maxLevels < 1 || maxLevels > 100)
-      throw new BadRequestException('Game maxLevels must be between 1 and 100')
+    if (maxLevels < 0 || maxLevels > 100)
+      throw new BadRequestException('Game maxLevels must be between 0 and 100')
 
     const base = dto.coinsPerLevelBase ?? 5
     if (base < 1)
@@ -67,6 +74,9 @@ export class GameEntity {
       dto.bonusCoins ?? 4,
       cost,
       dto.createdAt ?? new Date(),
+      dto.emulatorCore ?? null,
+      dto.gameFileUrl ?? null,
+      dto.biosFileUrl ?? null,
     )
   }
 

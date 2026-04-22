@@ -13,7 +13,7 @@ interface Props { isAdmin?: boolean }
 export function GamesSection({ isAdmin }: Props) {
   const {
     games, loading, selectedGame, levels, levelsLoading,
-    playing, editing, editForm, saving, session, handlers,
+    playing, editing, editForm, saving, session, upload, handlers,
   } = useGames()
 
   if (playing && selectedGame) {
@@ -73,6 +73,7 @@ export function GamesSection({ isAdmin }: Props) {
           game={editing}
           form={editForm}
           saving={saving}
+          upload={upload}
           onClose={handlers.closeEdit}
           onSave={handlers.saveEdit}
           onFormChange={patch => handlers.setEditForm(f => ({ ...f, ...patch }))}

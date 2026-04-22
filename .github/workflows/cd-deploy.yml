@@ -6,48 +6,12 @@ on:
 
 concurrency:
   group: deploy-production
-  cancel-in-progress: false  # never cancel an in-progress deploy
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  notify:
     name: Deploy — production server
     runs-on: ubuntu-latest
-    environment: production
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-
-      - name: Build shared types
-        run: npm run build -w shared
-
-      - name: Build API
-        run: npm run build -w api
-
-      - name: Build Web
-        run: npm run build -w web
-        env:
-          NEXT_PUBLIC_WS_URL: ${{ secrets.NEXT_PUBLIC_WS_URL }}
-
-      # ── Replace the steps below with your actual deploy commands ──────────
-      # Examples:
-      #   Docker: docker build + docker push + ssh deploy
-      #   VPS:    rsync + ssh restart
-      #   Cloud:  platform-specific CLI (railway, fly, render, etc.)
-
-      - name: Deploy to server
-        run: echo "TODO — configure deploy commands for your hosting provider"
-        env:
-          DATABASE_URL:      ${{ secrets.DATABASE_URL }}
-          JWT_SECRET:        ${{ secrets.JWT_SECRET }}
-          VAPID_PUBLIC:      ${{ secrets.VAPID_PUBLIC }}
-          VAPID_PRIVATE:     ${{ secrets.VAPID_PRIVATE }}
-          WEB_ORIGIN:        ${{ secrets.WEB_ORIGIN }}
-
-      - name: Run database migrations
-        run: echo "TODO — npx prisma migrate deploy"
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - name: Deployment handled by Coolify
+        run: echo "Push to deploy received — Coolify webhook triggers the production redeploy automatically."

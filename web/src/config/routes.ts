@@ -83,6 +83,7 @@ export const API_ROUTES = {
     BY_SLUG:        (slug: string)   => `/api-games/games/${slug}`,
     LEVELS:         (gameId: string) => `/api-games/games/${gameId}/levels`,
     UPDATE:         (id: string)     => `/api-games/games/${id}`,
+    UPLOAD_URL:     (id: string)     => `/api-games/games/${id}/upload-url`,
     LEVEL_COMPLETE: '/api-games/sessions/level-complete',
     CONTINUE:       '/api-games/sessions/continue',
   },

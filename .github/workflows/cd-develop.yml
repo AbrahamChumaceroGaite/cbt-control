@@ -4,26 +4,14 @@ on:
   push:
     branches: [develop]
 
-# Only one deploy at a time — cancel in-flight if new push arrives
 concurrency:
   group: deploy-develop
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  notify:
     name: Deploy DEV
     runs-on: ubuntu-latest
-    # Only deploy when CI passes (ci.yml must finish first on the same commit)
-    environment: development
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Build and push Docker images
-        run: |
-          echo "Deploy step — configure per your hosting provider."
-          echo "Typical steps:"
-          echo "  1. docker build -t ghcr.io/org/cbt-api:dev ./api"
-          echo "  2. docker push ghcr.io/org/cbt-api:dev"
-          echo "  3. Trigger remote deploy (ssh, webhook, etc.)"
-        # Replace the above echo commands with real deploy commands once
-        # the hosting infrastructure is configured.
+      - name: Deployment handled by Coolify
+        run: echo "Push to develop received — Coolify picks up from here if configured for this branch."

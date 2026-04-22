@@ -14,7 +14,8 @@ COPY shared ./shared
 COPY api    ./api
 RUN /app/node_modules/.bin/tsc --project /app/shared/tsconfig.json
 ENV DATABASE_URL="file:./prisma/dev.db"
-RUN /app/node_modules/.bin/prisma generate --schema=/app/api/prisma/schema.prisma
+RUN --mount=type=cache,target=/root/.cache/prisma,id=prisma-engines-v1 \
+    /app/node_modules/.bin/prisma generate --schema=/app/api/prisma/schema.prisma
 RUN /app/node_modules/.bin/tsc --project /app/api/tsconfig.build.json
 RUN test -f /app/api/dist/main.js
 
@@ -29,9 +30,11 @@ COPY --from=builder /app/api/dist        ./dist
 COPY --from=builder /app/shared          ./shared
 COPY --from=builder /app/api/prisma      ./prisma
 COPY --from=builder /app/api/src/data    ./src/data
-RUN npx --yes prisma generate --schema=/app/prisma/schema.prisma
+RUN --mount=type=cache,target=/root/.cache/prisma,id=prisma-engines-v1 \
+    npx --yes prisma generate --schema=/app/prisma/schema.prisma
 COPY api/docker-entrypoint.sh            ./docker-entrypoint.sh
-RUN chmod +x ./docker-entrypoint.sh && \
+RUN sed -i 's/\r//' ./docker-entrypoint.sh && \
+    chmod +x ./docker-entrypoint.sh && \
     chown -R nestjs:nodejs /app/dist /app/shared /app/prisma /app/src
 EXPOSE 4001
 ENV PORT=4001

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resident Evil — PlayStation 1</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+    #game { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="game"></div>
+
+  <script>
+    // EmulatorJS configuration
+    EJS_player        = '#game';
+    EJS_core          = 'psx';
+    EJS_gameUrl       = 'game.cue';
+    EJS_biosUrl       = 'bios.bin';
+    EJS_pathtodata    = 'https://cdn.emulatorjs.org/stable/data/';
+    EJS_startOnLoaded = true;
+    EJS_defaultOptions = {
+      'save-state-location': 'browser',
+    };
+
+    // Notify parent frame that the emulator started
+    EJS_onGameStart = function () {
+      window.parent.postMessage({ type: 'SESSION_START' }, '*');
+    };
+
+    // Listen for postMessage from parent (e.g. CONTINUE_GRANTED)
+    window.addEventListener('message', function (ev) {
+      if (ev.data && ev.data.type === 'CONTINUE_GRANTED') {
+        // No-op for PS1 — saves/loads handled by in-game memory card
+      }
+    });
+  </script>
+  <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
+</body>
+</html>

@@ -9,6 +9,7 @@ vi.mock('@/config/routes', () => ({
       BY_SLUG:        (slug: string)   => `/api-games/games/${slug}`,
       LEVELS:         (gameId: string) => `/api-games/games/${gameId}/levels`,
       UPDATE:         (id: string)     => `/api-games/games/${id}`,
+      UPLOAD_URL:     (id: string) => `/api-games/games/${id}/upload-url`,
       LEVEL_COMPLETE: '/api-games/sessions/level-complete',
       CONTINUE:       '/api-games/sessions/continue',
     },
@@ -25,6 +26,7 @@ const fakeGame: GameResponse = {
   description: 'desc', coverUrl: '', iconEmoji: '🎮', isActive: true,
   maxLevels: 30, coinsPerLevelBase: 5, coinsPerLevelStep: 2,
   bonusCoins: 4, continueCost: 2, createdAt: '2026-01-01',
+  emulatorCore: null, gameFileUrl: null, biosFileUrl: null,
 }
 
 const fakeLevel: LevelResponse = {

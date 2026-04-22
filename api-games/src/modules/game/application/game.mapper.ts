@@ -17,6 +17,9 @@ export class GameMapper {
       bonusCoins:        entity.bonusCoins,
       continueCost:      entity.continueCost,
       createdAt:         entity.createdAt.toISOString(),
+      emulatorCore:      entity.emulatorCore,
+      gameFileUrl:       entity.gameFileUrl,
+      biosFileUrl:       entity.biosFileUrl,
     }
   }
 }

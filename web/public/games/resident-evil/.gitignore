@@ -1,0 +1,6 @@
+# Game ROM and BIOS files — do not commit (copyright + large binary)
+*.bin
+*.BIN
+*.iso
+*.img
+*.chd

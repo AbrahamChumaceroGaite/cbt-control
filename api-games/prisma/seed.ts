@@ -104,38 +104,41 @@ async function main() {
 
   console.log(`Created ${LEVELS.length} levels for ${game.title}.`)
 
-  // ── DOOM ──────────────────────────────────────────────────────────────────
-  // DOOM runs via js-dos in the browser. The level system does not apply —
-  // the game manages its own progression (4 episodes × 9 maps).
+  // ── Resident Evil — Director's Cut (PS1) ──────────────────────────────────
+  // Runs via EmulatorJS (PlayStation 1 emulator) in the browser.
+  // Level system does not apply — the game manages its own progression.
   // Coins are awarded per play session rather than per in-game level.
-  console.log('Seeding DOOM...')
+  // Remove the old DOOM entry if it exists.
+  await prisma.game.deleteMany({ where: { slug: 'doom' } })
+
+  console.log('Seeding Resident Evil...')
   await prisma.game.upsert({
-    where:  { slug: 'doom' },
+    where:  { slug: 'resident-evil' },
     update: {
-      title:             'DOOM',
-      description:       'The classic 1993 first-person shooter. Fight through demon-infested levels across four episodes. Save data persists in your browser.',
-      iconEmoji:         '💀',
+      title:             'Resident Evil',
+      description:       "Capcom's 1996 survival horror classic. Escape the Spencer Mansion as S.T.A.R.S. agent Chris or Jill. Save data stored in the browser via emulator memory card.",
+      iconEmoji:         '🧟',
       isActive:          true,
-      maxLevels:         36,
-      coinsPerLevelBase: 8,
-      coinsPerLevelStep: 1,
+      maxLevels:         0,
+      coinsPerLevelBase: 10,
+      coinsPerLevelStep: 0,
       bonusCoins:        5,
       continueCost:      0,
     },
     create: {
-      slug:              'doom',
-      title:             'DOOM',
-      description:       'The classic 1993 first-person shooter. Fight through demon-infested levels across four episodes. Save data persists in your browser.',
-      iconEmoji:         '💀',
+      slug:              'resident-evil',
+      title:             'Resident Evil',
+      description:       "Capcom's 1996 survival horror classic. Escape the Spencer Mansion as S.T.A.R.S. agent Chris or Jill. Save data stored in the browser via emulator memory card.",
+      iconEmoji:         '🧟',
       isActive:          true,
-      maxLevels:         36,
-      coinsPerLevelBase: 8,
-      coinsPerLevelStep: 1,
+      maxLevels:         0,
+      coinsPerLevelBase: 10,
+      coinsPerLevelStep: 0,
       bonusCoins:        5,
       continueCost:      0,
     },
   })
-  console.log('DOOM seeded.')
+  console.log('Resident Evil seeded.')
   console.log('Seed complete.')
 }
 

@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -20,6 +21,10 @@ model Game {
   coinsPerLevelStep  Int      @default(2)
   bonusCoins         Int      @default(4)
   continueCost       Int      @default(2)
+  // EmulatorJS — null for native-JS games
+  emulatorCore       String?
+  gameFileUrl        String?
+  biosFileUrl        String?
   createdAt          DateTime @default(now())
 
   levels         Level[]

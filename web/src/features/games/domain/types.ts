@@ -42,4 +42,7 @@ export type EditGameForm = {
   bonusCoins:        number
   continueCost:      number
   maxLevels:         number
+  emulatorCore:      string
+  gameFileUrl:       string
+  biosFileUrl:       string
 }
