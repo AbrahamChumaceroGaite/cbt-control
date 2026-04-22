@@ -39,9 +39,6 @@ services:
     environment:
       - MINIO_ROOT_USER=${MINIO_ACCESS_KEY:-minioadmin}
       - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY:-minioadmin}
-      # Tell MinIO its public URLs so the browser redirect works behind Traefik
-      - MINIO_SERVER_URL=${MINIO_PUBLIC_URL:-http://localhost:9100}
-      - MINIO_BROWSER_REDIRECT_URL=${MINIO_CONSOLE_URL:-http://localhost:9101}
       - TZ=America/La_Paz
     volumes:
       - minio_data:/data
