@@ -15,5 +15,4 @@ web/public/games/**/*.img
 web/public/games/**/*.IMG
 web/public/games/**/*.chd
 web/public/games/**/*.CHD
-web/public/games/**/*.cue
 cbt-games/
