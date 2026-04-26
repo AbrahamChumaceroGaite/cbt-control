@@ -22,6 +22,7 @@ canvas{display:block;image-rendering:pixelated}
 <body>
 <div id="ui">
   <span>LVL <span id="hud-lv">1</span></span>
+  <span id="hud-world" style="color:#aaa;font-size:9px">BLUE ZONE</span>
   <span>SCORE <span id="hud-sc">0</span></span>
   <div id="lives-wrap"></div>
 </div>
@@ -82,30 +83,52 @@ const Sfx={
   _wakaFlip:false,
 }
 
+// ── Save / load (localStorage) ────────────────────────────────────────────────
+const Save={
+  KEY:'pacman_progress_v1',
+  get(){try{const d=localStorage.getItem(this.KEY);return d?JSON.parse(d):null}catch{return null}},
+  set(level,score,lives){try{localStorage.setItem(this.KEY,JSON.stringify({level,score,lives}))}catch{}},
+  clear(){try{localStorage.removeItem(this.KEY)}catch{}},
+}
+
 // ── Level config ─────────────────────────────────────────────────────────────
+// Maze rotates every level: classic→tunnel→labyrinth→open (cycle)
+// Wall color changes every 4 levels (world theme)
 // ghosts=count, speed=ghost speed mult, maze=maze key, boss=no power pellets, fruit=fruit bonus
+const MAZE_CYCLE=['classic','tunnel','labyrinth','open']
+// World wall colors: blue, purple, red, green, gold
+const WORLD_COLORS=['#1a1aee','#770077','#aa1100','#006633','#aa6600']
+
+function mazeForLevel(l){return MAZE_CYCLE[(l-1)%4]}
+function wallColorForLevel(l){return WORLD_COLORS[Math.floor((l-1)/4)%5]}
+
 const LCFG=[
   null,
-  {ghosts:2,speed:0.75,maze:'classic',  boss:false,fruit:true },
-  {ghosts:2,speed:0.80,maze:'classic',  boss:false,fruit:true },
-  {ghosts:3,speed:0.85,maze:'classic',  boss:false,fruit:true },
-  {ghosts:3,speed:0.90,maze:'tunnel',   boss:false,fruit:true },
-  {ghosts:3,speed:0.95,maze:'classic',  boss:false,fruit:true },
-  {ghosts:4,speed:1.00,maze:'tunnel',   boss:false,fruit:true },
-  {ghosts:4,speed:1.05,maze:'labyrinth',boss:false,fruit:false},
-  {ghosts:4,speed:1.10,maze:'classic',  boss:false,fruit:true },
-  {ghosts:4,speed:1.15,maze:'open',     boss:false,fruit:true },
-  {ghosts:5,speed:1.20,maze:'labyrinth',boss:false,fruit:false},
-  {ghosts:5,speed:1.30,maze:'tunnel',   boss:false,fruit:true },
-  {ghosts:5,speed:1.40,maze:'open',     boss:true, fruit:false},
-  {ghosts:5,speed:1.50,maze:'classic',  boss:false,fruit:true },
-  {ghosts:6,speed:1.60,maze:'labyrinth',boss:false,fruit:false},
-  {ghosts:6,speed:1.70,maze:'tunnel',   boss:false,fruit:true },
-  {ghosts:6,speed:1.80,maze:'open',     boss:true, fruit:false},
-  {ghosts:6,speed:1.90,maze:'labyrinth',boss:false,fruit:true },
-  {ghosts:6,speed:2.00,maze:'open',     boss:false,fruit:false},
-  {ghosts:6,speed:2.20,maze:'tunnel',   boss:false,fruit:true },
-  {ghosts:6,speed:2.50,maze:'open',     boss:true, fruit:false},
+  // World 1 — Tutorial (blue)
+  {ghosts:2,speed:0.75,boss:false,fruit:true },  // 1 classic
+  {ghosts:2,speed:0.80,boss:false,fruit:true },  // 2 tunnel
+  {ghosts:3,speed:0.85,boss:false,fruit:true },  // 3 labyrinth
+  {ghosts:3,speed:0.90,boss:false,fruit:true },  // 4 open
+  // World 2 — Normal (purple)
+  {ghosts:3,speed:0.95,boss:false,fruit:true },  // 5 classic
+  {ghosts:4,speed:1.00,boss:false,fruit:true },  // 6 tunnel
+  {ghosts:4,speed:1.05,boss:false,fruit:false},  // 7 labyrinth
+  {ghosts:4,speed:1.10,boss:false,fruit:true },  // 8 open
+  // World 3 — Hard (red)
+  {ghosts:4,speed:1.20,boss:false,fruit:true },  // 9 classic
+  {ghosts:5,speed:1.30,boss:false,fruit:false},  // 10 tunnel
+  {ghosts:5,speed:1.40,boss:false,fruit:true },  // 11 labyrinth
+  {ghosts:5,speed:1.50,boss:true, fruit:false},  // 12 open (boss — no power pellets)
+  // World 4 — Elite (green)
+  {ghosts:5,speed:1.60,boss:false,fruit:true },  // 13 classic
+  {ghosts:6,speed:1.70,boss:false,fruit:false},  // 14 tunnel
+  {ghosts:6,speed:1.80,boss:false,fruit:true },  // 15 labyrinth
+  {ghosts:6,speed:1.90,boss:true, fruit:false},  // 16 open (boss)
+  // World 5 — Inferno (gold)
+  {ghosts:6,speed:2.00,boss:false,fruit:true },  // 17 classic
+  {ghosts:6,speed:2.10,boss:false,fruit:false},  // 18 tunnel
+  {ghosts:6,speed:2.30,boss:false,fruit:true },  // 19 labyrinth
+  {ghosts:6,speed:2.50,boss:true, fruit:false},  // 20 open (boss)
 ]
 const MAX_LVL=20
 
@@ -242,9 +265,11 @@ const G={
 
   init(level){
     const cfg=LCFG[Math.min(level,MAX_LVL)]||LCFG[MAX_LVL]
-    const meta=MAZE_META[cfg.maze]
+    const mazeKey=mazeForLevel(level)
+    const meta=MAZE_META[mazeKey]
     this.level=level;this.cfg=cfg;this.meta=meta
-    this.map=cloneMaze(MAZES[cfg.maze])
+    this.wallColor=wallColorForLevel(level)
+    this.map=cloneMaze(MAZES[mazeKey])
     this.pellets=0
     for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)
       if(this.map[r][c]===2||this.map[r][c]===3) this.pellets++
@@ -375,8 +400,7 @@ const Ghosts={
     this.list=[]
     this.exitCol=meta.exitCol
     this.exitRow=meta.exitRow
-    // pen spawn positions (inside ghost house for each maze)
-    const penSpawns=this._penSpawns(cfg.maze)
+    const penSpawns=this._penSpawns()
     const count=Math.min(cfg.ghosts,6)
     for(let i=0;i<count;i++){
       const [sc,sr]=penSpawns[i]||penSpawns[0]
@@ -386,11 +410,8 @@ const Ghosts={
     }
   },
 
-  _penSpawns(mazeKey){
-    // Inner ghost house tile positions
-    return [
-      [10,9],[9,9],[11,9],[9,10],[11,10],[10,10]
-    ]
+  _penSpawns(){
+    return [[10,9],[9,9],[11,9],[9,10],[11,10],[10,10]]
   },
 
   frighten(){
@@ -603,9 +624,9 @@ function drawMaze(){
     for(let c=0;c<COLS;c++){
       const v=G.map[r][c],x=c*TILE,y=r*TILE
       if(v===1){
-        ctx.fillStyle='#1a1aee'
+        ctx.fillStyle=G.wallColor||'#1a1aee'
         ctx.fillRect(x,y,TILE,TILE)
-        ctx.strokeStyle='rgba(100,100,255,0.4)'
+        ctx.strokeStyle='rgba(255,255,255,0.08)'
         ctx.lineWidth=1
         ctx.strokeRect(x+1,y+1,TILE-2,TILE-2)
       }else if(v===0||v===4){
@@ -630,6 +651,8 @@ function drawMaze(){
 function updateHUD(){
   document.getElementById('hud-lv').textContent=G.level
   document.getElementById('hud-sc').textContent=G.score
+  const wEl=document.getElementById('hud-world')
+  if(wEl){wEl.textContent=worldName(G.level);wEl.style.color=G.wallColor||'#aaa'}
   const el=document.getElementById('lives-wrap')
   el.innerHTML=''
   for(let i=0;i<G.lives;i++){
@@ -670,13 +693,22 @@ function showDead(){
 function hideOver(){document.getElementById('overlay').style.display='none'}
 
 // ── Game events ───────────────────────────────────────────────────────────────
+const WORLD_NAMES=['','BLUE ZONE','PURPLE ZONE','RED ZONE','GREEN ZONE','GOLD ZONE']
+function worldName(l){return WORLD_NAMES[Math.floor((l-1)/4)+1]||'INFERNO'}
+
 function onLevelDone(){
   cancelAnimationFrame(G.raf);G.state='won'
   const elapsed=Math.floor((Date.now()-G.startTime)/1000)
   PM.levelComplete(G.level,G.score,elapsed)
   Sfx.win()
-  if(G.level>=MAX_LVL){showOver('🎉 YOU WIN!',`Final Score: ${G.score}`,false);return}
-  showOver('LEVEL CLEAR! ✨',`Score: ${G.score}`,true)
+  if(G.level>=MAX_LVL){Save.clear();showOver('🎉 YOU WIN!',`Final Score: ${G.score}`,false);return}
+  // Save progress for next level
+  const nextLvl=G.level+1
+  Save.set(nextLvl,G.score,G.lives)
+  const world=worldName(nextLvl)
+  const boss=LCFG[Math.min(nextLvl,MAX_LVL)]?.boss?' ⚠️ NO POWER PELLETS':''
+  showOver(`LEVEL ${G.level} CLEAR! ✨`,
+    `Score: ${G.score}  ·  Lives: ${G.lives}\nNext: Level ${nextLvl} — ${world}${boss}`,true)
 }
 
 function onPacDead(){
@@ -684,17 +716,20 @@ function onPacDead(){
   Sfx.death();updateHUD()
   if(G.lives<=0){
     G.state='gameover';PM.gameOver(G.level,G.score)
+    Save.clear() // no progress to keep — game over
     showOver('GAME OVER',`Score: ${G.score}`,false)
   }else{
-    G.state='dead';PM.requestContinue()
+    G.state='dead'
+    Save.set(G.level,G.score,G.lives) // save remaining lives
+    PM.requestContinue()
     showDead()
   }
 }
 
 function doContinueLocal(){hideOver();G.doContinue()}
 function doNext(){hideOver();G.init(G.level+1);updateHUD()}
-function doRestart(){hideOver();G.score=0;G.lives=3;launchLevel(1)}
-function launchLevel(l){G.score=0;G.lives=3;G.init(l);updateHUD()}
+function doRestart(){hideOver();Save.clear();G.score=0;G.lives=3;launchLevel(1)}
+function launchLevel(l,score=0,lives=3){G.score=score;G.lives=lives;G.init(l);updateHUD()}
 
 // ── Loop ──────────────────────────────────────────────────────────────────────
 function loop(){
@@ -735,11 +770,35 @@ window.addEventListener('touchend',e=>{
   else{Pac.ndx=0;Pac.ndy=dy>0?1:-1}
 })
 
-// ── Start button ──────────────────────────────────────────────────────────────
-document.getElementById('btn-start').addEventListener('click',()=>{
-  PM.start(1);hideOver()
-  G.score=0;G.lives=3;G.init(1);updateHUD()
-})
+// ── Start screen ──────────────────────────────────────────────────────────────
+function buildStartScreen(){
+  const o=document.getElementById('overlay')
+  const saved=Save.get()
+  let html=`<h1>👾 PACMAN</h1><p>Arrow keys / WASD to move<br>Eat all pellets · Power pellets stun ghosts!</p>`
+  if(saved&&saved.level>1){
+    const w=worldName(saved.level)
+    html+=`<button class="btn" id="btn-continue">▶ CONTINUE  LVL ${saved.level} — ${w}</button>`
+    html+=`<small style="color:#666;font-size:9px">Score: ${saved.score}  ·  Lives: ${saved.lives}</small>`
+    html+=`<button class="btn btn-dark" id="btn-new">New Game</button>`
+  }else{
+    html+=`<button class="btn" id="btn-start">▶ PLAY</button>`
+  }
+  o.innerHTML=html
+
+  document.getElementById('btn-start')?.addEventListener('click',()=>{
+    PM.start(1);hideOver();Save.clear()
+    launchLevel(1)
+  })
+  document.getElementById('btn-continue')?.addEventListener('click',()=>{
+    PM.start(saved.level);hideOver()
+    launchLevel(saved.level,saved.score,saved.lives)
+  })
+  document.getElementById('btn-new')?.addEventListener('click',()=>{
+    PM.start(1);hideOver();Save.clear()
+    launchLevel(1)
+  })
+}
+buildStartScreen()
 </script>
 </body>
 </html>
