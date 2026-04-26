@@ -49,13 +49,13 @@ services:
       - DATABASE_URL=${GAMES_DATABASE_URL:-file:/app/data/academic.db}
       - PORT=${GAMES_PORT:-4003}
       - CORE_API_URL=http://api:${API_PORT:-4001}
-      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-localhost}
       - MINIO_PORT=${MINIO_PORT:-9000}
       - MINIO_USE_SSL=${MINIO_USE_SSL:-false}
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
       - MINIO_BUCKET=${MINIO_BUCKET:-cbt-games}
-      - MINIO_PUBLIC_URL=${MINIO_PUBLIC_URL}
+      - MINIO_PUBLIC_URL=${MINIO_PUBLIC_URL:-http://localhost:9000}
       - TZ=America/La_Paz
     volumes:
       - games_data:/app/data
