@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pacman</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #000;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    font-family: 'Press Start 2P', monospace;
+  }
+  canvas { display: block; image-rendering: pixelated; }
+  #ui {
+    position: fixed; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 16px;
+    color: #fff; font-size: 10px; background: rgba(0,0,0,0.8);
+    z-index: 10;
+  }
+  #overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: #FFD700; text-align: center; gap: 16px;
+    z-index: 20;
+  }
+  #overlay h1 { font-size: 24px; color: #FFD700; }
+  #overlay p  { font-size: 11px; color: #aaa; line-height: 1.8; }
+  #overlay button {
+    margin-top: 12px; padding: 12px 28px;
+    background: #FFD700; color: #000;
+    border: none; border-radius: 4px;
+    font-size: 12px; cursor: pointer; font-weight: bold;
+    font-family: inherit;
+  }
+  #overlay button:hover { background: #fff; }
+  #lives-display { display: flex; gap: 4px; }
+</style>
+</head>
+<body>
+<div id="ui">
+  <span>LEVEL <span id="hud-level">1</span></span>
+  <span>SCORE <span id="hud-score">0</span></span>
+  <div id="lives-display"></div>
+</div>
+
+<canvas id="c"></canvas>
+
+<div id="overlay">
+  <h1>👾 PACMAN</h1>
+  <p>Arrow keys or WASD to move<br>Eat all pellets to advance<br>Power pellets make ghosts edible!</p>
+  <button id="btn-start">PLAY LEVEL 1</button>
+</div>
+
+<script>
+// ─── postMessage integration ─────────────────────────────────────────────────
+const PM = {
+  currentLevel: 1,
+  sessionStarted: false,
+  start(level) {
+    this.currentLevel = level
+    window.parent.postMessage({ type: 'SESSION_START', gameSlug: 'pacman' }, '*')
+    this.sessionStarted = true
+  },
+  levelComplete(level, score, time) {
+    window.parent.postMessage({ type: 'LEVEL_COMPLETE', level, score, time }, '*')
+  },
+  gameOver(level, score) {
+    window.parent.postMessage({ type: 'GAME_OVER', level, score }, '*')
+  },
+  requestContinue() {
+    window.parent.postMessage({ type: 'CONTINUE_REQUESTED' }, '*')
+  },
+}
+
+window.addEventListener('message', (e) => {
+  if (e.data?.type === 'CONTINUE_GRANTED') Game.continue()
+  if (e.data?.type === 'CONTINUE_DENIED')  showOverlay('overlay-dead')
+  if (e.data?.type === 'START_LEVEL' && e.data.level) startLevel(e.data.level)
+})
+
+// ─── Config ──────────────────────────────────────────────────────────────────
+const TILE  = 20
+const COLS  = 21
+const ROWS  = 21
+const W     = COLS * TILE
+const H     = ROWS * TILE
+
+// Level config: [ghostCount, speedMult, mazeVariant, powerPelletFree, fruitBonus]
+const LEVEL_CFG = [
+  null, // index 0 unused
+  { ghosts: 2, speed: 0.75, maze: 'classic',   boss: false, fruit: true  }, // 1
+  { ghosts: 2, speed: 0.80, maze: 'classic',   boss: false, fruit: true  }, // 2
+  { ghosts: 3, speed: 0.85, maze: 'classic',   boss: false, fruit: true  }, // 3
+  { ghosts: 3, speed: 0.90, maze: 'tunnel',    boss: false, fruit: true  }, // 4
+  { ghosts: 3, speed: 0.95, maze: 'classic',   boss: false, fruit: true  }, // 5
+  { ghosts: 4, speed: 1.00, maze: 'tunnel',    boss: false, fruit: true  }, // 6
+  { ghosts: 4, speed: 1.05, maze: 'labyrinth', boss: false, fruit: false }, // 7
+  { ghosts: 4, speed: 1.10, maze: 'classic',   boss: false, fruit: true  }, // 8
+  { ghosts: 4, speed: 1.15, maze: 'open',      boss: false, fruit: true  }, // 9
+  { ghosts: 5, speed: 1.20, maze: 'labyrinth', boss: false, fruit: false }, // 10
+  { ghosts: 5, speed: 1.30, maze: 'tunnel',    boss: false, fruit: true  }, // 11
+  { ghosts: 5, speed: 1.40, maze: 'open',      boss: true,  fruit: false }, // 12
+  { ghosts: 5, speed: 1.50, maze: 'classic',   boss: false, fruit: true  }, // 13
+  { ghosts: 6, speed: 1.60, maze: 'labyrinth', boss: false, fruit: false }, // 14
+  { ghosts: 6, speed: 1.70, maze: 'tunnel',    boss: false, fruit: true  }, // 15
+  { ghosts: 6, speed: 1.80, maze: 'open',      boss: true,  fruit: false }, // 16
+  { ghosts: 6, speed: 1.90, maze: 'labyrinth', boss: false, fruit: true  }, // 17
+  { ghosts: 6, speed: 2.00, maze: 'open',      boss: false, fruit: false }, // 18
+  { ghosts: 6, speed: 2.20, maze: 'tunnel',    boss: false, fruit: true  }, // 19
+  { ghosts: 6, speed: 2.50, maze: 'open',      boss: true,  fruit: false }, // 20
+]
+const MAX_LEVEL = 20
+
+// ─── Mazes ───────────────────────────────────────────────────────────────────
+// 0=path 1=wall 2=pellet 3=power-pellet 4=ghost-house
+const MAZES = {}
+
+function buildMaze(template) {
+  return template.map(row => [...row])
+}
+
+// Classic Pacman-style maze
+MAZES.classic = buildMaze([
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1],
+  [1,3,1,1,2,1,1,1,2,1,1,1,2,1,1,1,2,1,1,3,1],
+  [1,2,1,1,2,1,1,1,2,1,1,1,2,1,1,1,2,1,1,2,1],
+  [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+  [1,2,1,1,2,1,2,1,1,1,1,1,1,1,2,1,2,1,1,2,1],
+  [1,2,2,2,2,1,2,2,2,2,1,2,2,2,2,1,2,2,2,2,1],
+  [1,1,1,1,2,1,1,1,0,0,0,0,0,1,1,1,2,1,1,1,1],
+  [1,1,1,1,2,1,0,0,4,4,4,4,4,0,0,1,2,1,1,1,1],
+  [1,1,1,1,2,1,0,4,4,4,4,4,4,4,0,1,2,1,1,1,1],
+  [0,0,0,0,2,0,0,4,4,4,4,4,4,4,0,0,2,0,0,0,0],
+  [1,1,1,1,2,1,0,4,4,4,4,4,4,4,0,1,2,1,1,1,1],
+  [1,1,1,1,2,1,0,0,0,0,0,0,0,0,0,1,2,1,1,1,1],
+  [1,1,1,1,2,1,0,1,1,1,1,1,1,1,0,1,2,1,1,1,1],
+  [1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1],
+  [1,2,1,1,2,1,1,1,2,1,1,1,2,1,1,1,2,1,1,2,1],
+  [1,3,2,1,2,2,2,2,2,2,0,2,2,2,2,2,2,1,2,3,1],
+  [1,1,2,1,2,1,2,1,1,1,1,1,1,1,2,1,2,1,2,1,1],
+  [1,2,2,2,2,1,2,2,2,2,1,2,2,2,2,1,2,2,2,2,1],
+  [1,2,1,1,1,1,1,1,2,1,1,1,2,1,1,1,1,1,1,2,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+])
+
+MAZES.tunnel = buildMaze([
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+  [1,3,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,3,1],
+  [1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1],
+  [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+  [1,2,1,2,1,1,1,2,1,1,1,1,1,2,1,1,1,2,1,2,1],
+  [1,2,1,2,2,2,1,2,2,2,1,2,2,2,1,2,2,2,1,2,1],
+  [0,2,1,1,1,2,1,1,1,0,0,0,1,1,1,2,1,1,1,2,0],
+  [0,2,0,0,0,2,0,4,4,4,4,4,4,4,0,2,0,0,0,2,0],
+  [0,2,0,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,0,2,0],
+  [0,2,0,4,1,1,1,4,4,4,4,4,4,4,1,1,1,4,0,2,0],
+  [0,2,0,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,0,2,0],
+  [0,2,0,0,0,2,0,0,0,0,0,0,0,0,0,2,0,0,0,2,0],
+  [1,2,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,2,1],
+  [1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1],
+  [1,2,1,2,1,1,1,2,1,1,1,1,1,2,1,1,1,2,1,2,1],
+  [1,3,1,2,2,2,1,2,2,2,0,2,2,2,1,2,2,2,1,3,1],
+  [1,2,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,2,1],
+  [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+  [1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+])
+
+MAZES.labyrinth = buildMaze([
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1],
+  [1,3,1,1,2,1,1,2,1,2,1,2,1,2,1,1,2,1,1,3,1],
+  [1,2,1,1,2,1,1,2,1,2,1,2,1,2,1,1,2,1,1,2,1],
+  [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+  [1,2,1,1,2,1,2,1,1,2,1,2,1,1,2,1,2,1,1,2,1],
+  [1,2,2,2,2,1,2,2,2,2,1,2,2,2,2,1,2,2,2,2,1],
+  [1,1,1,2,2,1,1,1,0,1,0,1,0,1,1,1,2,2,1,1,1],
+  [0,0,0,2,0,0,0,0,4,4,4,4,4,0,0,0,0,2,0,0,0],
+  [0,0,0,2,0,4,4,4,4,4,4,4,4,4,4,4,0,2,0,0,0],
+  [0,0,0,2,0,4,1,1,1,4,4,4,1,1,1,4,0,2,0,0,0],
+  [0,0,0,2,0,4,4,4,4,4,4,4,4,4,4,4,0,2,0,0,0],
+  [0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0],
+  [1,1,1,2,2,1,1,1,1,1,1,1,1,1,1,1,2,2,1,1,1],
+  [1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1],
+  [1,2,1,1,2,1,2,1,1,2,1,2,1,1,2,1,2,1,1,2,1],
+  [1,3,2,2,2,1,2,2,2,2,0,2,2,2,2,1,2,2,2,3,1],
+  [1,1,2,1,2,1,1,2,1,1,1,1,1,2,1,1,2,1,2,1,1],
+  [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+  [1,2,1,1,2,1,1,2,1,2,1,2,1,2,1,1,2,1,1,2,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+])
+
+MAZES.open = buildMaze([
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+  [1,3,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,3,1],
+  [1,2,2,1,2,2,2,2,2,2,1,2,2,2,2,2,2,1,2,2,1],
+  [1,2,2,2,2,2,1,2,2,2,2,2,2,2,1,2,2,2,2,2,1],
+  [1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1],
+  [1,2,1,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,1,2,1],
+  [1,2,1,2,2,2,1,1,0,0,0,0,0,1,1,2,2,2,1,2,1],
+  [1,2,2,2,2,2,0,4,4,4,4,4,4,4,0,2,2,2,2,2,1],
+  [1,2,2,2,2,2,0,4,4,4,4,4,4,4,0,2,2,2,2,2,1],
+  [0,0,0,0,0,0,0,4,4,4,4,4,4,4,0,0,0,0,0,0,0],
+  [1,2,2,2,2,2,0,4,4,4,4,4,4,4,0,2,2,2,2,2,1],
+  [1,2,2,2,2,2,0,0,0,0,0,0,0,0,0,2,2,2,2,2,1],
+  [1,2,1,2,2,2,2,2,1,1,1,1,1,2,2,2,2,2,1,2,1],
+  [1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1],
+  [1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1],
+  [1,3,2,2,2,2,2,2,2,2,0,2,2,2,2,2,2,2,2,3,1],
+  [1,2,2,1,2,2,2,2,2,2,1,2,2,2,2,2,2,1,2,2,1],
+  [1,2,2,2,2,2,1,2,2,2,2,2,2,2,1,2,2,2,2,2,1],
+  [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+])
+
+// ─── Canvas setup ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('c')
+const ctx    = canvas.getContext('2d')
+canvas.width  = W
+canvas.height = H
+
+function scaleCanvas() {
+  const s = Math.min(
+    window.innerWidth  / W,
+    (window.innerHeight - 40) / H
+  )
+  canvas.style.width  = (W * s) + 'px'
+  canvas.style.height = (H * s) + 'px'
+  canvas.style.marginTop = '40px'
+}
+scaleCanvas()
+window.addEventListener('resize', scaleCanvas)
+
+// ─── Game State ──────────────────────────────────────────────────────────────
+const Game = {
+  level:     1,
+  score:     0,
+  lives:     3,
+  map:       null,
+  pellets:   0,
+  startTime: 0,
+  state:     'idle', // idle | playing | dead | won | gameover
+  raf:       null,
+
+  init(level) {
+    const cfg = LEVEL_CFG[Math.min(level, MAX_LEVEL)] || LEVEL_CFG[MAX_LEVEL]
+    const mazeKey = cfg.maze
+    this.level = level
+    this.score = this.score // preserve score across levels
+    this.map   = buildMaze(MAZES[mazeKey])
+    this.pellets = 0
+    for (let r = 0; r < ROWS; r++)
+      for (let c = 0; c < COLS; c++)
+        if (this.map[r][c] === 2 || this.map[r][c] === 3) this.pellets++
+
+    // Pacman spawn
+    Pacman.reset()
+
+    // Ghost spawn
+    Ghosts.init(cfg)
+
+    // Fruit
+    Fruit.active = cfg.fruit
+    Fruit.eaten  = false
+    Fruit.timer  = 0
+    Fruit.visible = false
+
+    this.startTime = Date.now()
+    this.state = 'playing'
+    this.raf = requestAnimationFrame(loop)
+  },
+
+  continue() {
+    if (this.lives <= 0) return
+    Pacman.reset()
+    Ghosts.scatter()
+    this.state = 'playing'
+    this.raf = requestAnimationFrame(loop)
+  },
+}
+
+// ─── Pacman ──────────────────────────────────────────────────────────────────
+const Pacman = {
+  x: 10, y: 16,   // tile coords
+  dx: 0,  dy: 0,
+  nextDx: 0, nextDy: 0,
+  mouthAngle: 0.25,
+  mouthDir: -1,
+  move: 0,         // fractional position within tile
+  SPEED: 0.12,
+
+  reset() {
+    this.x = 10; this.y = 15
+    this.dx = 0; this.dy = 0
+    this.nextDx = 0; this.nextDy = 0
+    this.move = 0
+  },
+
+  canMove(row, col) {
+    if (row < 0 || row >= ROWS) return false
+    // tunnel row — allow wrap
+    if (col < 0 || col >= COLS) return true
+    const cell = Game.map[row][col]
+    return cell !== 1
+  },
+
+  update() {
+    this.move += this.SPEED
+    if (this.move < 1) return
+
+    this.move = 0
+    // Tunnel wrap
+    let nx = this.x, ny = this.y
+    nx += this.dx; ny += this.dy
+    if (nx < 0)    nx = COLS - 1
+    if (nx >= COLS) nx = 0
+
+    const tryNext = () => {
+      const tnx = this.x + this.nextDx
+      const tny = this.y + this.nextDy
+      return this.canMove(tny, tnx)
+    }
+    const tryCur = () => this.canMove(ny, nx)
+
+    if (tryNext()) {
+      this.dx = this.nextDx; this.dy = this.nextDy
+      nx = this.x + this.dx; ny = this.y + this.dy
+      if (nx < 0)    nx = COLS - 1
+      if (nx >= COLS) nx = 0
+    }
+
+    if (tryCur() || (this.dx === 0 && this.dy === 0)) {
+      if (this.canMove(ny, nx)) {
+        this.x = nx; this.y = ny
+      }
+    }
+
+    this.eat()
+  },
+
+  eat() {
+    const cell = Game.map[this.y][this.x]
+    if (cell === 2) {
+      Game.map[this.y][this.x] = 0
+      Game.score += 10
+      Game.pellets--
+      if (Game.pellets <= 0) levelComplete()
+    } else if (cell === 3) {
+      Game.map[this.y][this.x] = 0
+      Game.score += 50
+      Game.pellets--
+      const cfg = LEVEL_CFG[Math.min(Game.level, MAX_LEVEL)]
+      if (!cfg.boss) Ghosts.frightened()
+      if (Game.pellets <= 0) levelComplete()
+    }
+    if (Fruit.visible && this.x === Fruit.col && this.y === Fruit.row) {
+      Game.score += 200
+      Fruit.visible = false
+      Fruit.eaten   = true
+    }
+  },
+
+  draw() {
+    const px = this.x * TILE + TILE / 2
+    const py = this.y * TILE + TILE / 2
+    const r  = TILE / 2 - 1
+
+    let angle = 0
+    if (this.dx === 1)  angle = 0
+    if (this.dx === -1) angle = Math.PI
+    if (this.dy === -1) angle = -Math.PI / 2
+    if (this.dy === 1)  angle = Math.PI / 2
+
+    const mouth = this.mouthAngle * Math.PI
+    ctx.fillStyle = '#FFD700'
+    ctx.beginPath()
+    ctx.moveTo(px, py)
+    ctx.arc(px, py, r, angle + mouth, angle + Math.PI * 2 - mouth)
+    ctx.closePath()
+    ctx.fill()
+
+    this.mouthAngle += 0.04 * this.mouthDir
+    if (this.mouthAngle >= 0.45 || this.mouthAngle <= 0) this.mouthDir *= -1
+  },
+}
+
+// ─── Ghosts ──────────────────────────────────────────────────────────────────
+const GHOST_COLORS = ['#FF0000', '#FFB8FF', '#00FFFF', '#FFB852', '#FF69B4', '#90EE90']
+
+function makeGhost(color, sx, sy) {
+  return {
+    color, sx, sy,
+    x: sx, y: sy,
+    dx: 0, dy: -1,
+    move: Math.random(),
+    state: 'scatter', // scatter | chase | frightened | dead
+    frighTimer: 0,
+    SPEED: 0.09,
+  }
+}
+
+const GHOST_SPAWNS = [
+  [10, 9], [9, 9], [11, 9], [9, 10], [11, 10], [10, 10],
+]
+
+const Ghosts = {
+  list: [],
+
+  init(cfg) {
+    this.list = []
+    const count = Math.min(cfg.ghosts, 6)
+    for (let i = 0; i < count; i++) {
+      const [sx, sy] = GHOST_SPAWNS[i]
+      const g = makeGhost(GHOST_COLORS[i], sx, sy)
+      g.SPEED = 0.09 * cfg.speed
+      this.list.push(g)
+    }
+  },
+
+  frightened() {
+    this.list.forEach(g => {
+      if (g.state !== 'dead') {
+        g.state = 'frightened'
+        g.frighTimer = 300
+      }
+    })
+  },
+
+  scatter() {
+    this.list.forEach(g => {
+      g.state = 'scatter'
+      g.x = g.sx; g.y = g.sy
+      g.dx = 0; g.dy = -1
+      g.move = 0
+    })
+  },
+
+  update() {
+    this.list.forEach(g => this.updateOne(g))
+  },
+
+  updateOne(g) {
+    if (g.state === 'frightened') {
+      g.frighTimer--
+      if (g.frighTimer <= 0) g.state = 'chase'
+    }
+
+    g.move += g.SPEED
+    if (g.move < 1) return
+    g.move -= 1
+
+    // Pick a direction
+    const candidates = []
+    const dirs = [{dx:1,dy:0},{dx:-1,dy:0},{dx:0,dy:1},{dx:0,dy:-1}]
+    for (const d of dirs) {
+      if (d.dx === -g.dx && d.dy === -g.dy) continue // no reverse
+      const nr = g.y + d.dy
+      const nc = g.x + d.dx
+      if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS) continue
+      const cell = Game.map[nr][nc]
+      if (cell === 1) continue
+      if (cell === 4 && g.state !== 'dead') continue
+      candidates.push(d)
+    }
+
+    if (candidates.length === 0) return
+
+    let chosen
+    if (g.state === 'frightened') {
+      chosen = candidates[Math.floor(Math.random() * candidates.length)]
+    } else if (g.state === 'dead') {
+      // Head home
+      const targetX = g.sx, targetY = g.sy
+      chosen = candidates.reduce((best, d) => {
+        const nx = g.x + d.dx, ny = g.y + d.dy
+        const dist = Math.hypot(nx - targetX, ny - targetY)
+        const bdist = Math.hypot(g.x + best.dx - targetX, g.y + best.dy - targetY)
+        return dist < bdist ? d : best
+      })
+      if (g.x === g.sx && g.y === g.sy) g.state = 'scatter'
+    } else {
+      // Chase Pacman
+      const targetX = Pacman.x, targetY = Pacman.y
+      chosen = candidates.reduce((best, d) => {
+        const nx = g.x + d.dx, ny = g.y + d.dy
+        const dist = Math.hypot(nx - targetX, ny - targetY)
+        const bdist = Math.hypot(g.x + best.dx - targetX, g.y + best.dy - targetY)
+        return dist < bdist ? d : best
+      })
+    }
+
+    g.dx = chosen.dx; g.dy = chosen.dy
+    let nx = g.x + g.dx
+    let ny = g.y + g.dy
+    if (nx < 0)    nx = COLS - 1
+    if (nx >= COLS) nx = 0
+    g.x = nx; g.y = ny
+  },
+
+  checkCollision() {
+    for (const g of this.list) {
+      if (g.x === Pacman.x && g.y === Pacman.y) {
+        if (g.state === 'frightened') {
+          g.state = 'dead'
+          Game.score += 200
+        } else if (g.state !== 'dead') {
+          return true // Pacman hit
+        }
+      }
+    }
+    return false
+  },
+
+  drawOne(g) {
+    const px = g.x * TILE + TILE / 2
+    const py = g.y * TILE + TILE / 2
+    const r  = TILE / 2 - 1
+
+    let color = g.color
+    if (g.state === 'frightened') {
+      color = g.frighTimer < 80 && Math.floor(g.frighTimer / 10) % 2 === 0 ? '#fff' : '#0000FF'
+    }
+    if (g.state === 'dead') {
+      // Just eyes
+      ctx.fillStyle = '#fff'
+      ctx.beginPath(); ctx.arc(px - 4, py - 2, 3, 0, Math.PI*2); ctx.fill()
+      ctx.beginPath(); ctx.arc(px + 4, py - 2, 3, 0, Math.PI*2); ctx.fill()
+      ctx.fillStyle = '#00f'
+      ctx.beginPath(); ctx.arc(px - 3, py - 2, 1.5, 0, Math.PI*2); ctx.fill()
+      ctx.beginPath(); ctx.arc(px + 5, py - 2, 1.5, 0, Math.PI*2); ctx.fill()
+      return
+    }
+
+    ctx.fillStyle = color
+    ctx.beginPath()
+    ctx.arc(px, py - 2, r, Math.PI, 0)
+    // Wavy bottom
+    ctx.lineTo(px + r, py + r)
+    for (let i = 0; i < 3; i++) {
+      const wx = px + r - (i * 2 + 1) * (r / 3)
+      ctx.quadraticCurveTo(wx + r/3, py + r - 5, wx, py + r)
+      const wx2 = px + r - (i * 2 + 2) * (r / 3)
+      ctx.quadraticCurveTo(wx2 + r/3, py + r + 5, wx2, py + r)
+    }
+    ctx.closePath()
+    ctx.fill()
+
+    // Eyes
+    if (g.state !== 'frightened') {
+      ctx.fillStyle = '#fff'
+      ctx.beginPath(); ctx.arc(px - 4, py - 3, 3, 0, Math.PI*2); ctx.fill()
+      ctx.beginPath(); ctx.arc(px + 4, py - 3, 3, 0, Math.PI*2); ctx.fill()
+      ctx.fillStyle = '#00f'
+      ctx.beginPath(); ctx.arc(px - 3, py - 3, 1.5, 0, Math.PI*2); ctx.fill()
+      ctx.beginPath(); ctx.arc(px + 5, py - 3, 1.5, 0, Math.PI*2); ctx.fill()
+    }
+  },
+
+  draw() { this.list.forEach(g => this.drawOne(g)) },
+}
+
+// ─── Fruit ───────────────────────────────────────────────────────────────────
+const Fruit = {
+  active:  false,
+  eaten:   false,
+  visible: false,
+  timer:   0,
+  row: 10, col: 10,
+
+  update() {
+    if (!this.active || this.eaten) return
+    this.timer++
+    if (!this.visible && this.timer === 150) this.visible = true
+    if (this.visible  && this.timer === 450) this.visible = false
+  },
+
+  draw() {
+    if (!this.visible) return
+    const px = this.col * TILE + TILE / 2
+    const py = this.row * TILE + TILE / 2
+    ctx.font = `${TILE - 4}px serif`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('🍒', px, py)
+  },
+}
+
+// ─── Draw maze ───────────────────────────────────────────────────────────────
+function drawMaze() {
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const cell = Game.map[r][c]
+      const x = c * TILE, y = r * TILE
+
+      if (cell === 1) {
+        ctx.fillStyle = '#1a1aff'
+        ctx.fillRect(x, y, TILE, TILE)
+        ctx.strokeStyle = '#4444ff'
+        ctx.lineWidth = 1
+        ctx.strokeRect(x + 1, y + 1, TILE - 2, TILE - 2)
+      } else if (cell === 0 || cell === 4) {
+        ctx.fillStyle = '#000'
+        ctx.fillRect(x, y, TILE, TILE)
+      } else if (cell === 2) {
+        ctx.fillStyle = '#000'
+        ctx.fillRect(x, y, TILE, TILE)
+        ctx.fillStyle = '#FFD700'
+        ctx.beginPath()
+        ctx.arc(x + TILE/2, y + TILE/2, 2, 0, Math.PI*2)
+        ctx.fill()
+      } else if (cell === 3) {
+        ctx.fillStyle = '#000'
+        ctx.fillRect(x, y, TILE, TILE)
+        ctx.fillStyle = '#fff'
+        ctx.beginPath()
+        ctx.arc(x + TILE/2, y + TILE/2, 5, 0, Math.PI*2)
+        ctx.fill()
+      }
+    }
+  }
+}
+
+// ─── HUD ─────────────────────────────────────────────────────────────────────
+function updateHUD() {
+  document.getElementById('hud-level').textContent  = Game.level
+  document.getElementById('hud-score').textContent  = Game.score
+  const el = document.getElementById('lives-display')
+  el.innerHTML = ''
+  for (let i = 0; i < Game.lives; i++) {
+    const s = document.createElement('span')
+    s.textContent = '😮'
+    el.appendChild(s)
+  }
+}
+
+// ─── Level complete / death ───────────────────────────────────────────────────
+function levelComplete() {
+  cancelAnimationFrame(Game.raf)
+  Game.state = 'won'
+  const elapsed = Math.floor((Date.now() - Game.startTime) / 1000)
+  PM.levelComplete(Game.level, Game.score, elapsed)
+
+  if (Game.level >= MAX_LEVEL) {
+    showEndOverlay('🎉 YOU WIN!', `Score: ${Game.score}`, false)
+    return
+  }
+
+  showEndOverlay('LEVEL COMPLETE!', `Score: ${Game.score}`, true)
+}
+
+function pacmanDied() {
+  cancelAnimationFrame(Game.raf)
+  Game.lives--
+  updateHUD()
+
+  if (Game.lives <= 0) {
+    Game.state = 'gameover'
+    PM.gameOver(Game.level, Game.score)
+    showEndOverlay('GAME OVER', `Score: ${Game.score}`, false)
+  } else {
+    Game.state = 'dead'
+    PM.requestContinue()
+    showDeadOverlay()
+  }
+}
+
+function showEndOverlay(title, sub, hasNext) {
+  const o = document.getElementById('overlay')
+  o.innerHTML = `
+    <h1>${title}</h1>
+    <p>${sub}</p>
+    ${hasNext
+      ? `<button onclick="nextLevel()">NEXT LEVEL</button>`
+      : `<button onclick="restartGame()">PLAY AGAIN</button>`
+    }
+  `
+  o.style.display = 'flex'
+}
+
+function showDeadOverlay() {
+  const o = document.getElementById('overlay')
+  o.innerHTML = `
+    <h1>💀 CAUGHT!</h1>
+    <p>Lives: ${Game.lives} remaining<br>Use Continue (2 coins)?</p>
+    <button onclick="continueGame()">CONTINUE (2 coins)</button>
+    <button onclick="restartGame()" style="background:#555;color:#fff;margin-top:4px">QUIT</button>
+  `
+  o.style.display = 'flex'
+}
+
+function continueGame() {
+  // The postMessage was already sent on pacmanDied — wait for response.
+  // If user clicks manually, treat as local continue.
+  document.getElementById('overlay').style.display = 'none'
+  Game.continue()
+}
+
+function nextLevel() {
+  document.getElementById('overlay').style.display = 'none'
+  Game.init(Game.level + 1)
+  updateHUD()
+}
+
+function restartGame() {
+  document.getElementById('overlay').style.display = 'none'
+  Game.score = 0
+  Game.lives = 3
+  Game.init(1)
+  PM.start(1)
+  updateHUD()
+}
+
+function startLevel(level) {
+  document.getElementById('overlay').style.display = 'none'
+  Game.score = 0
+  Game.lives = 3
+  Game.init(level)
+  updateHUD()
+}
+
+// ─── Game loop ───────────────────────────────────────────────────────────────
+function loop() {
+  if (Game.state !== 'playing') return
+
+  ctx.clearRect(0, 0, W, H)
+
+  Pacman.update()
+  Ghosts.update()
+  Fruit.update()
+
+  drawMaze()
+  Fruit.draw()
+  Ghosts.draw()
+  Pacman.draw()
+
+  if (Ghosts.checkCollision()) {
+    pacmanDied()
+    return
+  }
+
+  updateHUD()
+  Game.raf = requestAnimationFrame(loop)
+}
+
+// ─── Input ───────────────────────────────────────────────────────────────────
+const KEY_MAP = {
+  ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1],
+  a: [-1, 0], d: [1, 0], w: [0, -1], s: [0, 1],
+  A: [-1, 0], D: [1, 0], W: [0, -1], S: [0, 1],
+}
+
+window.addEventListener('keydown', e => {
+  const dir = KEY_MAP[e.key]
+  if (!dir) return
+  e.preventDefault()
+  Pacman.nextDx = dir[0]
+  Pacman.nextDy = dir[1]
+})
+
+// Touch swipe
+let touchX = 0, touchY = 0
+window.addEventListener('touchstart', e => {
+  touchX = e.touches[0].clientX
+  touchY = e.touches[0].clientY
+})
+window.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchX
+  const dy = e.changedTouches[0].clientY - touchY
+  if (Math.abs(dx) > Math.abs(dy)) {
+    Pacman.nextDx = dx > 0 ? 1 : -1; Pacman.nextDy = 0
+  } else {
+    Pacman.nextDx = 0; Pacman.nextDy = dy > 0 ? 1 : -1
+  }
+})
+
+// ─── Start ───────────────────────────────────────────────────────────────────
+document.getElementById('btn-start').addEventListener('click', () => {
+  PM.start(1)
+  document.getElementById('overlay').style.display = 'none'
+  Game.score = 0
+  Game.lives = 3
+  Game.init(1)
+  updateHUD()
+})
+</script>
+</body>
+</html>
